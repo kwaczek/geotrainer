@@ -1,0 +1,7 @@
+---
+description: handling of server and client
+globs: 
+alwaysApply: false
+---
+
+Do not restart server or client. I will handle it from my terminal and if there is and error I will pass it to you.

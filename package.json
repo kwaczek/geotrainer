@@ -1,0 +1,14 @@
+{
+  "name": "geotrainer",
+  "version": "0.1.0",
+  "description": "A web application for training and memorizing GeoGuessr-related features",
+  "scripts": {
+    "client": "cd client && npm start",
+    "server": "cd server && npm run dev",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0"
+  }
+}

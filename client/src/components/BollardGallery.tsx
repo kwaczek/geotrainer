@@ -1,0 +1,237 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { Bollard } from '../services/countryService';
+import axios from 'axios';
+
+interface BollardGalleryProps {
+  bollards: Bollard[];
+  isLoading: boolean;
+}
+
+interface CountryDetails {
+  _id: string;
+  name: string;
+}
+
+const BollardGallery: React.FC<BollardGalleryProps> = ({ bollards, isLoading }) => {
+  const [selectedBollard, setSelectedBollard] = useState<Bollard | null>(null);
+  const [bollardCountries, setBollardCountries] = useState<CountryDetails[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState<boolean>(false);
+
+  // Create a memoized closeModal function
+  const closeModal = useCallback(() => {
+    setSelectedBollard(null);
+  }, []);
+
+  // Add event listener for Escape key
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && selectedBollard) {
+        closeModal();
+      }
+    };
+
+    // Add event listener when modal is open
+    if (selectedBollard) {
+      document.addEventListener('keydown', handleEscKey);
+    }
+
+    // Clean up event listener
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [selectedBollard, closeModal]);
+
+  // Fetch countries for the selected bollard
+  useEffect(() => {
+    const fetchBollardCountries = async () => {
+      if (selectedBollard && selectedBollard.countries.length > 0) {
+        setLoadingCountries(true);
+        try {
+          // Create an array of promises for each country ID
+          const countryPromises = selectedBollard.countries.map(countryId => 
+            axios.get(`/api/countries/${countryId}`)
+          );
+          
+          // Wait for all promises to resolve
+          const responses = await Promise.all(countryPromises);
+          
+          // Extract country data from responses
+          const countries = responses
+            .filter(response => response.data && response.data.success)
+            .map(response => response.data.country);
+          
+          setBollardCountries(countries);
+        } catch (error) {
+          console.error('Error fetching bollard countries:', error);
+        } finally {
+          setLoadingCountries(false);
+        }
+      }
+    };
+
+    fetchBollardCountries();
+  }, [selectedBollard]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-6">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (bollards.length === 0) {
+    return (
+      <div className="text-center p-4 bg-gray-50 rounded-lg">
+        <p className="text-gray-500">No bollards found for this country.</p>
+      </div>
+    );
+  }
+
+  const openModal = (bollard: Bollard) => {
+    setSelectedBollard(bollard);
+    setBollardCountries([]);
+  };
+
+  return (
+    <div>
+      <div className="space-y-4">
+        {bollards.map((bollard) => (
+          <div 
+            key={bollard._id} 
+            className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+          >
+            <div className="flex flex-col md:flex-row">
+              {/* Image column */}
+              <div 
+                className="md:w-1/3 cursor-pointer"
+                onClick={() => openModal(bollard)}
+              >
+                <div className="aspect-square overflow-hidden">
+                  <img 
+                    src={`http://localhost:3002${bollard.imageUrl}`} 
+                    alt={`Bollard in ${bollard.description}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+              
+              {/* Details column */}
+              <div className="p-4 md:w-2/3">
+                <h3 className="font-semibold text-gray-800 mb-2">Bollard Details</h3>
+                <p className="text-gray-600 mb-3">{bollard.description}</p>
+                
+                <a 
+                  href={bollard.googleMapsUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  View on Google Maps
+                </a>
+                
+                <div className="mt-3">
+                  <button
+                    onClick={() => openModal(bollard)}
+                    className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal for displaying bollard details */}
+      {selectedBollard && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={closeModal}>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">Bollard Details</h3>
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={closeModal}
+                  aria-label="Close modal"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <img 
+                  src={`http://localhost:3002${selectedBollard.imageUrl}`} 
+                  alt={`Bollard in ${selectedBollard.description}`}
+                  className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
+                />
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                <p className="text-gray-600">{selectedBollard.description}</p>
+              </div>
+              
+              {/* Countries section */}
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Countries where this bollard can be found</h4>
+                {loadingCountries ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                    <span className="text-gray-500">Loading countries...</span>
+                  </div>
+                ) : bollardCountries.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {bollardCountries.map(country => (
+                      <div key={country._id} className="bg-gray-50 p-2 rounded flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{country.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No country information available.</p>
+                )}
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Location</h4>
+                <a 
+                  href={selectedBollard.googleMapsUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 flex items-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  View on Google Maps
+                </a>
+              </div>
+              
+              <div className="mt-6 text-center text-sm text-gray-500">
+                Press ESC key or click outside to close
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BollardGallery; 
