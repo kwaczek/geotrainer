@@ -1,4 +1,4 @@
-# GeoTrainer - Unified Quiz System
+# GeoTrainer - Unified Quiz System - By Miro
 
 ## Overview
 
