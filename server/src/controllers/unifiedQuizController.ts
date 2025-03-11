@@ -713,11 +713,34 @@ async function getRandomBollardQuestion(filters?: QuizFilters) {
     throw new Error('No country details found for this bollard');
   }
   
+  // Build a filter for additional countries that matches the same criteria
+  const additionalCountriesFilter: any = { _id: { $nin: bollard.countries } };
+  
+  // Apply the same continent filter to additional countries
+  if (filters?.continent && filters.continent !== 'all') {
+    additionalCountriesFilter.continent = filters.continent;
+  }
+  
+  // Apply the same GeoGuessr filter to additional countries
+  if (filters?.in_geoguessr) {
+    additionalCountriesFilter.in_geoguessr = true;
+  }
+  
   // Get additional random countries for options (we need 3 more to have 4 total)
   const additionalCountries = await Country.aggregate([
-    { $match: { _id: { $nin: bollard.countries } } },
+    { $match: additionalCountriesFilter },
     { $sample: { size: 3 } }
   ]);
+  
+  // If we couldn't find enough countries with the filters, fall back to countries without filters
+  if (additionalCountries.length < 3) {
+    console.log(`Warning: Could only find ${additionalCountries.length} additional countries with the specified filters. Falling back to countries without filters.`);
+    const fallbackCountries = await Country.aggregate([
+      { $match: { _id: { $nin: [...bollard.countries, ...additionalCountries.map(c => c._id)] } } },
+      { $sample: { size: 3 - additionalCountries.length } }
+    ]);
+    additionalCountries.push(...fallbackCountries);
+  }
   
   // Create an array with exactly 4 options: 1 correct + 3 incorrect
   const allCountries = [
