@@ -1,0 +1,43 @@
+   name: Deploy to EC2
+
+   on:
+     push:
+       branches: [ main ]
+
+   jobs:
+     deploy:
+       runs-on: ubuntu-latest
+       steps:
+         - name: Checkout code
+           uses: actions/checkout@v3
+
+         - name: Set up SSH
+           uses: webfactory/ssh-agent@v0.7.0
+           with:
+             ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+         - name: Add host key
+           run: |
+             mkdir -p ~/.ssh
+             ssh-keyscan ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+         - name: Deploy to EC2
+           run: |
+             ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "
+               if [ ! -d ~/app/.git ]; then
+                 # First-time setup
+                 cd ~/app
+                 git clone ${{ github.server_url }}/${{ github.repository }} .
+                 npm install
+                 npm run build
+                 pm2 restart all || pm2 start npm --name 'app' -- start
+               else
+                 # Regular deployment
+                 cd ~/app
+                 git fetch
+                 git reset --hard origin/main
+                 npm install
+                 npm run build
+                 pm2 restart all
+               fi
+             "
