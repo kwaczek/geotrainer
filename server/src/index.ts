@@ -37,6 +37,17 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api', routes);
 app.use('/api/bollards', bollardRoutes);
 
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/build')));
+
+  // The "catchall" handler: for any request that doesn't
+  // match one above, send back React's index.html file.
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/build/index.html'));
+  });
+}
+
 // Health check route
 app.get('/', (req, res) => {
   res.send('GeoTrainer API is running');
