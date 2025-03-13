@@ -46,6 +46,7 @@ jobs:
             cd ~/geotrainer
             npm run install:all
             pm2 stop geotrainer || true
-            pm2 start npm --name "geotrainer" -- start
+            pm2 delete geotrainer || true
+            NODE_ENV=production pm2 start server/dist/index.js --name "geotrainer"
             pm2 save
           EOF
