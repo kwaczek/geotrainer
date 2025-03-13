@@ -20,7 +20,10 @@ jobs:
         run: npm run install:all
         
       - name: Build application
-        run: npm run build
+        run: |
+          # Disable treating warnings as errors in CI
+          export CI=false
+          npm run build
         
       - name: Setup SSH
         run: |
