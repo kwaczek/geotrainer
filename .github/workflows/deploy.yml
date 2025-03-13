@@ -34,10 +34,11 @@ jobs:
         run: |
           # Disable treating warnings as errors in CI
           export CI=false
-          # Skip tests during build
-          export SKIP_TESTS=true
-          npm run build
-         
+          # Build the client
+          cd client && npm run build && cd ..
+          # Build the server
+          cd server && npm run build && cd ..
+
       - name: Deploy to EC2
         run: |
           rsync -avz --exclude 'node_modules' --exclude '.git' ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:~/geotrainer/
