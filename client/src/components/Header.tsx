@@ -25,6 +25,19 @@ const Header: React.FC = () => {
                 Profile
               </Link>
             </li>
+            <li className="relative group">
+              <span className="hover:text-blue-200 transition-colors cursor-pointer">
+                Admin
+              </span>
+              <div className="absolute hidden group-hover:block bg-blue-700 p-2 rounded shadow-lg right-0 w-48 z-10">
+                <Link to="/admin/bollards" className="block py-1 px-2 hover:bg-blue-600 rounded transition-colors">
+                  Bollard Admin
+                </Link>
+                <Link to="/admin/licenseplates" className="block py-1 px-2 hover:bg-blue-600 rounded transition-colors">
+                  License Plate Admin
+                </Link>
+              </div>
+            </li>
           </ul>
         </nav>
       </div>

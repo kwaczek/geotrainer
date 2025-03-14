@@ -8,6 +8,7 @@ import GenericQuizPage from './pages/GenericQuizPage';
 import GenericQuizResultPage from './pages/GenericQuizResultPage';
 import QuizSettingsPage from './pages/QuizSettingsPage';
 import BollardAdmin from './pages/BollardAdmin';
+import LicensePlateAdmin from './pages/LicensePlateAdmin';
 import Header from './components/Header';
 import { QuizType } from './types/quiz';
 
@@ -63,6 +64,7 @@ const App: React.FC = () => {
             <Route path="/quiz/result" element={<GenericQuizResultPage />} />
             <Route path="/quiz-result/:quizId" element={<GenericQuizResultPage />} />
             <Route path="/admin/bollards" element={<BollardAdmin />} />
+            <Route path="/admin/licenseplates" element={<LicensePlateAdmin />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>

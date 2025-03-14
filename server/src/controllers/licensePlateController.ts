@@ -1,0 +1,150 @@
+import { Request, Response } from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs/promises';
+import { existsSync } from 'fs';
+import LicensePlate from '../models/LicensePlate';
+import Country from '../models/Country';
+import mongoose from 'mongoose';
+
+// Configure multer for file upload
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/licenseplates/');
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        const allowedTypes = /jpeg|jpg|png|webp/;
+        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimetype = allowedTypes.test(file.mimetype);
+        
+        if (extname && mimetype) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed'));
+        }
+    },
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+});
+
+export const uploadLicensePlate = upload.single('image');
+
+export const createLicensePlate = async (req: Request, res: Response): Promise<void> => {
+    try {
+        if (!req.file) {
+            res.status(400).json({ message: 'No image file provided' });
+            return;
+        }
+
+        const { description, countries, googleMapsUrl } = req.body;
+
+        if (!description || !countries || !googleMapsUrl) {
+            res.status(400).json({ message: 'Description, countries, and Google Maps URL are required' });
+            return;
+        }
+
+        const licensePlate = new LicensePlate({
+            imageUrl: `/uploads/licenseplates/${req.file.filename}`,
+            description,
+            googleMapsUrl,
+            countries: JSON.parse(countries)
+        });
+
+        await licensePlate.save();
+        res.status(201).json(licensePlate);
+    } catch (error) {
+        console.error('Error creating license plate:', error);
+        res.status(500).json({ message: 'Error creating license plate' });
+    }
+};
+
+export const getGeoGuessrCountries = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const countries = await Country.find().sort('name');
+        res.json(countries);
+    } catch (error) {
+        console.error('Error fetching countries:', error);
+        res.status(500).json({ message: 'Error fetching countries' });
+    }
+};
+
+export const getAllLicensePlates = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const licensePlates = await LicensePlate.find()
+            .populate('countries', 'name code')
+            .sort('-createdAt');
+        res.json(licensePlates);
+    } catch (error) {
+        console.error('Error fetching license plates:', error);
+        res.status(500).json({ message: 'Error fetching license plates' });
+    }
+};
+
+export const deleteLicensePlate = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        
+        // Find the license plate first to get the image URL
+        const licensePlate = await LicensePlate.findById(id);
+        if (!licensePlate) {
+            res.status(404).json({ message: 'License plate not found' });
+            return;
+        }
+
+        // Extract the filename from the imageUrl
+        const imagePath = path.join(__dirname, '../../', licensePlate.imageUrl);
+
+        // Delete the license plate from the database
+        await LicensePlate.findByIdAndDelete(id);
+
+        // Delete the image file if it exists
+        if (existsSync(imagePath)) {
+            await fs.unlink(imagePath);
+        }
+
+        res.json({ message: 'License plate deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting license plate:', error);
+        res.status(500).json({ message: 'Error deleting license plate' });
+    }
+};
+
+export const getLicensePlatesByCountry = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { countryId } = req.params;
+        
+        // Validate if the id is a valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(countryId)) {
+            res.status(400).json({ 
+                success: false,
+                message: 'Invalid country ID format' 
+            });
+            return;
+        }
+        
+        // Find license plates that include this country
+        const licensePlates = await LicensePlate.find({ 
+            countries: { $in: [countryId] } 
+        }).sort('-createdAt');
+        
+        res.status(200).json({
+            success: true,
+            licensePlates
+        });
+    } catch (error) {
+        console.error('Error fetching license plates by country:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Failed to fetch license plates for this country' 
+        });
+    }
+}; 

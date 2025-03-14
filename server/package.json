@@ -10,7 +10,12 @@
     "test:watch": "jest --watch",
     "seed": "ts-node src/data/seeds/seedCountries.ts",
     "seed:bollards": "ts-node src/data/seeds/seedBollards.ts",
-    "seed:all": "npm run seed && npm run seed:bollards"
+    "seed:plates": "ts-node src/data/seeds/seedLicensePlates.ts",
+    "seed:all": "npm run seed && npm run seed:bollards && npm run seed:plates",
+    "export:countries": "node src/data/seeds/exportCountries.js",
+    "export:bollards": "node src/data/seeds/exportBollards.js",
+    "export:plates": "node src/data/seeds/exportLicensePlates.js",
+    "export:all": "npm run export:countries && npm run export:bollards && npm run export:plates"
   },
   "keywords": [],
   "author": "",
