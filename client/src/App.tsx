@@ -12,7 +12,7 @@ import Header from './components/Header';
 import { QuizType } from './types/quiz';
 
 // Placeholder components for now
-const Footer = () => <div className="bg-gray-800 p-4 text-white">Footer Placebolder</div>;
+const Footer = () => <div className="bg-gray-800 p-4 text-white">Footer Placeholder</div>;
 const LoginPage = () => <div className="p-4">Login Page Placeholder</div>;
 const RegisterPage = () => <div className="p-4">Register Page Placeholder</div>;
 const ProfilePage = () => <div className="p-4">Profile Page Placeholder</div>;
