@@ -32,7 +32,7 @@ app.use(express.urlencoded({ extended: true }));
 connectDB();
 
 // Serve uploaded files
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
 app.use('/api', routes);

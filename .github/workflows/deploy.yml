@@ -45,6 +45,8 @@ jobs:
           ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd ~/geotrainer
             npm run install:all
+            # Seed the database with the latest data
+            cd server && npm run seed:all && cd ..
             pm2 stop geotrainer || true
             pm2 delete geotrainer || true
             NODE_ENV=production pm2 start server/dist/index.js --name "geotrainer"

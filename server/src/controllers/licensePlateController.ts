@@ -2,15 +2,22 @@ import { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import LicensePlate from '../models/LicensePlate';
 import Country from '../models/Country';
 import mongoose from 'mongoose';
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), 'uploads/licenseplates');
+if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+    console.log(`Created uploads directory: ${uploadsDir}`);
+}
+
 // Configure multer for file upload
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/licenseplates/');
+        cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -40,7 +47,12 @@ export const uploadLicensePlate = upload.single('image');
 
 export const createLicensePlate = async (req: Request, res: Response): Promise<void> => {
     try {
+        console.log('Creating license plate...');
+        console.log('Request file:', req.file);
+        console.log('Request body:', req.body);
+
         if (!req.file) {
+            console.log('No image file provided');
             res.status(400).json({ message: 'No image file provided' });
             return;
         }
@@ -48,9 +60,17 @@ export const createLicensePlate = async (req: Request, res: Response): Promise<v
         const { description, countries, googleMapsUrl } = req.body;
 
         if (!description || !countries || !googleMapsUrl) {
+            console.log('Missing required fields:', { description, countries, googleMapsUrl });
             res.status(400).json({ message: 'Description, countries, and Google Maps URL are required' });
             return;
         }
+
+        console.log('Creating license plate with data:', {
+            imageUrl: `/uploads/licenseplates/${req.file.filename}`,
+            description,
+            googleMapsUrl,
+            countries: JSON.parse(countries)
+        });
 
         const licensePlate = new LicensePlate({
             imageUrl: `/uploads/licenseplates/${req.file.filename}`,
@@ -60,6 +80,7 @@ export const createLicensePlate = async (req: Request, res: Response): Promise<v
         });
 
         await licensePlate.save();
+        console.log('License plate saved successfully:', licensePlate);
         res.status(201).json(licensePlate);
     } catch (error) {
         console.error('Error creating license plate:', error);
@@ -101,7 +122,8 @@ export const deleteLicensePlate = async (req: Request, res: Response): Promise<v
         }
 
         // Extract the filename from the imageUrl
-        const imagePath = path.join(__dirname, '../../', licensePlate.imageUrl);
+        const imagePath = path.join(process.cwd(), licensePlate.imageUrl);
+        console.log(`Deleting image at: ${imagePath}`);
 
         // Delete the license plate from the database
         await LicensePlate.findByIdAndDelete(id);
@@ -109,6 +131,9 @@ export const deleteLicensePlate = async (req: Request, res: Response): Promise<v
         // Delete the image file if it exists
         if (existsSync(imagePath)) {
             await fs.unlink(imagePath);
+            console.log(`Deleted image file: ${imagePath}`);
+        } else {
+            console.log(`Image file not found: ${imagePath}`);
         }
 
         res.json({ message: 'License plate deleted successfully' });
