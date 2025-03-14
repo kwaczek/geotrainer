@@ -1,187 +1,1297 @@
 export const countries = [
-    {"name": "Afghanistan", "capital": "Kabul", "continent": "Asia", "in_geoguessr": false, "code": "af"},
-    {"name": "Albania", "capital": "Tirana", "continent": "Europe", "in_geoguessr": true, "code": "al"},
-    {"name": "Algeria", "capital": "Algiers", "continent": "Africa", "in_geoguessr": true, "code": "dz"},
-    {"name": "Andorra", "capital": "Andorra la Vella", "continent": "Europe", "in_geoguessr": true, "code": "ad"},
-    {"name": "Angola", "capital": "Luanda", "continent": "Africa", "in_geoguessr": false, "code": "ao"},
-    {"name": "Antigua and Barbuda", "capital": "Saint John's", "continent": "North America", "in_geoguessr": false, "code": "ag"},
-    {"name": "Argentina", "capital": "Buenos Aires", "continent": "South America", "in_geoguessr": true, "code": "ar"},
-    {"name": "Armenia", "capital": "Yerevan", "continent": "Asia", "in_geoguessr": false, "code": "am"},
-    {"name": "Australia", "capital": "Canberra", "continent": "Oceania", "in_geoguessr": true, "code": "au"},
-    {"name": "Austria", "capital": "Vienna", "continent": "Europe", "in_geoguessr": true, "code": "at"},
-    {"name": "Azerbaijan", "capital": "Baku", "continent": "Asia", "in_geoguessr": true, "code": "az"},
-    {"name": "Bahamas", "capital": "Nassau", "continent": "North America", "in_geoguessr": false, "code": "bs"},
-    {"name": "Bahrain", "capital": "Manama", "continent": "Asia", "in_geoguessr": false, "code": "bh"},
-    {"name": "Bangladesh", "capital": "Dhaka", "continent": "Asia", "in_geoguessr": true, "code": "bd"},
-    {"name": "Barbados", "capital": "Bridgetown", "continent": "North America", "in_geoguessr": false, "code": "bb"},
-    {"name": "Belarus", "capital": "Minsk", "continent": "Europe", "in_geoguessr": true, "code": "by"},
-    {"name": "Belgium", "capital": "Brussels", "continent": "Europe", "in_geoguessr": true, "code": "be"},
-    {"name": "Belize", "capital": "Belmopan", "continent": "North America", "in_geoguessr": false, "code": "bz"},
-    {"name": "Benin", "capital": "Porto-Novo", "continent": "Africa", "in_geoguessr": false, "code": "bj"},
-    {"name": "Bhutan", "capital": "Thimphu", "continent": "Asia", "in_geoguessr": false, "code": "bt"},
-    {"name": "Bolivia", "capital": "Sucre", "continent": "South America", "in_geoguessr": true, "code": "bo"},
-    {"name": "Bosnia and Herzegovina", "capital": "Sarajevo", "continent": "Europe", "in_geoguessr": false, "code": "ba"},
-    {"name": "Botswana", "capital": "Gaborone", "continent": "Africa", "in_geoguessr": true, "code": "bw"},
-    {"name": "Brazil", "capital": "Brasília", "continent": "South America", "in_geoguessr": true, "code": "br"},
-    {"name": "Brunei", "capital": "Bandar Seri Begawan", "continent": "Asia", "in_geoguessr": false, "code": "bn"},
-    {"name": "Bulgaria", "capital": "Sofia", "continent": "Europe", "in_geoguessr": true, "code": "bg"},
-    {"name": "Burkina Faso", "capital": "Ouagadougou", "continent": "Africa", "in_geoguessr": false, "code": "bf"},
-    {"name": "Burundi", "capital": "Gitega", "continent": "Africa", "in_geoguessr": false, "code": "bi"},
-    {"name": "Cabo Verde", "capital": "Praia", "continent": "Africa", "in_geoguessr": false, "code": "cv"},
-    {"name": "Cambodia", "capital": "Phnom Penh", "continent": "Asia", "in_geoguessr": true, "code": "kh"},
-    {"name": "Cameroon", "capital": "Yaoundé", "continent": "Africa", "in_geoguessr": false, "code": "cm"},
-    {"name": "Canada", "capital": "Ottawa", "continent": "North America", "in_geoguessr": true, "code": "ca"},
-    {"name": "Central African Republic", "capital": "Bangui", "continent": "Africa", "in_geoguessr": false, "code": "cf"},
-    {"name": "Chad", "capital": "N'Djamena", "continent": "Africa", "in_geoguessr": false, "code": "td"},
-    {"name": "Chile", "capital": "Santiago", "continent": "South America", "in_geoguessr": true, "code": "cl"},
-    {"name": "China", "capital": "Beijing", "continent": "Asia", "in_geoguessr": true, "code": "cn"},
-    {"name": "Colombia", "capital": "Bogotá", "continent": "South America", "in_geoguessr": true, "code": "co"},
-    {"name": "Comoros", "capital": "Moroni", "continent": "Africa", "in_geoguessr": false, "code": "km"},
-    {"name": "Republic of the Congo", "capital": "Brazzaville", "continent": "Africa", "in_geoguessr": false, "code": "cg"},
-    {"name": "Costa Rica", "capital": "San José", "continent": "North America", "in_geoguessr": true, "code": "cr"},
-    {"name": "Croatia", "capital": "Zagreb", "continent": "Europe", "in_geoguessr": true, "code": "hr"},
-    {"name": "Cuba", "capital": "Havana", "continent": "North America", "in_geoguessr": false, "code": "cu"},
-    {"name": "Cyprus", "capital": "Nicosia", "continent": "Asia", "in_geoguessr": true, "code": "cy"},
-    {"name": "Czech Republic", "capital": "Prague", "continent": "Europe", "in_geoguessr": true, "code": "cz"},
-    {"name": "Denmark", "capital": "Copenhagen", "continent": "Europe", "in_geoguessr": true, "code": "dk"},
-    {"name": "Djibouti", "capital": "Djibouti", "continent": "Africa", "in_geoguessr": false, "code": "dj"},
-    {"name": "Dominica", "capital": "Roseau", "continent": "North America", "in_geoguessr": false, "code": "dm"},
-    {"name": "Dominican Republic", "capital": "Santo Domingo", "continent": "North America", "in_geoguessr": true, "code": "do"},
-    {"name": "Ecuador", "capital": "Quito", "continent": "South America", "in_geoguessr": true, "code": "ec"},
-    {"name": "Egypt", "capital": "Cairo", "continent": "Africa", "in_geoguessr": true, "code": "eg"},
-    {"name": "El Salvador", "capital": "San Salvador", "continent": "North America", "in_geoguessr": false, "code": "sv"},
-    {"name": "Equatorial Guinea", "capital": "Malabo", "continent": "Africa", "in_geoguessr": false, "code": "gq"},
-    {"name": "Eritrea", "capital": "Asmara", "continent": "Africa", "in_geoguessr": false, "code": "er"},
-    {"name": "Estonia", "capital": "Tallinn", "continent": "Europe", "in_geoguessr": true, "code": "ee"},
-    {"name": "Eswatini", "capital": "Mbabane", "continent": "Africa", "in_geoguessr": false, "code": "sz"},
-    {"name": "Ethiopia", "capital": "Addis Ababa", "continent": "Africa", "in_geoguessr": true, "code": "et"},
-    {"name": "Faroe Islands", "capital": "Tórshavn", "continent": "Europe", "in_geoguessr": true, "code": "fo"},
-    {"name": "Fiji", "capital": "Suva", "continent": "Oceania", "in_geoguessr": false, "code": "fj"},
-    {"name": "Finland", "capital": "Helsinki", "continent": "Europe", "in_geoguessr": true, "code": "fi"},
-    {"name": "France", "capital": "Paris", "continent": "Europe", "in_geoguessr": true, "code": "fr"},
-    {"name": "Gabon", "capital": "Libreville", "continent": "Africa", "in_geoguessr": false, "code": "ga"},
-    {"name": "Gambia", "capital": "Banjul", "continent": "Africa", "in_geoguessr": false, "code": "gm"},
-    {"name": "Georgia", "capital": "Tbilisi", "continent": "Asia", "in_geoguessr": false, "code": "ge"},
-    {"name": "Germany", "capital": "Berlin", "continent": "Europe", "in_geoguessr": true, "code": "de"},
-    {"name": "Ghana", "capital": "Accra", "continent": "Africa", "in_geoguessr": true, "code": "gh"},
-    {"name": "Greece", "capital": "Athens", "continent": "Europe", "in_geoguessr": true, "code": "gr"},
-    {"name": "Grenada", "capital": "St. George's", "continent": "North America", "in_geoguessr": false, "code": "gd"},
-    {"name": "Guatemala", "capital": "Guatemala City", "continent": "North America", "in_geoguessr": true, "code": "gt"},
-    {"name": "Guinea", "capital": "Conakry", "continent": "Africa", "in_geoguessr": false, "code": "gn"},
-    {"name": "Guinea-Bissau", "capital": "Bissau", "continent": "Africa", "in_geoguessr": false, "code": "gw"},
-    {"name": "Guyana", "capital": "Georgetown", "continent": "South America", "in_geoguessr": false, "code": "gy"},
-    {"name": "Haiti", "capital": "Port-au-Prince", "continent": "North America", "in_geoguessr": false, "code": "ht"},
-    {"name": "Honduras", "capital": "Tegucigalpa", "continent": "North America", "in_geoguessr": false, "code": "hn"},
-    {"name": "Hungary", "capital": "Budapest", "continent": "Europe", "in_geoguessr": true, "code": "hu"},
-    {"name": "Iceland", "capital": "Reykjavík", "continent": "Europe", "in_geoguessr": true, "code": "is"},
-    {"name": "India", "capital": "New Delhi", "continent": "Asia", "in_geoguessr": true, "code": "in"},
-    {"name": "Indonesia", "capital": "Jakarta", "continent": "Asia", "in_geoguessr": true, "code": "id"},
-    {"name": "Iran", "capital": "Tehran", "continent": "Asia", "in_geoguessr": false, "code": "ir"},
-    {"name": "Iraq", "capital": "Baghdad", "continent": "Asia", "in_geoguessr": false, "code": "iq"},
-    {"name": "Ireland", "capital": "Dublin", "continent": "Europe", "in_geoguessr": true, "code": "ie"},
-    {"name": "Israel", "capital": "Jerusalem", "continent": "Asia", "in_geoguessr": true, "code": "il"},
-    {"name": "Italy", "capital": "Rome", "continent": "Europe", "in_geoguessr": true, "code": "it"},
-    {"name": "Jamaica", "capital": "Kingston", "continent": "North America", "in_geoguessr": false, "code": "jm"},
-    {"name": "Japan", "capital": "Tokyo", "continent": "Asia", "in_geoguessr": true, "code": "jp"},
-    {"name": "Jordan", "capital": "Amman", "continent": "Asia", "in_geoguessr": false, "code": "jo"},
-    {"name": "Kazakhstan", "capital": "Astana", "continent": "Asia", "in_geoguessr": true, "code": "kz"},
-    {"name": "Kenya", "capital": "Nairobi", "continent": "Africa", "in_geoguessr": true, "code": "ke"},
-    {"name": "Kiribati", "capital": "South Tarawa", "continent": "Oceania", "in_geoguessr": false, "code": "ki"},
-    {"name": "Korea, North", "capital": "Pyongyang", "continent": "Asia", "in_geoguessr": false, "code": "kp"},
-    {"name": "Korea, South", "capital": "Seoul", "continent": "Asia", "in_geoguessr": true, "code": "kr"},
-    {"name": "Kuwait", "capital": "Kuwait City", "continent": "Asia", "in_geoguessr": false, "code": "kw"},
-    {"name": "Kyrgyzstan", "capital": "Bishkek", "continent": "Asia", "in_geoguessr": true, "code": "kg"},
-    {"name": "Laos", "capital": "Vientiane", "continent": "Asia", "in_geoguessr": false, "code": "la"},
-    {"name": "Latvia", "capital": "Riga", "continent": "Europe", "in_geoguessr": true, "code": "lv"},
-    {"name": "Lebanon", "capital": "Beirut", "continent": "Asia", "in_geoguessr": false, "code": "lb"},
-    {"name": "Lesotho", "capital": "Maseru", "continent": "Africa", "in_geoguessr": true, "code": "ls"},
-    {"name": "Liberia", "capital": "Monrovia", "continent": "Africa", "in_geoguessr": false, "code": "lr"},
-    {"name": "Libya", "capital": "Tripoli", "continent": "Africa", "in_geoguessr": false, "code": "ly"},
-    {"name": "Liechtenstein", "capital": "Vaduz", "continent": "Europe", "in_geoguessr": true, "code": "li"},
-    {"name": "Lithuania", "capital": "Riga", "continent": "Europe", "in_geoguessr": true, "code": "lt"},
-    {"name": "Luxembourg", "capital": "Luxembourg", "continent": "Europe", "in_geoguessr": true, "code": "lu"},
-    {"name": "Madagascar", "capital": "Antananarivo", "continent": "Africa", "in_geoguessr": false, "code": "mg"},
-    {"name": "Malawi", "capital": "Lilongwe", "continent": "Africa", "in_geoguessr": false, "code": "mw"},
-    {"name": "Malaysia", "capital": "Kuala Lumpur", "continent": "Asia", "in_geoguessr": true, "code": "my"},
-    {"name": "Maldives", "capital": "Malé", "continent": "Asia", "in_geoguessr": false, "code": "mv"},
-    {"name": "Mali", "capital": "Bamako", "continent": "Africa", "in_geoguessr": false, "code": "ml"},
-    {"name": "Malta", "capital": "Valletta", "continent": "Europe", "in_geoguessr": true, "code": "mt"},
-    {"name": "Marshall Islands", "capital": "Majuro", "continent": "Oceania", "in_geoguessr": false, "code": "mh"},
-    {"name": "Mauritania", "capital": "Nouakchott", "continent": "Africa", "in_geoguessr": false, "code": "mr"},
-    {"name": "Mauritius", "capital": "Port Louis", "continent": "Africa", "in_geoguessr": false, "code": "mu"},
-    {"name": "Mexico", "capital": "Mexico City", "continent": "North America", "in_geoguessr": true, "code": "mx"},
-    {"name": "Micronesia", "capital": "Palikir", "continent": "Oceania", "in_geoguessr": false, "code": "fm"},
-    {"name": "Moldova", "capital": "Chișinău", "continent": "Europe", "in_geoguessr": true, "code": "md"},
-    {"name": "Monaco", "capital": "Monaco", "continent": "Europe", "in_geoguessr": true, "code": "mc"},
-    {"name": "Mongolia", "capital": "Ulaanbaatar", "continent": "Asia", "in_geoguessr": true, "code": "mn"},
-    {"name": "Montenegro", "capital": "Podgorica", "continent": "Europe", "in_geoguessr": true, "code": "me"},
-    {"name": "Morocco", "capital": "Rabat", "continent": "Africa", "in_geoguessr": true, "code": "ma"},
-    {"name": "Mozambique", "capital": "Maputo", "continent": "Africa", "in_geoguessr": false, "code": "mz"},
-    {"name": "Myanmar", "capital": "Naypyidaw", "continent": "Asia", "in_geoguessr": false, "code": "mm"},
-    {"name": "Namibia", "capital": "Windhoek", "continent": "Africa", "in_geoguessr": true, "code": "na"},
-    {"name": "Nauru", "capital": "Yaren", "continent": "Oceania", "in_geoguessr": false, "code": "nr"},
-    {"name": "Nepal", "capital": "Kathmandu", "continent": "Asia", "in_geoguessr": false, "code": "np"},
-    {"name": "Netherlands", "capital": "Amsterdam", "continent": "Europe", "in_geoguessr": true, "code": "nl"},
-    {"name": "New Zealand", "capital": "Wellington", "continent": "Oceania", "in_geoguessr": true, "code": "nz"},
-    {"name": "Nicaragua", "capital": "Managua", "continent": "North America", "in_geoguessr": false, "code": "ni"},
-    {"name": "Niger", "capital": "Niamey", "continent": "Africa", "in_geoguessr": false, "code": "ne"},
-    {"name": "Nigeria", "capital": "Abuja", "continent": "Africa", "in_geoguessr": true, "code": "ng"},
-    {"name": "North Macedonia", "capital": "Skopje", "continent": "Europe", "in_geoguessr": true, "code": "mk"},
-    {"name": "Norway", "capital": "Oslo", "continent": "Europe", "in_geoguessr": true, "code": "no"},
-    {"name": "Oman", "capital": "Muscat", "continent": "Asia", "in_geoguessr": false, "code": "om"},
-    {"name": "Pakistan", "capital": "Islamabad", "continent": "Asia", "in_geoguessr": false, "code": "pk"},
-    {"name": "Palau", "capital": "Ngerulmud", "continent": "Oceania", "in_geoguessr": false, "code": "pw"},
-    {"name": "Panama", "capital": "Panama City", "continent": "North America", "in_geoguessr": true, "code": "pa"},
-    {"name": "Papua New Guinea", "capital": "Port Moresby", "continent": "Oceania", "in_geoguessr": false, "code": "pg"},
-    {"name": "Paraguay", "capital": "Asunción", "continent": "South America", "in_geoguessr": false, "code": "py"},
-    {"name": "Peru", "capital": "Lima", "continent": "South America", "in_geoguessr": true, "code": "pe"},
-    {"name": "Philippines", "capital": "Manila", "continent": "Asia", "in_geoguessr": true, "code": "ph"},
-    {"name": "Poland", "capital": "Warsaw", "continent": "Europe", "in_geoguessr": true, "code": "pl"},
-    {"name": "Portugal", "capital": "Lisbon", "continent": "Europe", "in_geoguessr": true, "code": "pt"},
-    {"name": "Qatar", "capital": "Doha", "continent": "Asia", "in_geoguessr": false, "code": "qa"},
-    {"name": "Romania", "capital": "Bucharest", "continent": "Europe", "in_geoguessr": true, "code": "ro"},
-    {"name": "Russia", "capital": "Moscow", "continent": "Asia", "in_geoguessr": true, "code": "ru"},
-    {"name": "Rwanda", "capital": "Kigali", "continent": "Africa", "in_geoguessr": false, "code": "rw"},
-    {"name": "Saint Kitts and Nevis", "capital": "Basseterre", "continent": "North America", "in_geoguessr": false, "code": "kn"},
-    {"name": "Saint Lucia", "capital": "Castries", "continent": "North America", "in_geoguessr": false, "code": "lc"},
-    {"name": "Saint Vincent and the Grenadines", "capital": "Kingstown", "continent": "North America", "in_geoguessr": false, "code": "vc"},
-    {"name": "Samoa", "capital": "Apia", "continent": "Oceania", "in_geoguessr": false, "code": "ws"},
-    {"name": "San Marino", "capital": "San Marino", "continent": "Europe", "in_geoguessr": true, "code": "sm"},
-    {"name": "Sao Tome and Principe", "capital": "São Tomé", "continent": "Africa", "in_geoguessr": false, "code": "st"},
-    {"name": "Saudi Arabia", "capital": "Riyadh", "continent": "Asia", "in_geoguessr": false, "code": "sa"},
-    {"name": "Senegal", "capital": "Dakar", "continent": "Africa", "in_geoguessr": true, "code": "sn"},
-    {"name": "Serbia", "capital": "Belgrade", "continent": "Europe", "in_geoguessr": true, "code": "rs"},
-    {"name": "Seychelles", "capital": "Victoria", "continent": "Africa", "in_geoguessr": false, "code": "sc"},
-    {"name": "Sierra Leone", "capital": "Freetown", "continent": "Africa", "in_geoguessr": false, "code": "sl"},
-    {"name": "Singapore", "capital": "Singapore", "continent": "Asia", "in_geoguessr": true, "code": "sg"},
-    {"name": "Slovakia", "capital": "Bratislava", "continent": "Europe", "in_geoguessr": true, "code": "sk"},
-    {"name": "Slovenia", "capital": "Ljubljana", "continent": "Europe", "in_geoguessr": true, "code": "si"},
-    {"name": "Solomon Islands", "capital": "Honiara", "continent": "Oceania", "in_geoguessr": false, "code": "sb"},
-    {"name": "Somalia", "capital": "Mogadishu", "continent": "Africa", "in_geoguessr": false, "code": "so"},
-    {"name": "South Africa", "capital": "Pretoria", "continent": "Africa", "in_geoguessr": true, "code": "za"},
-    {"name": "South Sudan", "capital": "Juba", "continent": "Africa", "in_geoguessr": false, "code": "ss"},
-    {"name": "Spain", "capital": "Madrid", "continent": "Europe", "in_geoguessr": true, "code": "es"},
-    {"name": "Sri Lanka", "capital": "Sri Jayawardenepura Kotte", "continent": "Asia", "in_geoguessr": true, "code": "lk"},
-    {"name": "Sudan", "capital": "Khartoum", "continent": "Africa", "in_geoguessr": false, "code": "sd"},
-    {"name": "Suriname", "capital": "Paramaribo", "continent": "South America", "in_geoguessr": false, "code": "sr"},
-    {"name": "Sweden", "capital": "Stockholm", "continent": "Europe", "in_geoguessr": true, "code": "se"},
-    {"name": "Switzerland", "capital": "Bern", "continent": "Europe", "in_geoguessr": true, "code": "ch"},
-    {"name": "Syria", "capital": "Damascus", "continent": "Asia", "in_geoguessr": false, "code": "sy"},
-    {"name": "Tajikistan", "capital": "Dushanbe", "continent": "Asia", "in_geoguessr": false, "code": "tj"},
-    {"name": "Tanzania", "capital": "Dodoma", "continent": "Africa", "in_geoguessr": true, "code": "tz"},
-    {"name": "Thailand", "capital": "Bangkok", "continent": "Asia", "in_geoguessr": true, "code": "th"},
-    {"name": "Togo", "capital": "Lomé", "continent": "Africa", "in_geoguessr": false, "code": "tg"},
-    {"name": "Tonga", "capital": "Nuku'alofa", "continent": "Oceania", "in_geoguessr": false, "code": "to"},
-    {"name": "Tunisia", "capital": "Tunis", "continent": "Africa", "in_geoguessr": true, "code": "tn"},
-    {"name": "Turkey", "capital": "Ankara", "continent": "Asia", "in_geoguessr": true, "code": "tr"},
-    {"name": "Turkmenistan", "capital": "Ashgabat", "continent": "Asia", "in_geoguessr": false, "code": "tm"},
-    {"name": "Tuvalu", "capital": "Funafuti", "continent": "Oceania", "in_geoguessr": false, "code": "tv"},
-    {"name": "Uganda", "capital": "Kampala", "continent": "Africa", "in_geoguessr": true, "code": "ug"},
-    {"name": "Ukraine", "capital": "Kyiv", "continent": "Europe", "in_geoguessr": true, "code": "ua"},
-    {"name": "United Arab Emirates", "capital": "Abu Dhabi", "continent": "Asia", "in_geoguessr": false, "code": "ae"},
-    {"name": "United Kingdom", "capital": "London", "continent": "Europe", "in_geoguessr": true, "code": "gb"},
-    {"name": "United States", "capital": "Washington, D.C.", "continent": "North America", "in_geoguessr": true, "code": "us"},
-    {"name": "Uruguay", "capital": "Montevideo", "continent": "South America", "in_geoguessr": true, "code": "uy"},
-    {"name": "Uzbekistan", "capital": "Tashkent", "continent": "Asia", "in_geoguessr": false, "code": "uz"},
-    {"name": "Vatican City", "capital": "Vatican City", "continent": "Europe", "in_geoguessr": true, "code": "va"}
-]
+  {
+    "name": "Afghanistan",
+    "capital": "Kabul",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "af"
+  },
+  {
+    "name": "Albania",
+    "capital": "Tirana",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "al"
+  },
+  {
+    "name": "Algeria",
+    "capital": "Algiers",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "dz"
+  },
+  {
+    "name": "Andorra",
+    "capital": "Andorra la Vella",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "ad"
+  },
+  {
+    "name": "Angola",
+    "capital": "Luanda",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "ao"
+  },
+  {
+    "name": "Antigua and Barbuda",
+    "capital": "Saint John's",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "ag"
+  },
+  {
+    "name": "Argentina",
+    "capital": "Buenos Aires",
+    "continent": "South America",
+    "in_geoguessr": true,
+    "code": "ar"
+  },
+  {
+    "name": "Armenia",
+    "capital": "Yerevan",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "am"
+  },
+  {
+    "name": "Australia",
+    "capital": "Canberra",
+    "continent": "Oceania",
+    "in_geoguessr": true,
+    "code": "au"
+  },
+  {
+    "name": "Austria",
+    "capital": "Vienna",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "at"
+  },
+  {
+    "name": "Azerbaijan",
+    "capital": "Baku",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "az"
+  },
+  {
+    "name": "Bahamas",
+    "capital": "Nassau",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "bs"
+  },
+  {
+    "name": "Bahrain",
+    "capital": "Manama",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "bh"
+  },
+  {
+    "name": "Bangladesh",
+    "capital": "Dhaka",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "bd"
+  },
+  {
+    "name": "Barbados",
+    "capital": "Bridgetown",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "bb"
+  },
+  {
+    "name": "Belarus",
+    "capital": "Minsk",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "by"
+  },
+  {
+    "name": "Belgium",
+    "capital": "Brussels",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "be"
+  },
+  {
+    "name": "Belize",
+    "capital": "Belmopan",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "bz"
+  },
+  {
+    "name": "Benin",
+    "capital": "Porto-Novo",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "bj"
+  },
+  {
+    "name": "Bhutan",
+    "capital": "Thimphu",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "bt"
+  },
+  {
+    "name": "Bolivia",
+    "capital": "Sucre",
+    "continent": "South America",
+    "in_geoguessr": true,
+    "code": "bo"
+  },
+  {
+    "name": "Bosnia and Herzegovina",
+    "capital": "Sarajevo",
+    "continent": "Europe",
+    "in_geoguessr": false,
+    "code": "ba"
+  },
+  {
+    "name": "Botswana",
+    "capital": "Gaborone",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "bw"
+  },
+  {
+    "name": "Brazil",
+    "capital": "Brasília",
+    "continent": "South America",
+    "in_geoguessr": true,
+    "code": "br"
+  },
+  {
+    "name": "Brunei",
+    "capital": "Bandar Seri Begawan",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "bn"
+  },
+  {
+    "name": "Bulgaria",
+    "capital": "Sofia",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "bg"
+  },
+  {
+    "name": "Burkina Faso",
+    "capital": "Ouagadougou",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "bf"
+  },
+  {
+    "name": "Burundi",
+    "capital": "Gitega",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "bi"
+  },
+  {
+    "name": "Cabo Verde",
+    "capital": "Praia",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "cv"
+  },
+  {
+    "name": "Cambodia",
+    "capital": "Phnom Penh",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "kh"
+  },
+  {
+    "name": "Cameroon",
+    "capital": "Yaoundé",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "cm"
+  },
+  {
+    "name": "Canada",
+    "capital": "Ottawa",
+    "continent": "North America",
+    "in_geoguessr": true,
+    "code": "ca"
+  },
+  {
+    "name": "Central African Republic",
+    "capital": "Bangui",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "cf"
+  },
+  {
+    "name": "Chad",
+    "capital": "N'Djamena",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "td"
+  },
+  {
+    "name": "Chile",
+    "capital": "Santiago",
+    "continent": "South America",
+    "in_geoguessr": true,
+    "code": "cl"
+  },
+  {
+    "name": "China",
+    "capital": "Beijing",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "cn"
+  },
+  {
+    "name": "Colombia",
+    "capital": "Bogotá",
+    "continent": "South America",
+    "in_geoguessr": true,
+    "code": "co"
+  },
+  {
+    "name": "Comoros",
+    "capital": "Moroni",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "km"
+  },
+  {
+    "name": "Republic of the Congo",
+    "capital": "Brazzaville",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "cg"
+  },
+  {
+    "name": "Costa Rica",
+    "capital": "San José",
+    "continent": "North America",
+    "in_geoguessr": true,
+    "code": "cr"
+  },
+  {
+    "name": "Croatia",
+    "capital": "Zagreb",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "hr"
+  },
+  {
+    "name": "Cuba",
+    "capital": "Havana",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "cu"
+  },
+  {
+    "name": "Cyprus",
+    "capital": "Nicosia",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "cy"
+  },
+  {
+    "name": "Czech Republic",
+    "capital": "Prague",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "cz"
+  },
+  {
+    "name": "Denmark",
+    "capital": "Copenhagen",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "dk"
+  },
+  {
+    "name": "Djibouti",
+    "capital": "Djibouti",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "dj"
+  },
+  {
+    "name": "Dominica",
+    "capital": "Roseau",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "dm"
+  },
+  {
+    "name": "Dominican Republic",
+    "capital": "Santo Domingo",
+    "continent": "North America",
+    "in_geoguessr": true,
+    "code": "do"
+  },
+  {
+    "name": "Ecuador",
+    "capital": "Quito",
+    "continent": "South America",
+    "in_geoguessr": true,
+    "code": "ec"
+  },
+  {
+    "name": "Egypt",
+    "capital": "Cairo",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "eg"
+  },
+  {
+    "name": "El Salvador",
+    "capital": "San Salvador",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "sv"
+  },
+  {
+    "name": "Equatorial Guinea",
+    "capital": "Malabo",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "gq"
+  },
+  {
+    "name": "Eritrea",
+    "capital": "Asmara",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "er"
+  },
+  {
+    "name": "Estonia",
+    "capital": "Tallinn",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "ee"
+  },
+  {
+    "name": "Eswatini",
+    "capital": "Mbabane",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "sz"
+  },
+  {
+    "name": "Ethiopia",
+    "capital": "Addis Ababa",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "et"
+  },
+  {
+    "name": "Faroe Islands",
+    "capital": "Tórshavn",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "fo"
+  },
+  {
+    "name": "Fiji",
+    "capital": "Suva",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "fj"
+  },
+  {
+    "name": "Finland",
+    "capital": "Helsinki",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "fi"
+  },
+  {
+    "name": "France",
+    "capital": "Paris",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "fr"
+  },
+  {
+    "name": "Gabon",
+    "capital": "Libreville",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "ga"
+  },
+  {
+    "name": "Gambia",
+    "capital": "Banjul",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "gm"
+  },
+  {
+    "name": "Georgia",
+    "capital": "Tbilisi",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "ge"
+  },
+  {
+    "name": "Germany",
+    "capital": "Berlin",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "de"
+  },
+  {
+    "name": "Ghana",
+    "capital": "Accra",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "gh"
+  },
+  {
+    "name": "Greece",
+    "capital": "Athens",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "gr"
+  },
+  {
+    "name": "Grenada",
+    "capital": "St. George's",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "gd"
+  },
+  {
+    "name": "Guatemala",
+    "capital": "Guatemala City",
+    "continent": "North America",
+    "in_geoguessr": true,
+    "code": "gt"
+  },
+  {
+    "name": "Guinea",
+    "capital": "Conakry",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "gn"
+  },
+  {
+    "name": "Guinea-Bissau",
+    "capital": "Bissau",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "gw"
+  },
+  {
+    "name": "Guyana",
+    "capital": "Georgetown",
+    "continent": "South America",
+    "in_geoguessr": false,
+    "code": "gy"
+  },
+  {
+    "name": "Haiti",
+    "capital": "Port-au-Prince",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "ht"
+  },
+  {
+    "name": "Honduras",
+    "capital": "Tegucigalpa",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "hn"
+  },
+  {
+    "name": "Hungary",
+    "capital": "Budapest",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "hu"
+  },
+  {
+    "name": "Iceland",
+    "capital": "Reykjavík",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "is"
+  },
+  {
+    "name": "India",
+    "capital": "New Delhi",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "in"
+  },
+  {
+    "name": "Indonesia",
+    "capital": "Jakarta",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "id"
+  },
+  {
+    "name": "Iran",
+    "capital": "Tehran",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "ir"
+  },
+  {
+    "name": "Iraq",
+    "capital": "Baghdad",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "iq"
+  },
+  {
+    "name": "Ireland",
+    "capital": "Dublin",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "ie"
+  },
+  {
+    "name": "Israel",
+    "capital": "Jerusalem",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "il"
+  },
+  {
+    "name": "Italy",
+    "capital": "Rome",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "it"
+  },
+  {
+    "name": "Jamaica",
+    "capital": "Kingston",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "jm"
+  },
+  {
+    "name": "Japan",
+    "capital": "Tokyo",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "jp"
+  },
+  {
+    "name": "Jordan",
+    "capital": "Amman",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "jo"
+  },
+  {
+    "name": "Kazakhstan",
+    "capital": "Astana",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "kz"
+  },
+  {
+    "name": "Kenya",
+    "capital": "Nairobi",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "ke"
+  },
+  {
+    "name": "Kiribati",
+    "capital": "South Tarawa",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "ki"
+  },
+  {
+    "name": "Korea, North",
+    "capital": "Pyongyang",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "kp"
+  },
+  {
+    "name": "Korea, South",
+    "capital": "Seoul",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "kr"
+  },
+  {
+    "name": "Kuwait",
+    "capital": "Kuwait City",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "kw"
+  },
+  {
+    "name": "Kyrgyzstan",
+    "capital": "Bishkek",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "kg"
+  },
+  {
+    "name": "Laos",
+    "capital": "Vientiane",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "la"
+  },
+  {
+    "name": "Latvia",
+    "capital": "Riga",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "lv"
+  },
+  {
+    "name": "Lebanon",
+    "capital": "Beirut",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "lb"
+  },
+  {
+    "name": "Lesotho",
+    "capital": "Maseru",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "ls"
+  },
+  {
+    "name": "Liberia",
+    "capital": "Monrovia",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "lr"
+  },
+  {
+    "name": "Libya",
+    "capital": "Tripoli",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "ly"
+  },
+  {
+    "name": "Liechtenstein",
+    "capital": "Vaduz",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "li"
+  },
+  {
+    "name": "Lithuania",
+    "capital": "Riga",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "lt"
+  },
+  {
+    "name": "Luxembourg",
+    "capital": "Luxembourg",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "lu"
+  },
+  {
+    "name": "Madagascar",
+    "capital": "Antananarivo",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "mg"
+  },
+  {
+    "name": "Malawi",
+    "capital": "Lilongwe",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "mw"
+  },
+  {
+    "name": "Malaysia",
+    "capital": "Kuala Lumpur",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "my"
+  },
+  {
+    "name": "Maldives",
+    "capital": "Malé",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "mv"
+  },
+  {
+    "name": "Mali",
+    "capital": "Bamako",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "ml"
+  },
+  {
+    "name": "Malta",
+    "capital": "Valletta",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "mt"
+  },
+  {
+    "name": "Marshall Islands",
+    "capital": "Majuro",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "mh"
+  },
+  {
+    "name": "Mauritania",
+    "capital": "Nouakchott",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "mr"
+  },
+  {
+    "name": "Mauritius",
+    "capital": "Port Louis",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "mu"
+  },
+  {
+    "name": "Mexico",
+    "capital": "Mexico City",
+    "continent": "North America",
+    "in_geoguessr": true,
+    "code": "mx"
+  },
+  {
+    "name": "Micronesia",
+    "capital": "Palikir",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "fm"
+  },
+  {
+    "name": "Moldova",
+    "capital": "Chișinău",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "md"
+  },
+  {
+    "name": "Monaco",
+    "capital": "Monaco",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "mc"
+  },
+  {
+    "name": "Mongolia",
+    "capital": "Ulaanbaatar",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "mn"
+  },
+  {
+    "name": "Montenegro",
+    "capital": "Podgorica",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "me"
+  },
+  {
+    "name": "Morocco",
+    "capital": "Rabat",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "ma"
+  },
+  {
+    "name": "Mozambique",
+    "capital": "Maputo",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "mz"
+  },
+  {
+    "name": "Myanmar",
+    "capital": "Naypyidaw",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "mm"
+  },
+  {
+    "name": "Namibia",
+    "capital": "Windhoek",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "na"
+  },
+  {
+    "name": "Nauru",
+    "capital": "Yaren",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "nr"
+  },
+  {
+    "name": "Nepal",
+    "capital": "Kathmandu",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "np"
+  },
+  {
+    "name": "Netherlands",
+    "capital": "Amsterdam",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "nl"
+  },
+  {
+    "name": "New Zealand",
+    "capital": "Wellington",
+    "continent": "Oceania",
+    "in_geoguessr": true,
+    "code": "nz"
+  },
+  {
+    "name": "Nicaragua",
+    "capital": "Managua",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "ni"
+  },
+  {
+    "name": "Niger",
+    "capital": "Niamey",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "ne"
+  },
+  {
+    "name": "Nigeria",
+    "capital": "Abuja",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "ng"
+  },
+  {
+    "name": "North Macedonia",
+    "capital": "Skopje",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "mk"
+  },
+  {
+    "name": "Norway",
+    "capital": "Oslo",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "no"
+  },
+  {
+    "name": "Oman",
+    "capital": "Muscat",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "om"
+  },
+  {
+    "name": "Pakistan",
+    "capital": "Islamabad",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "pk"
+  },
+  {
+    "name": "Palau",
+    "capital": "Ngerulmud",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "pw"
+  },
+  {
+    "name": "Panama",
+    "capital": "Panama City",
+    "continent": "North America",
+    "in_geoguessr": true,
+    "code": "pa"
+  },
+  {
+    "name": "Papua New Guinea",
+    "capital": "Port Moresby",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "pg"
+  },
+  {
+    "name": "Paraguay",
+    "capital": "Asunción",
+    "continent": "South America",
+    "in_geoguessr": false,
+    "code": "py"
+  },
+  {
+    "name": "Peru",
+    "capital": "Lima",
+    "continent": "South America",
+    "in_geoguessr": true,
+    "code": "pe"
+  },
+  {
+    "name": "Philippines",
+    "capital": "Manila",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "ph"
+  },
+  {
+    "name": "Poland",
+    "capital": "Warsaw",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "pl"
+  },
+  {
+    "name": "Portugal",
+    "capital": "Lisbon",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "pt"
+  },
+  {
+    "name": "Qatar",
+    "capital": "Doha",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "qa"
+  },
+  {
+    "name": "Romania",
+    "capital": "Bucharest",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "ro"
+  },
+  {
+    "name": "Russia",
+    "capital": "Moscow",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "ru"
+  },
+  {
+    "name": "Rwanda",
+    "capital": "Kigali",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "rw"
+  },
+  {
+    "name": "Saint Kitts and Nevis",
+    "capital": "Basseterre",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "kn"
+  },
+  {
+    "name": "Saint Lucia",
+    "capital": "Castries",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "lc"
+  },
+  {
+    "name": "Saint Vincent and the Grenadines",
+    "capital": "Kingstown",
+    "continent": "North America",
+    "in_geoguessr": false,
+    "code": "vc"
+  },
+  {
+    "name": "Samoa",
+    "capital": "Apia",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "ws"
+  },
+  {
+    "name": "San Marino",
+    "capital": "San Marino",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "sm"
+  },
+  {
+    "name": "Sao Tome and Principe",
+    "capital": "São Tomé",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "st"
+  },
+  {
+    "name": "Saudi Arabia",
+    "capital": "Riyadh",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "sa"
+  },
+  {
+    "name": "Senegal",
+    "capital": "Dakar",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "sn"
+  },
+  {
+    "name": "Serbia",
+    "capital": "Belgrade",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "rs"
+  },
+  {
+    "name": "Seychelles",
+    "capital": "Victoria",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "sc"
+  },
+  {
+    "name": "Sierra Leone",
+    "capital": "Freetown",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "sl"
+  },
+  {
+    "name": "Singapore",
+    "capital": "Singapore",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "sg"
+  },
+  {
+    "name": "Slovakia",
+    "capital": "Bratislava",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "sk"
+  },
+  {
+    "name": "Slovenia",
+    "capital": "Ljubljana",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "si"
+  },
+  {
+    "name": "Solomon Islands",
+    "capital": "Honiara",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "sb"
+  },
+  {
+    "name": "Somalia",
+    "capital": "Mogadishu",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "so"
+  },
+  {
+    "name": "South Africa",
+    "capital": "Pretoria",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "za"
+  },
+  {
+    "name": "South Sudan",
+    "capital": "Juba",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "ss"
+  },
+  {
+    "name": "Spain",
+    "capital": "Madrid",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "es"
+  },
+  {
+    "name": "Sri Lanka",
+    "capital": "Sri Jayawardenepura Kotte",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "lk"
+  },
+  {
+    "name": "Sudan",
+    "capital": "Khartoum",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "sd"
+  },
+  {
+    "name": "Suriname",
+    "capital": "Paramaribo",
+    "continent": "South America",
+    "in_geoguessr": false,
+    "code": "sr"
+  },
+  {
+    "name": "Sweden",
+    "capital": "Stockholm",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "se"
+  },
+  {
+    "name": "Switzerland",
+    "capital": "Bern",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "ch"
+  },
+  {
+    "name": "Syria",
+    "capital": "Damascus",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "sy"
+  },
+  {
+    "name": "Tajikistan",
+    "capital": "Dushanbe",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "tj"
+  },
+  {
+    "name": "Tanzania",
+    "capital": "Dodoma",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "tz"
+  },
+  {
+    "name": "Thailand",
+    "capital": "Bangkok",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "th"
+  },
+  {
+    "name": "Togo",
+    "capital": "Lomé",
+    "continent": "Africa",
+    "in_geoguessr": false,
+    "code": "tg"
+  },
+  {
+    "name": "Tonga",
+    "capital": "Nuku'alofa",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "to"
+  },
+  {
+    "name": "Tunisia",
+    "capital": "Tunis",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "tn"
+  },
+  {
+    "name": "Turkey",
+    "capital": "Ankara",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "tr"
+  },
+  {
+    "name": "Turkmenistan",
+    "capital": "Ashgabat",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "tm"
+  },
+  {
+    "name": "Tuvalu",
+    "capital": "Funafuti",
+    "continent": "Oceania",
+    "in_geoguessr": false,
+    "code": "tv"
+  },
+  {
+    "name": "Uganda",
+    "capital": "Kampala",
+    "continent": "Africa",
+    "in_geoguessr": true,
+    "code": "ug"
+  },
+  {
+    "name": "Ukraine",
+    "capital": "Kyiv",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "ua"
+  },
+  {
+    "name": "United Arab Emirates",
+    "capital": "Abu Dhabi",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "ae"
+  },
+  {
+    "name": "United Kingdom",
+    "capital": "London",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "gb"
+  },
+  {
+    "name": "United States",
+    "capital": "Washington, D.C.",
+    "continent": "North America",
+    "in_geoguessr": true,
+    "code": "us"
+  },
+  {
+    "name": "Uruguay",
+    "capital": "Montevideo",
+    "continent": "South America",
+    "in_geoguessr": true,
+    "code": "uy"
+  },
+  {
+    "name": "Uzbekistan",
+    "capital": "Tashkent",
+    "continent": "Asia",
+    "in_geoguessr": false,
+    "code": "uz"
+  },
+  {
+    "name": "Vatican City",
+    "capital": "Vatican City",
+    "continent": "Europe",
+    "in_geoguessr": true,
+    "code": "va"
+  }
+];
