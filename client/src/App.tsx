@@ -10,11 +10,13 @@ import QuizSettingsPage from './pages/QuizSettingsPage';
 import BollardAdmin from './pages/BollardAdmin';
 import LicensePlateAdmin from './pages/LicensePlateAdmin';
 import Header from './components/Header';
+import LoginPage from './pages/LoginPage';
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
 import { QuizType } from './types/quiz';
 
 // Placeholder components for now
 const Footer = () => <div className="bg-gray-800 p-4 text-white">Footer Placehholder</div>;
-const LoginPage = () => <div className="p-4">Login Page Placeholder</div>;
 const RegisterPage = () => <div className="p-4">Register Page Placeholder</div>;
 const ProfilePage = () => <div className="p-4">Profile Page Placeholder</div>;
 const NotFoundPage = () => <div className="p-4">404 - Page Not Found</div>;
@@ -49,28 +51,35 @@ const QuizSessionRouter: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <div className="flex flex-col min-h-screen">
-        <Header />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/quiz/:id" element={<QuizRouter />} />
-            <Route path="/quiz/:quizType/settings" element={<QuizSettingsPage />} />
-            <Route path="/quiz/:type/session/:sessionId" element={<QuizSessionRouter />} />
-            <Route path="/quiz/result" element={<GenericQuizResultPage />} />
-            <Route path="/quiz-result/:quizId" element={<GenericQuizResultPage />} />
-            <Route path="/admin/bollards" element={<BollardAdmin />} />
-            <Route path="/admin/licenseplates" element={<LicensePlateAdmin />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/quiz/:id" element={<QuizRouter />} />
+              <Route path="/quiz/:quizType/settings" element={<QuizSettingsPage />} />
+              <Route path="/quiz/:type/session/:sessionId" element={<QuizSessionRouter />} />
+              <Route path="/quiz/result" element={<GenericQuizResultPage />} />
+              <Route path="/quiz-result/:quizId" element={<GenericQuizResultPage />} />
+              
+              {/* Protected Admin Routes */}
+              <Route element={<ProtectedRoute requireAdmin={true} />}>
+                <Route path="/admin/bollards" element={<BollardAdmin />} />
+                <Route path="/admin/licenseplates" element={<LicensePlateAdmin />} />
+              </Route>
+              
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
   );
 };
 

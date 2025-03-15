@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
+  const { login } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
-    if (!email || !password) {
+    if (!username || !password) {
       setError('Please fill in all fields');
       return;
     }
@@ -22,19 +24,17 @@ const LoginPage: React.FC = () => {
     setError('');
     
     try {
-      // Mock login for now - will be replaced with actual API call later
-      console.log('Login with:', { email, password });
+      // Try to login with provided credentials
+      const success = login(username, password);
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate successful login
-      localStorage.setItem('userInfo', JSON.stringify({ email }));
-      
-      // Redirect to home page
-      navigate('/');
+      if (success) {
+        // Redirect to home page
+        navigate('/');
+      } else {
+        setError('Invalid username or password');
+      }
     } catch (err) {
-      setError('Invalid email or password');
+      setError('An error occurred during login');
       console.error('Login error:', err);
     } finally {
       setIsLoading(false);
@@ -42,8 +42,8 @@ const LoginPage: React.FC = () => {
   };
   
   return (
-    <div className="max-w-md mx-auto">
-      <h1 className="text-3xl font-bold text-center mb-6">Login to GeoTrainer</h1>
+    <div className="max-w-md mx-auto mt-10">
+      <h1 className="text-3xl font-bold text-center mb-6">Admin Login</h1>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -53,16 +53,16 @@ const LoginPage: React.FC = () => {
       
       <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-            Email
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+            Username
           </label>
           <input
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            id="email"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            id="username"
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
         </div>
@@ -92,15 +92,6 @@ const LoginPage: React.FC = () => {
           </button>
         </div>
       </form>
-      
-      <div className="text-center">
-        <p className="text-gray-600">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-blue-600 hover:text-blue-800">
-            Register here
-          </Link>
-        </p>
-      </div>
     </div>
   );
 };
