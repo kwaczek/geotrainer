@@ -9,7 +9,6 @@ const MONGO_URI = 'mongodb://localhost:27017/geotrainer';
 const LicensePlateSchema = new mongoose.Schema({
   imageUrl: String,
   description: String,
-  googleMapsUrl: String,
   countries: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Country' }]
 }, {
   timestamps: true
@@ -42,7 +41,6 @@ async function exportLicensePlates() {
   _id?: string;
   imageUrl: string;
   description: string;
-  googleMapsUrl: string;
   countries: string[];
   createdAt?: string;
   updatedAt?: string;

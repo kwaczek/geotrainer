@@ -28,7 +28,7 @@ const HomePage: React.FC = () => {
     { id: 'capitals', name: 'Capitals', description: 'Match capitals to their countries', icon: '🏙️', supportsFilters: true },
     { id: 'flags', name: 'Flags', description: 'Test your knowledge of country flags', icon: '🏳️', supportsFilters: true },
     { id: 'bollards', name: 'Bollards', description: 'Identify countries by their road bollards', icon: '🚧', supportsFilters: true },
-    { id: 'license_plates', name: 'License Plates', description: 'Recognize license plates from around the world', icon: '🚗' },
+    { id: 'licenseplates', name: 'License Plates', description: 'Recognize license plates from around the world', icon: '🚗', supportsFilters: true },
     { id: 'road_signs', name: 'Road Signs', description: 'Learn to identify road signs by country', icon: '🚸' },
   ];
   

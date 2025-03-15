@@ -57,25 +57,23 @@ export const createLicensePlate = async (req: Request, res: Response): Promise<v
             return;
         }
 
-        const { description, countries, googleMapsUrl } = req.body;
+        const { description, countries } = req.body;
 
-        if (!description || !countries || !googleMapsUrl) {
-            console.log('Missing required fields:', { description, countries, googleMapsUrl });
-            res.status(400).json({ message: 'Description, countries, and Google Maps URL are required' });
+        if (!description || !countries) {
+            console.log('Missing required fields:', { description, countries });
+            res.status(400).json({ message: 'Description and countries are required' });
             return;
         }
 
         console.log('Creating license plate with data:', {
             imageUrl: `/uploads/licenseplates/${req.file.filename}`,
             description,
-            googleMapsUrl,
             countries: JSON.parse(countries)
         });
 
         const licensePlate = new LicensePlate({
             imageUrl: `/uploads/licenseplates/${req.file.filename}`,
             description,
-            googleMapsUrl,
             countries: JSON.parse(countries)
         });
 

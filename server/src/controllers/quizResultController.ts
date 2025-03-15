@@ -46,10 +46,10 @@ export const initQuizSession = async (req: Request, res: Response, next: NextFun
     const quizTypeValue = type || quizType;
     
     // Validate quiz type
-    if (!quizTypeValue || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS].includes(quizTypeValue.toLowerCase() as QuizType)) {
+    if (!quizTypeValue || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES].includes(quizTypeValue.toLowerCase() as QuizType)) {
       res.status(400).json({
         success: false,
-        message: 'Invalid quiz type. Must be either "flags", "capitals", or "bollards"'
+        message: 'Invalid quiz type. Must be either "flags", "capitals", "bollards", or "licenseplates"'
       });
       return;
     }
@@ -282,10 +282,11 @@ export const getNextQuestion = async (req: Request, res: Response) => {
       return;
     }
 
-    // For now, we support flags, capitals, and bollards quizzes
+    // For now, we support flags, capitals, bollards, and license plates quizzes
     if (quizResult.type !== QuizType.FLAGS && 
         quizResult.type !== QuizType.CAPITALS && 
-        quizResult.type !== QuizType.BOLLARDS) {
+        quizResult.type !== QuizType.BOLLARDS &&
+        quizResult.type !== QuizType.LICENSEPLATES) {
       res.status(400).json({ message: 'Unsupported quiz type' });
       return;
     }

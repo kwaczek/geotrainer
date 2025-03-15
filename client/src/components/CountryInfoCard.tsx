@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import CountryMap from './CountryMap';
 import BollardGallery from './BollardGallery';
-import { fetchCountryDetails, fetchBollardsByCountry, CountryInfo, Bollard } from '../services/countryService';
+import LicensePlateGallery from './LicensePlateGallery';
+import { fetchCountryDetails, fetchBollardsByCountry, fetchLicensePlatesByCountry, CountryInfo, Bollard, LicensePlate } from '../services/countryService';
 
 interface CountryInfoCardProps {
   country: CountryInfo;
@@ -12,8 +13,11 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible })
   const [countryDetails, setCountryDetails] = useState<CountryInfo>(country);
   const [loading, setLoading] = useState<boolean>(false);
   const [bollards, setBollards] = useState<Bollard[]>([]);
+  const [licensePlates, setLicensePlates] = useState<LicensePlate[]>([]);
   const [loadingBollards, setLoadingBollards] = useState<boolean>(false);
+  const [loadingLicensePlates, setLoadingLicensePlates] = useState<boolean>(false);
   const [showBollards, setShowBollards] = useState<boolean>(true);
+  const [showLicensePlates, setShowLicensePlates] = useState<boolean>(true);
 
   useEffect(() => {
     const getCountryDetails = async () => {
@@ -60,6 +64,25 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible })
 
     getBollards();
   }, [showBollards, countryDetails.id]);
+
+  // Fetch license plates when country ID is available and license plates section is expanded
+  useEffect(() => {
+    const getLicensePlates = async () => {
+      if (showLicensePlates && countryDetails.id) {
+        setLoadingLicensePlates(true);
+        try {
+          const licensePlateData = await fetchLicensePlatesByCountry(countryDetails.id);
+          setLicensePlates(licensePlateData);
+        } catch (error) {
+          console.error('Error fetching license plates:', error);
+        } finally {
+          setLoadingLicensePlates(false);
+        }
+      }
+    };
+
+    getLicensePlates();
+  }, [showLicensePlates, countryDetails.id]);
 
   if (!isVisible) return null;
   
@@ -193,6 +216,36 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible })
             <div className="rounded-lg overflow-hidden shadow-md">
               <CountryMap countryName={countryDetails.name} />
             </div>
+          </div>
+          
+          {/* License Plates section */}
+          <div className="mt-6">
+            <button 
+              onClick={() => setShowLicensePlates(!showLicensePlates)}
+              className="w-full flex items-center justify-between bg-gray-50 p-3 rounded-lg shadow-sm hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+                </svg>
+                <span className="font-semibold">License Plates in {countryDetails.name}</span>
+              </div>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-5 w-5 transition-transform ${showLicensePlates ? 'transform rotate-180' : ''}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {showLicensePlates && (
+              <div className="mt-4">
+                <LicensePlateGallery licensePlates={licensePlates} isLoading={loadingLicensePlates} />
+              </div>
+            )}
           </div>
           
           {/* Bollards section */}

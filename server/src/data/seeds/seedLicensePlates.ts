@@ -31,7 +31,6 @@ const seedLicensePlates = async (): Promise<void> => {
         _id: plate._id ? new mongoose.Types.ObjectId(plate._id) : generateConsistentId(plate.imageUrl),
         imageUrl: plate.imageUrl,
         description: plate.description,
-        googleMapsUrl: plate.googleMapsUrl,
         countries: plate.countries.map((countryId: string) => new mongoose.Types.ObjectId(countryId)),
         createdAt: plate.createdAt ? new Date(plate.createdAt) : new Date(),
         updatedAt: plate.updatedAt ? new Date(plate.updatedAt) : new Date()

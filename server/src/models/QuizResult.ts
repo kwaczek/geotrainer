@@ -4,7 +4,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 export enum QuizType {
   FLAGS = 'flags',
   CAPITALS = 'capitals',
-  BOLLARDS = 'bollards'
+  BOLLARDS = 'bollards',
+  LICENSEPLATES = 'licenseplates'
 }
 
 // Quiz filters interface

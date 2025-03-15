@@ -41,5 +41,19 @@ export const QUIZ_CONFIGS: Record<QuizType, QuizConfig> = {
       imageField: 'imageUrl',
       correctAnswerField: 'countryName'
     }
+  },
+  licenseplates: {
+    type: 'licenseplates',
+    title: 'License Plates Quiz',
+    description: 'Test your knowledge of license plates from around the world.',
+    hasImages: true,
+    questionTemplate: "In which country can you find this license plate?",
+    timeLimit: 30,
+    questionsPerQuiz: 10,
+    dataSource: {
+      endpoint: '/api/quiz-questions/licenseplates',
+      imageField: 'imageUrl',
+      correctAnswerField: 'countryName'
+    }
   }
 }; 

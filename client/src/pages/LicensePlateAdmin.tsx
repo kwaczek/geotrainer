@@ -12,7 +12,6 @@ interface LicensePlate {
     _id: string;
     imageUrl: string;
     description: string;
-    googleMapsUrl: string;
     countries: Country[];
     createdAt: string;
 }
@@ -21,7 +20,6 @@ const LicensePlateAdmin: React.FC = () => {
     const [countries, setCountries] = useState<Country[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [description, setDescription] = useState('');
-    const [googleMapsUrl, setGoogleMapsUrl] = useState('');
     const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
     const [licensePlates, setLicensePlates] = useState<LicensePlate[]>([]);
     const [loading, setLoading] = useState(false);
@@ -84,7 +82,7 @@ const LicensePlateAdmin: React.FC = () => {
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        if (!selectedFile || selectedCountries.length === 0 || !description || !googleMapsUrl) {
+        if (!selectedFile || selectedCountries.length === 0 || !description) {
             alert('Please fill in all fields');
             return;
         }
@@ -93,7 +91,6 @@ const LicensePlateAdmin: React.FC = () => {
         const formData = new FormData();
         formData.append('image', selectedFile);
         formData.append('description', description);
-        formData.append('googleMapsUrl', googleMapsUrl);
         formData.append('countries', JSON.stringify(selectedCountries));
 
         try {
@@ -106,7 +103,6 @@ const LicensePlateAdmin: React.FC = () => {
             // Reset form
             setSelectedFile(null);
             setDescription('');
-            setGoogleMapsUrl('');
             setSelectedCountries([]);
             if (event.target instanceof HTMLFormElement) {
                 event.target.reset();
@@ -155,20 +151,6 @@ const LicensePlateAdmin: React.FC = () => {
                 </div>
 
                 <div className="mb-4">
-                    <label className="block mb-2">
-                        Google Maps URL:
-                        <input
-                            type="url"
-                            value={googleMapsUrl}
-                            onChange={(e) => setGoogleMapsUrl(e.target.value)}
-                            className="mt-1 block w-full border rounded p-2"
-                            placeholder="https://www.google.com/maps/@...."
-                            required
-                        />
-                    </label>
-                </div>
-
-                <div className="mb-4">
                     <label className="block mb-2">Countries:</label>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2 border rounded">
                         {countries.map(country => (
@@ -208,16 +190,6 @@ const LicensePlateAdmin: React.FC = () => {
                             <p className="text-sm text-gray-600 mb-2">{licensePlate.description}</p>
                             <div className="text-xs text-gray-500">
                                 Countries: {licensePlate.countries.map(c => c.name).join(', ')}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1">
-                                <a 
-                                    href={licensePlate.googleMapsUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="text-blue-500 hover:text-blue-700"
-                                >
-                                    View on Google Maps
-                                </a>
                             </div>
                             <div className="text-xs text-gray-400 mt-1">
                                 Added: {new Date(licensePlate.createdAt).toLocaleDateString()}

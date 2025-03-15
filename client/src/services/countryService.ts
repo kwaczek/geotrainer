@@ -20,6 +20,15 @@ export interface Bollard {
   updatedAt: string;
 }
 
+export interface LicensePlate {
+  _id: string;
+  imageUrl: string;
+  description: string;
+  countries: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export const fetchCountryDetails = async (countryName: string, initialFlagUrl?: string): Promise<CountryInfo> => {
   // Start with basic info
   const initialCountryData: CountryInfo = {
@@ -60,6 +69,20 @@ export const fetchBollardsByCountry = async (countryId: string): Promise<Bollard
     return [];
   } catch (error) {
     console.error('Error fetching bollards for country:', error);
+    return [];
+  }
+};
+
+export const fetchLicensePlatesByCountry = async (countryId: string): Promise<LicensePlate[]> => {
+  try {
+    const response = await axios.get(`/api/licenseplates/country/${countryId}`);
+    
+    if (response.data && response.data.success) {
+      return response.data.licensePlates;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching license plates for country:', error);
     return [];
   }
 };

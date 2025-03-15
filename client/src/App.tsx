@@ -26,7 +26,7 @@ const QuizRouter: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   
   // Validate that the quiz type is supported
-  const isValidQuizType = id && ['capitals', 'flags', 'bollards'].includes(id);
+  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates'].includes(id);
   
   if (isValidQuizType) {
     return <GenericQuizPage quizType={id as QuizType} />;
@@ -40,7 +40,7 @@ const QuizSessionRouter: React.FC = () => {
   const { type, sessionId } = useParams<{ type: string; sessionId: string }>();
   
   // Validate that the quiz type is supported
-  const isValidQuizType = type && ['capitals', 'flags', 'bollards'].includes(type);
+  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates'].includes(type);
   
   if (isValidQuizType && sessionId) {
     return <GenericQuizPage quizType={type as QuizType} sessionId={sessionId} />;

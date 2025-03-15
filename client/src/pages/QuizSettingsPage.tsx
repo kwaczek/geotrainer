@@ -97,7 +97,12 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     <div className="max-w-2xl mx-auto p-6">
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <div className="flex flex-col items-center mb-6">
-          <div className="text-5xl mb-4">{quizConfig.type === 'capitals' ? '🏙️' : quizConfig.type === 'flags' ? '🏳️' : '🚧'}</div>
+          <div className="text-5xl mb-4">
+            {quizConfig.type === 'capitals' ? '🏙️' : 
+             quizConfig.type === 'flags' ? '🏳️' : 
+             quizConfig.type === 'bollards' ? '🚧' : 
+             quizConfig.type === 'licenseplates' ? '🚗' : '❓'}
+          </div>
           <h1 className="text-2xl font-bold mb-2 text-center">{quizConfig.title}</h1>
           <p className="text-gray-500 text-center">{quizConfig.description}</p>
         </div>

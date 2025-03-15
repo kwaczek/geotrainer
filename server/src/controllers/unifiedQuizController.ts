@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import QuizResult, { QuizType } from '../models/QuizResult';
 import Country from '../models/Country';
 import Bollard from '../models/Bollard';
+import LicensePlate from '../models/LicensePlate';
 
 // Interface for quiz filters
 interface QuizFilters {
@@ -57,10 +58,10 @@ export const initQuizSession = async (req: Request, res: Response) => {
     const { type, userName, filters } = req.body;
     
     // Validate quiz type
-    if (!type || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS].includes(type.toLowerCase() as QuizType)) {
+    if (!type || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES].includes(type.toLowerCase() as QuizType)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid quiz type. Must be either "flags", "capitals", or "bollards"'
+        message: 'Invalid quiz type. Must be either "flags", "capitals", "bollards", or "licenseplates"'
       });
     }
     
@@ -187,10 +188,10 @@ export const getNextQuestion = async (req: Request, res: Response) => {
     console.log(`Getting next question for ${quizType} quiz, sessionId: ${sessionId}, filters:`, filters);
     
     // Validate quiz type
-    if (!quizType || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS].includes(quizType.toLowerCase() as QuizType)) {
+    if (!quizType || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES].includes(quizType.toLowerCase() as QuizType)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid quiz type. Must be either "flags", "capitals", or "bollards"'
+        message: 'Invalid quiz type. Must be either "flags", "capitals", "bollards", or "licenseplates"'
       });
     }
     
@@ -263,6 +264,9 @@ export const getNextQuestion = async (req: Request, res: Response) => {
           break;
         case QuizType.BOLLARDS:
           question = await getRandomBollardQuestion(session.filters);
+          break;
+        case QuizType.LICENSEPLATES:
+          question = await getRandomLicensePlateQuestion(session.filters);
           break;
         default:
           return res.status(400).json({
@@ -765,6 +769,133 @@ async function getRandomBollardQuestion(filters?: QuizFilters) {
     id: new mongoose.Types.ObjectId().toString(),
     question: 'In which country can you find this bollard?',
     imageUrl: bollard.imageUrl,
+    options
+  };
+}
+
+async function getRandomLicensePlateQuestion(filters?: QuizFilters) {
+  // Build the aggregation pipeline based on filters
+  const pipeline: any[] = [];
+  
+  // Add continent filter if specified
+  if (filters?.continent && filters.continent !== 'all') {
+    pipeline.push({
+      $lookup: {
+        from: 'countries',
+        localField: 'countries',
+        foreignField: '_id',
+        as: 'countryDetails'
+      }
+    });
+    pipeline.push({
+      $match: {
+        'countryDetails.continent': filters.continent
+      }
+    });
+  }
+  
+  // Add GeoGuessr filter if specified
+  if (filters?.in_geoguessr) {
+    if (!pipeline.length) {
+      pipeline.push({
+        $lookup: {
+          from: 'countries',
+          localField: 'countries',
+          foreignField: '_id',
+          as: 'countryDetails'
+        }
+      });
+    }
+    pipeline.push({
+      $match: {
+        'countryDetails.in_geoguessr': true
+      }
+    });
+  }
+  
+  // Add random sampling
+  pipeline.push({ $sample: { size: 1 } });
+  
+  // Execute the query
+  const licensePlates = await LicensePlate.aggregate(pipeline)
+    .lookup({
+      from: 'countries',
+      localField: 'countries',
+      foreignField: '_id',
+      as: 'countryDetails'
+    });
+  
+  if (!licensePlates.length) {
+    throw new Error('No license plates found matching the criteria');
+  }
+  
+  const licensePlate = licensePlates[0];
+  
+  // Get the countries associated with this license plate
+  const correctCountryIds = licensePlate.countries.map((id: mongoose.Types.ObjectId) => id.toString());
+  
+  // If there are multiple correct countries, randomly select just one
+  let selectedCorrectCountry;
+  if (licensePlate.countryDetails.length > 0) {
+    // Randomly select one correct country
+    const randomIndex = Math.floor(Math.random() * licensePlate.countryDetails.length);
+    selectedCorrectCountry = licensePlate.countryDetails[randomIndex];
+  } else {
+    throw new Error('No country details found for this license plate');
+  }
+  
+  // Build a filter for additional countries that matches the same criteria
+  const additionalCountriesFilter: any = { _id: { $nin: licensePlate.countries } };
+  
+  // Apply the same continent filter to additional countries
+  if (filters?.continent && filters.continent !== 'all') {
+    additionalCountriesFilter.continent = filters.continent;
+  }
+  
+  // Apply the same GeoGuessr filter to additional countries
+  if (filters?.in_geoguessr) {
+    additionalCountriesFilter.in_geoguessr = true;
+  }
+  
+  // Get additional random countries for options (we need 3 more to have 4 total)
+  const additionalCountries = await Country.aggregate([
+    { $match: additionalCountriesFilter },
+    { $sample: { size: 3 } }
+  ]);
+  
+  // If we couldn't find enough countries with the filters, fall back to countries without filters
+  if (additionalCountries.length < 3) {
+    console.log(`Warning: Could only find ${additionalCountries.length} additional countries with the specified filters. Falling back to countries without filters.`);
+    const fallbackCountries = await Country.aggregate([
+      { $match: { _id: { $nin: [...licensePlate.countries, ...additionalCountries.map(c => c._id)] } } },
+      { $sample: { size: 3 - additionalCountries.length } }
+    ]);
+    additionalCountries.push(...fallbackCountries);
+  }
+  
+  // Create an array with exactly 4 options: 1 correct + 3 incorrect
+  const allCountries = [
+    selectedCorrectCountry,
+    ...additionalCountries
+  ];
+  
+  // Shuffle the countries
+  for (let i = allCountries.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allCountries[i], allCountries[j]] = [allCountries[j], allCountries[i]];
+  }
+  
+  // Create options
+  const options = allCountries.map(country => ({
+    id: country._id.toString(),
+    text: country.name,
+    isCorrect: country._id.toString() === selectedCorrectCountry._id.toString()
+  }));
+  
+  return {
+    id: new mongoose.Types.ObjectId().toString(),
+    question: 'In which country can you find this license plate?',
+    imageUrl: licensePlate.imageUrl,
     options
   };
 }
