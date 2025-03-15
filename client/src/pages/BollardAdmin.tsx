@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getImageUrl } from '../config/apiConfig';
 
 interface Country {
     _id: string;
@@ -200,7 +201,7 @@ const BollardAdmin: React.FC = () => {
                     {bollards.map(bollard => (
                         <div key={bollard._id} className="border rounded-lg p-4 bg-white shadow relative">
                             <img
-                                src={bollard.imageUrl}
+                                src={getImageUrl(bollard.imageUrl)}
                                 alt="Bollard"
                                 className="w-full h-48 object-cover rounded mb-2"
                             />

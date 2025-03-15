@@ -1,4 +1,5 @@
 import React from 'react';
+import { getImageUrl } from '../../config/apiConfig';
 
 interface QuizImageProps {
   imageUrl: string;
@@ -10,7 +11,7 @@ const QuizImage: React.FC<QuizImageProps> = ({ imageUrl }) => {
   return (
     <div className="mb-4">
       <img 
-        src={imageUrl} 
+        src={getImageUrl(imageUrl)} 
         alt="Quiz visual" 
         className="max-w-full h-auto rounded-md"
       />

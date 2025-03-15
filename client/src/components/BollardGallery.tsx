@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Bollard } from '../services/countryService';
 import axios from 'axios';
+import { getImageUrl } from '../config/apiConfig';
 
 interface BollardGalleryProps {
   bollards: Bollard[];
@@ -109,7 +110,7 @@ const BollardGallery: React.FC<BollardGalleryProps> = ({ bollards, isLoading }) 
               >
                 <div className="aspect-square overflow-hidden">
                   <img 
-                    src={`http://localhost:3002${bollard.imageUrl}`} 
+                    src={getImageUrl(bollard.imageUrl)} 
                     alt={`Bollard in ${bollard.description}`}
                     className="w-full h-full object-cover"
                   />
@@ -172,7 +173,7 @@ const BollardGallery: React.FC<BollardGalleryProps> = ({ bollards, isLoading }) 
               
               <div className="mb-4">
                 <img 
-                  src={`http://localhost:3002${selectedBollard.imageUrl}`} 
+                  src={getImageUrl(selectedBollard.imageUrl)} 
                   alt={`Bollard in ${selectedBollard.description}`}
                   className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
                 />

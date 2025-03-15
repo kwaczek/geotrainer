@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import CountryInfoCard from '../CountryInfoCard';
+import { getImageUrl } from '../../config/apiConfig';
 
 interface Option {
   id: string;
@@ -192,7 +193,7 @@ const QuizComponent: React.FC<QuizComponentProps> = ({
         {question.imageUrl && (
           <div className="mb-4 h-[400px] flex items-center justify-center bg-gray-100 rounded-md overflow-hidden">
             <img 
-              src={question.imageUrl} 
+              src={getImageUrl(question.imageUrl)} 
               alt="Quiz visual" 
               className="max-h-full max-w-full object-contain"
             />

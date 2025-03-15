@@ -4,6 +4,7 @@ import { QuizType, QuestionAttempt, QuizResult } from '../types/quiz';
 import { QUIZ_CONFIGS } from '../config/quizConfig';
 import * as quizService from '../services/quizService';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { getImageUrl } from '../config/apiConfig';
 
 interface LocationState {
   score: number;
@@ -238,7 +239,7 @@ const GenericQuizResultPage: React.FC = () => {
                 {attempt.imageUrl && (
                   <div className="mb-2 flex justify-center">
                     <img 
-                      src={attempt.imageUrl} 
+                      src={getImageUrl(attempt.imageUrl)} 
                       alt="Question" 
                       className="max-h-48 object-contain rounded-lg border border-gray-200"
                     />

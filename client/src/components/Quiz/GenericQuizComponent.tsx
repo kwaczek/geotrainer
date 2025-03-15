@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { QuizQuestion, QuizOption, QuizType } from '../../types/quiz';
 import CountryInfoCard from '../CountryInfoCard';
 import { CountryInfo } from '../../services/countryService';
+import { getImageUrl } from '../../config/apiConfig';
 
 interface GenericQuizComponentProps {
   question: QuizQuestion;
@@ -150,7 +151,7 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
         {question.imageUrl && (
           <div className="flex justify-center mb-4">
             <img 
-              src={question.imageUrl} 
+              src={getImageUrl(question.imageUrl)} 
               alt="Quiz question" 
               className="max-h-64 object-contain rounded-md"
             />

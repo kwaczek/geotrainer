@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getImageUrl } from '../config/apiConfig';
 
 interface Country {
     _id: string;
@@ -200,7 +201,7 @@ const LicensePlateAdmin: React.FC = () => {
                     {licensePlates.map(licensePlate => (
                         <div key={licensePlate._id} className="border rounded-lg p-4 bg-white shadow relative">
                             <img
-                                src={licensePlate.imageUrl}
+                                src={getImageUrl(licensePlate.imageUrl)}
                                 alt="License Plate"
                                 className="w-full h-48 object-cover rounded mb-2"
                             />
