@@ -10,7 +10,7 @@ The unified quiz system consists of:
 
 1. **Client-side components**:
    - `types/quiz.ts`: Core types for the quiz systems
-   - `config/quizConfig.ts`: Configuration for each quiz type
+   - `config/quizConfig.ts`: Configuration for each quiz typeaas
    - `services/quizService.ts`: API service for quiz operations
    - `components/Quiz/GenericQuizComponent.tsx`: Reusable quiz UI component
    - `pages/GenericQuizPage.tsx`: Unified quiz page for all quiz types
