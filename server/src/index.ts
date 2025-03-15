@@ -31,13 +31,13 @@ app.use(express.urlencoded({ extended: true }));
 // Connect to MongoDB
 connectDB();
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-
 // Routes
 app.use('/api', routes);
 app.use('/api/bollards', bollardRoutes);
 app.use('/api/licenseplates', licensePlateRoutes);
+
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {

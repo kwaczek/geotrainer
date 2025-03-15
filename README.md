@@ -9,7 +9,7 @@ GeoTrainer is a geography quiz application that tests users' knowledge of flags,
 The unified quiz system consists of:
 
 1. **Client-side components**:
-   - `types/quiz.ts`: Core types for the quiz system
+   - `types/quiz.ts`: Core types for the quiz systems
    - `config/quizConfig.ts`: Configuration for each quiz type
    - `services/quizService.ts`: API service for quiz operations
    - `components/Quiz/GenericQuizComponent.tsx`: Reusable quiz UI component
