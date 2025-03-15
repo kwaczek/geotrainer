@@ -36,8 +36,21 @@ app.use('/api', routes);
 app.use('/api/bollards', bollardRoutes);
 app.use('/api/licenseplates', licensePlateRoutes);
 
-// Serve uploaded files
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+// Serve uploaded files - Make sure this comes BEFORE the React app serving code
+app.use('/uploads', (req, res, next) => {
+  // Log the request for debugging
+  console.log(`Upload request for: ${req.url}`);
+  
+  // Set the correct content type based on file extension
+  if (req.url.endsWith('.png')) {
+    res.setHeader('Content-Type', 'image/png');
+  } else if (req.url.endsWith('.jpg') || req.url.endsWith('.jpeg')) {
+    res.setHeader('Content-Type', 'image/jpeg');
+  }
+  
+  // Serve the file from the uploads directory
+  express.static(path.join(process.cwd(), 'uploads'))(req, res, next);
+});
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
