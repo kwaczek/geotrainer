@@ -45,6 +45,9 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
   // Store the last answer result to ensure it's preserved during transitions
   const [writeModeResult, setWriteModeResult] = useState<{questionId: string, isCorrect: boolean, userInput: string} | null>(null);
 
+  // Add ref for the next/view results button
+  const nextButtonRef = useRef<HTMLButtonElement>(null);
+
   // Reset timer when question changes
   useEffect(() => {
     // Check if this is a new question
@@ -238,7 +241,13 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
       name: correctOption.text,
       flagUrl: quizType === 'flags' ? question.imageUrl : undefined
     });
-    setShowCountryInfo(true);
+    
+    // Focus the next button after submission
+    setTimeout(() => {
+      if (nextButtonRef.current) {
+        nextButtonRef.current.focus();
+      }
+    }, 100);
   };
 
   // Helper function to check if the current answer is correct
@@ -330,6 +339,11 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
             question.options.filter(opt => opt.isCorrect).map(opt => opt.text)
           } 
           disabled={answered}
+          onAfterSubmit={() => {
+            if (nextButtonRef.current) {
+              nextButtonRef.current.focus();
+            }
+          }}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -415,6 +429,7 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
       {answered && (
         <div className="flex justify-center my-6 border-t border-b border-gray-100 py-6">
           <button
+            ref={nextButtonRef}
             onClick={handleNextClick}
             className={`font-bold py-3 px-8 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 ${
               isLastQuestion 

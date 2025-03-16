@@ -10,12 +10,14 @@ interface WriteAnswerInputProps {
   onSubmit: (isCorrect: boolean, countryName: string) => void;
   correctAnswers: string[];
   disabled: boolean;
+  onAfterSubmit?: () => void;
 }
 
 const WriteAnswerInput: React.FC<WriteAnswerInputProps> = ({ 
   onSubmit, 
   correctAnswers,
-  disabled 
+  disabled,
+  onAfterSubmit 
 }) => {
   const [inputValue, setInputValue] = useState('');
   const [countries, setCountries] = useState<Country[]>([]);
@@ -25,6 +27,13 @@ const WriteAnswerInput: React.FC<WriteAnswerInputProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
   const suggestionItemsRef = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Auto-focus input field when component mounts and not disabled
+  useEffect(() => {
+    if (!disabled && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [disabled]);
 
   // Fetch all countries on component mount
   useEffect(() => {
@@ -188,6 +197,13 @@ const WriteAnswerInput: React.FC<WriteAnswerInputProps> = ({
     }
     
     onSubmit(isCorrect, inputValue);
+    
+    // Call the onAfterSubmit callback to focus the next element
+    setTimeout(() => {
+      if (onAfterSubmit) {
+        onAfterSubmit();
+      }
+    }, 0);
   };
 
   return (
