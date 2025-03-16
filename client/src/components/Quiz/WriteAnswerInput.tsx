@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
 import axios from 'axios';
 
 interface Country {
@@ -21,8 +21,10 @@ const WriteAnswerInput: React.FC<WriteAnswerInputProps> = ({
   const [countries, setCountries] = useState<Country[]>([]);
   const [filteredCountries, setFilteredCountries] = useState<Country[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const suggestionItemsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   // Fetch all countries on component mount
   useEffect(() => {
@@ -44,6 +46,7 @@ const WriteAnswerInput: React.FC<WriteAnswerInputProps> = ({
   useEffect(() => {
     if (!inputValue.trim()) {
       setFilteredCountries([]);
+      setSelectedIndex(-1);
       return;
     }
 
@@ -62,6 +65,12 @@ const WriteAnswerInput: React.FC<WriteAnswerInputProps> = ({
     });
     
     setFilteredCountries(filtered.slice(0, 5)); // Limit to 5 suggestions
+    
+    // Reset selected index when filtered countries change
+    setSelectedIndex(-1);
+    
+    // Initialize refs array for the new filtered countries
+    suggestionItemsRef.current = Array(Math.min(filtered.length, 5)).fill(null);
   }, [inputValue, countries]);
 
   // Handle clicks outside the suggestions dropdown
@@ -91,11 +100,63 @@ const WriteAnswerInput: React.FC<WriteAnswerInputProps> = ({
   const handleSuggestionClick = (countryName: string) => {
     setInputValue(countryName);
     setShowSuggestions(false);
+    setSelectedIndex(-1);
     inputRef.current?.focus();
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+  const handleSelectSuggestion = (index: number) => {
+    if (index >= 0 && index < filteredCountries.length) {
+      handleSuggestionClick(filteredCountries[index].name);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    // Handle keyboard navigation for the dropdown
+    if (showSuggestions && filteredCountries.length > 0) {
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault(); // Prevent cursor from moving
+          setSelectedIndex((prevIndex) => 
+            prevIndex < filteredCountries.length - 1 ? prevIndex + 1 : prevIndex
+          );
+          break;
+          
+        case 'ArrowUp':
+          e.preventDefault(); // Prevent cursor from moving
+          setSelectedIndex((prevIndex) => 
+            prevIndex > 0 ? prevIndex - 1 : prevIndex
+          );
+          break;
+          
+        case 'Enter':
+          e.preventDefault();
+          if (selectedIndex >= 0) {
+            // If an item is selected in the dropdown, use it
+            handleSelectSuggestion(selectedIndex);
+          } else {
+            // Otherwise submit the form
+            handleSubmit();
+          }
+          break;
+          
+        case 'Escape':
+          e.preventDefault();
+          setShowSuggestions(false);
+          setSelectedIndex(-1);
+          break;
+          
+        case 'Tab':
+          // If an item is selected, use it before tabbing away
+          if (selectedIndex >= 0) {
+            handleSelectSuggestion(selectedIndex);
+          }
+          setShowSuggestions(false);
+          break;
+          
+        default:
+          break;
+      }
+    } else if (e.key === 'Enter') {
       handleSubmit();
     }
   };
@@ -142,6 +203,10 @@ const WriteAnswerInput: React.FC<WriteAnswerInputProps> = ({
           placeholder="Type a country name..."
           className="w-full p-3 border border-gray-300 rounded-l-md focus:ring-blue-500 focus:border-blue-500"
           disabled={disabled}
+          aria-autocomplete="list"
+          aria-controls={showSuggestions ? "country-suggestions" : undefined}
+          aria-expanded={showSuggestions}
+          aria-activedescendant={selectedIndex >= 0 ? `suggestion-${selectedIndex}` : undefined}
         />
         <button
           onClick={handleSubmit}
@@ -155,13 +220,26 @@ const WriteAnswerInput: React.FC<WriteAnswerInputProps> = ({
       {showSuggestions && filteredCountries.length > 0 && (
         <div 
           ref={suggestionsRef}
+          id="country-suggestions"
+          role="listbox"
           className="absolute z-10 w-full bg-white mt-1 border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
         >
-          {filteredCountries.map(country => (
+          {filteredCountries.map((country, index) => (
             <div
+              ref={(el) => {
+                suggestionItemsRef.current[index] = el;
+              }}
               key={country.id}
-              className="p-2 hover:bg-blue-100 cursor-pointer"
+              id={`suggestion-${index}`}
+              role="option"
+              aria-selected={selectedIndex === index}
+              className={`p-2 cursor-pointer ${
+                selectedIndex === index 
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'hover:bg-gray-50'
+              }`}
               onClick={() => handleSuggestionClick(country.name)}
+              onMouseEnter={() => setSelectedIndex(index)}
             >
               {country.name}
             </div>
