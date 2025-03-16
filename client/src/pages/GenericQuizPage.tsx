@@ -415,6 +415,16 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         };
       }
       
+      // Track quiz completion with Umami
+      if (window.umami) {
+        window.umami.track('Quiz Completed', {
+          quizType,
+          score,
+          total: customSettings.questionCount,
+          accuracy: Math.round((score / customSettings.questionCount) * 100)
+        });
+      }
+      
       // Navigate to results page with all attempts
       navigate(`/quiz-result/${result.quizId}`, {
         state: {

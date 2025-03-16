@@ -40,6 +40,18 @@ const GenericQuizResultPage: React.FC = () => {
   // Set the document title for the quiz results page
   useDocumentTitle(`Quiz Results`, true);
   
+  // Track page view with Umami
+  useEffect(() => {
+    if (window.umami && quizType && !loading && !error) {
+      window.umami.track('View Quiz Results', {
+        quizType,
+        score,
+        total,
+        accuracy: total > 0 ? Math.round((score / total) * 100) : 0
+      });
+    }
+  }, [quizType, score, total, loading, error]);
+  
   // Function to enhance attempts with option text
   function enhanceAttempt(attempt: QuestionAttempt): EnhancedQuestionAttempt {
     // This function will be called when we receive attempts from the server
