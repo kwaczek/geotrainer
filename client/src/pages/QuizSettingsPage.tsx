@@ -24,6 +24,9 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   const [timerDuration, setTimerDuration] = useState<number>(30);
   const [questionCount, setQuestionCount] = useState<number>(10);
   
+  // New state for max question count
+  const [maxQuestionCount, setMaxQuestionCount] = useState<number>(50);
+  
   // Get quiz config
   const quizConfig = quizType && QUIZ_CONFIGS[quizType as QuizType];
   
@@ -57,6 +60,67 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     
     fetchContinents();
   }, []);
+  
+  // Fetch max question count when filters or quiz type changes
+  useEffect(() => {
+    const fetchMaxQuestionCount = async () => {
+      if (!quizType) return;
+      
+      try {
+        setLoading(true);
+        
+        let endpoint = '';
+        if (quizType === 'flags' || quizType === 'capitals') {
+          endpoint = '/api/countries/count';
+        } else if (quizType === 'bollards') {
+          endpoint = '/api/bollards/count';
+        } else if (quizType === 'licenseplates') {
+          endpoint = '/api/licenseplates/count';
+        }
+        
+        if (endpoint) {
+          const params: any = {};
+          
+          // Apply continent filter for all quiz types
+          if (selectedContinent !== 'all') {
+            params.continent = selectedContinent;
+          }
+          
+          if (onlyGeoGuessr) {
+            params.in_geoguessr = true;
+          }
+          
+          const response = await axios.get(endpoint, { params });
+          
+          if (response.data && response.data.success) {
+            // Be explicit about handling a count of 0
+            const count = response.data.count;
+            const newMaxCount = count !== undefined ? count : 50;
+            setMaxQuestionCount(newMaxCount);
+            
+            // If current question count is higher than available questions, adjust it
+            if (newMaxCount === 0) {
+              // If count is 0, just set question count to 1 (it will be disabled anyway)
+              setQuestionCount(1);
+            } else if (questionCount > newMaxCount) {
+              setQuestionCount(newMaxCount);
+            } else if (questionCount === 0) {
+              // Ensure question count is at least 1
+              setQuestionCount(1);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching max question count for ${quizType}:`, error);
+        // Default to 50 if there's an error
+        setMaxQuestionCount(50);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchMaxQuestionCount();
+  }, [quizType, selectedContinent, onlyGeoGuessr]);
   
   const handleStartQuiz = () => {
     // Initialize a new quiz session with filters and settings
@@ -215,19 +279,31 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
               <input
                 type="number"
                 id="question-count"
-                min="5"
-                max="50"
+                min="1"
+                max={maxQuestionCount || 1}
                 value={questionCount}
-                onChange={(e) => setQuestionCount(Math.max(5, Math.min(50, parseInt(e.target.value) || 10)))}
+                onChange={(e) => setQuestionCount(Math.max(1, Math.min(maxQuestionCount || 1, parseInt(e.target.value) || 10)))}
                 className="w-24 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                disabled={maxQuestionCount === 0}
               />
               <label htmlFor="question-count" className="ml-2 block text-sm font-medium text-gray-700">
                 questions
               </label>
             </div>
-            <p className="mt-1 text-sm text-gray-500">
-              Choose between 5-50 questions per quiz
-            </p>
+            {maxQuestionCount > 0 ? (
+              <p className="mt-1 text-sm text-gray-500">
+                Choose between 1-{maxQuestionCount} questions per quiz
+              </p>
+            ) : (
+              <p className="mt-1 text-sm text-red-500 font-medium">
+                No questions available with current filter settings. Try changing continent or GeoGuessr filter.
+              </p>
+            )}
+            {loading && (
+              <p className="mt-1 text-sm text-blue-500">
+                Loading available questions...
+              </p>
+            )}
           </div>
         </div>
         
@@ -241,9 +317,14 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           
           <button
             onClick={handleStartQuiz}
-            className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            disabled={maxQuestionCount === 0}
+            className={`px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
+              maxQuestionCount === 0 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+            }`}
           >
-            Start Quiz
+            {maxQuestionCount === 0 ? 'No questions available' : 'Start Quiz'}
           </button>
         </div>
       </div>

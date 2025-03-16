@@ -1,5 +1,5 @@
 import express from 'express';
-import { uploadLicensePlate, createLicensePlate, getGeoGuessrCountries, getAllLicensePlates, deleteLicensePlate, getLicensePlatesByCountry } from '../controllers/licensePlateController';
+import { uploadLicensePlate, createLicensePlate, getGeoGuessrCountries, getAllLicensePlates, deleteLicensePlate, getLicensePlatesByCountry, getLicensePlateCount } from '../controllers/licensePlateController';
 
 const router = express.Router();
 
@@ -10,6 +10,7 @@ router.get('/', getAllLicensePlates);
 router.delete('/:id', deleteLicensePlate);
 
 // Public routes
+router.get('/count', getLicensePlateCount);
 router.get('/countries', getGeoGuessrCountries);
 router.get('/country/:countryId', getLicensePlatesByCountry);
 

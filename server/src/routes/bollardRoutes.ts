@@ -1,5 +1,5 @@
 import express from 'express';
-import { uploadBollard, createBollard, getGeoGuessrCountries, getAllBollards, deleteBollard, getBollardsByCountry } from '../controllers/bollardController';
+import { uploadBollard, createBollard, getGeoGuessrCountries, getAllBollards, deleteBollard, getBollardsByCountry, getBollardCount } from '../controllers/bollardController';
 
 const router = express.Router();
 
@@ -10,6 +10,7 @@ router.get('/', getAllBollards);
 router.delete('/:id', deleteBollard);
 
 // Public routes
+router.get('/count', getBollardCount);
 router.get('/country/:countryId', getBollardsByCountry);
 
 export default router;

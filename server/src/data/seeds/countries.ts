@@ -296,7 +296,7 @@ export const countries = [
   {
     "name": "Cyprus",
     "capital": "Nicosia",
-    "continent": "Asia",
+    "continent": "Europe",
     "in_geoguessr": true,
     "code": "cy"
   },

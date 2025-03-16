@@ -3,6 +3,9 @@ import * as countryController from '../controllers/countryController';
 
 const router = express.Router();
 
+// Get count of countries with optional filters
+router.get('/count', countryController.getCountryCount);
+
 // Get all countries
 router.get('/', countryController.getAllCountries);
 

@@ -138,3 +138,35 @@ export const getCountryByName = async (req: Request, res: Response): Promise<voi
     });
   }
 };
+
+// Get count of countries with optional filters
+export const getCountryCount = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { continent, in_geoguessr } = req.query;
+    
+    // Build query based on filters
+    const query: any = {};
+    
+    if (continent && continent !== 'all') {
+      query.continent = continent;
+    }
+    
+    if (in_geoguessr === 'true') {
+      query.in_geoguessr = true;
+    }
+    
+    // Count countries matching the query
+    const count = await Country.countDocuments(query);
+    
+    res.status(200).json({
+      success: true,
+      count
+    });
+  } catch (error) {
+    console.error('Error counting countries:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to count countries'
+    });
+  }
+};
