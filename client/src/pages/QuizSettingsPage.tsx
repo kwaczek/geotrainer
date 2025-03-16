@@ -13,6 +13,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   
   const [selectedContinent, setSelectedContinent] = useState<string>('all');
   const [onlyGeoGuessr, setOnlyGeoGuessr] = useState<boolean>(false);
+  const [writeMode, setWriteMode] = useState<boolean>(false);
   const [continents, setContinents] = useState<string[]>([
     'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica'
   ]);
@@ -68,7 +69,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         settings: {
           timerEnabled,
           timerDuration,
-          questionCount
+          questionCount,
+          writeMode
         }
       }
     });
@@ -146,6 +148,27 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
               Limit questions to countries that appear in the GeoGuessr game
             </p>
           </div>
+          
+          {/* Write Mode Setting - Only for non-capitals quizzes */}
+          {quizConfig.type !== 'capitals' && (
+            <div className="mb-6">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="write-mode-toggle"
+                  checked={writeMode}
+                  onChange={(e) => setWriteMode(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="write-mode-toggle" className="ml-2 block text-sm font-medium text-gray-700">
+                  Enable Write Mode
+                </label>
+              </div>
+              <p className="mt-1 ml-6 text-sm text-gray-500">
+                Type the country name instead of selecting from multiple choice options
+              </p>
+            </div>
+          )}
           
           {/* Timer Settings */}
           <div className="mb-6">

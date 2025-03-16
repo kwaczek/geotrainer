@@ -312,7 +312,7 @@ export const getNextQuestion = async (req: Request, res: Response) => {
 export const submitAnswer = async (req: Request, res: Response) => {
   try {
     const { quizType } = req.params;
-    const { sessionId, questionId, selectedOptionId, isCorrect, timeSpentMs } = req.body;
+    const { sessionId, questionId, selectedOptionId, isCorrect, timeSpentMs, userCustomInput } = req.body;
     
     console.log('Received answer submission:', {
       quizType,
@@ -320,7 +320,8 @@ export const submitAnswer = async (req: Request, res: Response) => {
       questionId,
       selectedOptionId,
       isCorrect,
-      timeSpentMs
+      timeSpentMs,
+      userCustomInput
     });
     
     // Validate required fields
@@ -373,15 +374,14 @@ export const submitAnswer = async (req: Request, res: Response) => {
       };
     }
     
-    // Create the attempt object
+    // Create an attempt object to store in the session
     const attempt = {
       questionId,
-      questionText: currentQuestion.question,
+      correctOptionId: selectedOptionId,
       selectedOptionId,
       isCorrect,
       timeSpentMs,
-      imageUrl: currentQuestion.imageUrl,
-      correctOptionId: currentQuestion.options.find(opt => opt.isCorrect)?.id || questionId
+      userCustomInput
     };
     
     // Update the session
@@ -411,7 +411,8 @@ export const submitAnswer = async (req: Request, res: Response) => {
           selectedCountryId: selectedOptionId ? new mongoose.Types.ObjectId(selectedOptionId) : null,
           isCorrect,
           timeSpentMs,
-          imageUrl: currentQuestion.imageUrl
+          imageUrl: currentQuestion.imageUrl,
+          userCustomInput
         });
         
         // Update totalScore if the answer was correct
@@ -441,7 +442,8 @@ export const submitAnswer = async (req: Request, res: Response) => {
             selectedCountryId: selectedOptionId ? new mongoose.Types.ObjectId(selectedOptionId) : null,
             isCorrect,
             timeSpentMs,
-            imageUrl: currentQuestion.imageUrl
+            imageUrl: currentQuestion.imageUrl,
+            userCustomInput
           }],
           totalScore: isCorrect ? 1 : 0,
           totalQuestions: 1,
@@ -717,6 +719,13 @@ async function getRandomBollardQuestion(filters?: QuizFilters) {
     throw new Error('No country details found for this bollard');
   }
   
+  // For write mode, we need to track all correct countries, not just one
+  const allCorrectCountries = bollard.countryDetails.map((country: any) => ({
+    id: country._id.toString(),
+    text: country.name,
+    isCorrect: true
+  }));
+  
   // Build a filter for additional countries that matches the same criteria
   const additionalCountriesFilter: any = { _id: { $nin: bollard.countries } };
   
@@ -758,18 +767,25 @@ async function getRandomBollardQuestion(filters?: QuizFilters) {
     [allCountries[i], allCountries[j]] = [allCountries[j], allCountries[i]];
   }
   
-  // Create options
+  // Create options, using the correct countries for the options display
   const options = allCountries.map(country => ({
     id: country._id.toString(),
     text: country.name,
     isCorrect: country._id.toString() === selectedCorrectCountry._id.toString()
   }));
   
+  // Add metadata for write mode - store all correct country names
+  // This will be used by the client to validate write mode answers
+  const allCorrectCountryNames = bollard.countryDetails.map((country: any) => country.name);
+  
   return {
     id: new mongoose.Types.ObjectId().toString(),
     question: 'In which country can you find this bollard?',
     imageUrl: bollard.imageUrl,
-    options
+    options,
+    metadata: {
+      allCorrectCountryNames
+    }
   };
 }
 
@@ -844,6 +860,13 @@ async function getRandomLicensePlateQuestion(filters?: QuizFilters) {
     throw new Error('No country details found for this license plate');
   }
   
+  // For write mode, we need to track all correct countries, not just one
+  const allCorrectCountries = licensePlate.countryDetails.map((country: any) => ({
+    id: country._id.toString(),
+    text: country.name,
+    isCorrect: true
+  }));
+  
   // Build a filter for additional countries that matches the same criteria
   const additionalCountriesFilter: any = { _id: { $nin: licensePlate.countries } };
   
@@ -885,18 +908,25 @@ async function getRandomLicensePlateQuestion(filters?: QuizFilters) {
     [allCountries[i], allCountries[j]] = [allCountries[j], allCountries[i]];
   }
   
-  // Create options
+  // Create options, using the correct countries for the options display
   const options = allCountries.map(country => ({
     id: country._id.toString(),
     text: country.name,
     isCorrect: country._id.toString() === selectedCorrectCountry._id.toString()
   }));
   
+  // Add metadata for write mode - store all correct country names
+  // This will be used by the client to validate write mode answers
+  const allCorrectCountryNames = licensePlate.countryDetails.map((country: any) => country.name);
+  
   return {
     id: new mongoose.Types.ObjectId().toString(),
     question: 'In which country can you find this license plate?',
     imageUrl: licensePlate.imageUrl,
-    options
+    options,
+    metadata: {
+      allCorrectCountryNames
+    }
   };
 }
 

@@ -21,18 +21,23 @@ export interface QuizQuestion {
   imageUrl?: string;
   options: QuizOption[];
   timeLimit?: number;
+  metadata?: {
+    allCorrectCountryNames?: string[];
+    [key: string]: any;
+  };
 }
 
 export interface QuestionAttempt {
   questionId: string;
   questionText: string;
   correctOptionId: string;
-  selectedOptionId: string | null;
+  selectedOptionId: string;
   isCorrect: boolean;
   timeSpentMs: number;
   imageUrl?: string;
   selectedCountryName?: string;
   correctCountryName?: string;
+  userCustomInput?: string;
 }
 
 export interface QuizSession {

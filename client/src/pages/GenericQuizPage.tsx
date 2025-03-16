@@ -16,6 +16,7 @@ interface QuizSettings {
   timerEnabled: boolean;
   timerDuration: number;
   questionCount: number;
+  writeMode?: boolean;
 }
 
 interface GenericQuizPageProps {
@@ -262,13 +263,36 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     
     setQuestionCount(prev => prev + 1);
     
+    // Check if optionId contains a custom input (for write mode)
+    let actualOptionId = optionId;
+    let userCustomInput = '';
+    if (optionId.includes('|CUSTOM:')) {
+      const [originalId, customPart] = optionId.split('|CUSTOM:');
+      actualOptionId = originalId;
+      userCustomInput = customPart;
+      console.log('Extracted custom user input:', userCustomInput);
+    }
+    
     // Find the selected option and correct option
-    const selectedOption = currentQuestion.options.find(opt => opt.id === optionId);
+    const selectedOption = currentQuestion.options.find(opt => opt.id === actualOptionId);
     const correctOption = currentQuestion.options.find(opt => opt.isCorrect);
     
-    if (!selectedOption || !correctOption) {
-      console.error('Could not find selected or correct option');
+    if (!correctOption) {
+      console.error('Could not find correct option');
       return;
+    }
+    
+    // Handle case where selected option might not be found (e.g., in write mode)
+    let selectedCountryName = '';
+    if (selectedOption) {
+      // For correct answers or regular multiple choice
+      selectedCountryName = selectedOption.text;
+    } else if (!isCorrect && userCustomInput) {
+      // For write mode with incorrect answers, use what the user actually typed
+      selectedCountryName = userCustomInput;
+    } else if (!isCorrect) {
+      // Fallback for any other case
+      selectedCountryName = 'Custom input (incorrect)';
     }
     
     // Create an attempt object
@@ -276,17 +300,22 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
       questionId: currentQuestionId,
       questionText: currentQuestion.question,
       correctOptionId: correctOption.id,
-      selectedOptionId: optionId,
+      selectedOptionId: actualOptionId,
       isCorrect,
       timeSpentMs,
       imageUrl: currentQuestion.imageUrl,
-      selectedCountryName: selectedOption.text,
-      correctCountryName: correctOption.text
+      selectedCountryName: selectedCountryName,
+      correctCountryName: correctOption.text,
+      userCustomInput: userCustomInput // Add the user's custom input if applicable
     };
     
     // Add the attempt to our list
     const updatedAttempts = [...attempts, attempt];
     setAttempts(updatedAttempts);
+    
+    // Save the session state after updating state values
+    // (The saveSessionState function will use the component state directly)
+    saveSessionState();
     
     try {
       // Submit the answer to the server
@@ -294,9 +323,10 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         quizType,
         sessionId,
         currentQuestionId,
-        optionId,
+        actualOptionId, // Use the extracted option ID without the custom part
         isCorrect,
-        timeSpentMs
+        timeSpentMs,
+        userCustomInput // Pass the custom input as an additional parameter
       );
       
       // We no longer immediately end the quiz on the last question
@@ -462,6 +492,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           selectedOptionId={selectedOptionId}
           quizType={quizType}
           isLastQuestion={currentQuestionNumber === customSettings.questionCount}
+          writeMode={customSettings.writeMode}
         />
       )}
     </div>

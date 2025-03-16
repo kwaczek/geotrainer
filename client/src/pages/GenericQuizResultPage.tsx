@@ -46,8 +46,12 @@ const GenericQuizResultPage: React.FC = () => {
     // or when we load them from state
     const enhanced: EnhancedQuestionAttempt = { ...attempt };
     
-    // If we have the option text from the server, use it
-    if (attempt.selectedCountryName) {
+    // For write mode, prioritize the user's actual input if available
+    if (attempt.userCustomInput) {
+      enhanced.selectedOptionText = attempt.userCustomInput;
+    } 
+    // Otherwise fall back to the selectedCountryName if available
+    else if (attempt.selectedCountryName) {
       enhanced.selectedOptionText = attempt.selectedCountryName;
     }
     
@@ -158,6 +162,16 @@ const GenericQuizResultPage: React.FC = () => {
   
   return (
     <div className="max-w-4xl mx-auto p-4">
+      {/* Debug info in development mode */}
+      {process.env.NODE_ENV !== 'production' && (
+        <div className="mb-4 p-3 bg-gray-100 rounded text-xs">
+          <div>Debug Info:</div>
+          <div>Quiz Type: {quizType}</div>
+          <div>Total Attempts: {attempts.length}</div>
+          <div>First attempt userCustomInput: {attempts[0]?.userCustomInput || 'none'}</div>
+        </div>
+      )}
+      
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h1 className="text-2xl font-bold mb-4">
           {quizConfig?.title || 'Quiz'} Results
@@ -250,8 +264,18 @@ const GenericQuizResultPage: React.FC = () => {
                   <div className="text-sm">
                     <span className="text-gray-700">Your answer: </span>
                     <span className={attempt.isCorrect ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
-                      {attempt.selectedOptionText || attempt.selectedOptionId || 'No answer'}
+                      {/* For write mode answers (with userCustomInput), show in quotes to indicate it was typed */}
+                      {attempt.userCustomInput ? 
+                        `"${attempt.selectedOptionText}"` : 
+                        attempt.selectedOptionText || attempt.selectedOptionId || 'No answer'
+                      }
                     </span>
+                    {/* Add a "write mode" badge if this was a write mode answer */}
+                    {attempt.userCustomInput && 
+                      <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full">
+                        write mode
+                      </span>
+                    }
                   </div>
                   
                   {!attempt.isCorrect && (

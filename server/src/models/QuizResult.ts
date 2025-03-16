@@ -23,6 +23,7 @@ export interface QuestionAttempt {
   isCorrect: boolean;
   timeSpentMs: number;
   imageUrl?: string;
+  userCustomInput?: string;
 }
 
 // Main quiz result interface
@@ -50,7 +51,9 @@ const QuestionAttemptSchema = new Schema({
   correctCountryId: { type: Schema.Types.ObjectId, ref: 'Country', required: true },
   selectedCountryId: { type: Schema.Types.ObjectId, ref: 'Country', default: null },
   isCorrect: { type: Boolean, required: true },
-  timeSpentMs: { type: Number, required: true }
+  timeSpentMs: { type: Number, required: true },
+  imageUrl: { type: String, required: false },
+  userCustomInput: { type: String, required: false }
 });
 
 // Quiz filters schema

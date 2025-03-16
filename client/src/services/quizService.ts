@@ -52,6 +52,18 @@ export const getNextQuestion = async (
     });
     
     console.log(`Received question:`, response.data);
+    
+    // Add additional debug for metadata
+    if (process.env.NODE_ENV !== 'production') {
+      console.log("Question details:", {
+        id: response.data.question.id,
+        question: response.data.question.question,
+        hasMetadata: !!response.data.question.metadata,
+        metadata: response.data.question.metadata,
+        options: response.data.question.options?.length || 0
+      });
+    }
+    
     return {
       question: response.data.question,
       sessionId: response.data.sessionId
@@ -71,7 +83,8 @@ export const submitAnswer = async (
   questionId: string,
   selectedOptionId: string,
   isCorrect: boolean,
-  timeSpentMs: number
+  timeSpentMs: number,
+  userCustomInput?: string
 ): Promise<{ success: boolean }> => {
   try {
     console.log(`Submitting answer for ${quizType} quiz, sessionId: ${sessionId}`);
@@ -80,7 +93,8 @@ export const submitAnswer = async (
       questionId,
       selectedOptionId,
       isCorrect,
-      timeSpentMs
+      timeSpentMs,
+      userCustomInput
     });
     
     console.log(`Answer submitted successfully:`, response.data);
