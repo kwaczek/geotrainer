@@ -130,5 +130,16 @@ export const plates: LicensePlateData[] = [
     "createdAt": "2025-03-15T12:47:02.722Z",
     "updatedAt": "2025-03-15T12:47:02.722Z",
     "__v": 0
+  },
+  {
+    "_id": "67d578931ea16611cc44f0c8",
+    "imageUrl": "/uploads/licenseplates/1742043283667-116576028.png",
+    "description": "Like most of Europe, Maltese licence plates have a blue strip on the left. However, unlike most of Europe, short plates are very common.",
+    "countries": [
+      "710998fd1b7c023517026565"
+    ],
+    "createdAt": "2025-03-15T12:54:43.675Z",
+    "updatedAt": "2025-03-15T12:54:43.675Z",
+    "__v": 0
   }
 ];
