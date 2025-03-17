@@ -10,6 +10,7 @@ import {
 import { QUIZ_CONFIGS } from '../config/quizConfig';
 import * as quizService from '../services/quizService';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { getSettings } from '../utils/settingsStorage';
 
 // Interface for custom quiz settings
 interface QuizSettings {
@@ -32,15 +33,18 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   // Get filters from location state if available
   const filters: QuizFilters = location.state?.filters || {};
   
-  // Get custom settings from location state if available
-  const customSettings: QuizSettings = location.state?.settings || {
-    timerEnabled: true,
-    timerDuration: QUIZ_CONFIGS[quizType].timeLimit,
-    questionCount: QUIZ_CONFIGS[quizType].questionsPerQuiz
-  };
+  // First try to get custom settings from location state
+  // If not available, load from localStorage
+  // If still not available, use defaults from quiz config
+  const customSettings: QuizSettings = location.state?.settings || 
+    getSettings(quizType) || {
+      timerEnabled: true,
+      timerDuration: QUIZ_CONFIGS[quizType].timeLimit,
+      questionCount: QUIZ_CONFIGS[quizType].questionsPerQuiz
+    };
   
   // Debug log to check settings
-  console.log('Custom settings received:', customSettings);
+  console.log('Custom settings used:', customSettings);
   console.log('Location state:', location.state);
   
   // Use sessionId from props or URL params

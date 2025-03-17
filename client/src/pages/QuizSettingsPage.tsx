@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { QuizType } from '../types/quiz';
 import { QUIZ_CONFIGS } from '../config/quizConfig';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import { getSettings, saveSettings, QuizSettings as StoredQuizSettings } from '../utils/settingsStorage';
 
 interface QuizSettingsPageProps {}
 
@@ -11,6 +12,14 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   const navigate = useNavigate();
   const { quizType } = useParams<{ quizType: string }>();
   
+  // Get quiz config early for setting initial values
+  const quizConfig = quizType && QUIZ_CONFIGS[quizType as QuizType];
+  
+  // Add a ref to track if settings are being loaded from localStorage
+  const initialLoadCompleted = useRef<boolean>(false);
+  const initialLoadStarted = useRef<boolean>(false);
+  
+  // Initialize state with empty/default values first
   const [selectedContinent, setSelectedContinent] = useState<string>('all');
   const [onlyGeoGuessr, setOnlyGeoGuessr] = useState<boolean>(false);
   const [writeMode, setWriteMode] = useState<boolean>(false);
@@ -19,7 +28,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   ]);
   const [loading, setLoading] = useState<boolean>(false);
   
-  // New state for timer and question count settings
+  // Initial values don't matter as they'll be immediately replaced
   const [timerEnabled, setTimerEnabled] = useState<boolean>(true);
   const [timerDuration, setTimerDuration] = useState<number>(30);
   const [questionCount, setQuestionCount] = useState<number>(10);
@@ -27,19 +36,75 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   // New state for max question count
   const [maxQuestionCount, setMaxQuestionCount] = useState<number>(50);
   
-  // Get quiz config
-  const quizConfig = quizType && QUIZ_CONFIGS[quizType as QuizType];
-  
   // Set the document title for the quiz settings page
   useDocumentTitle(quizConfig ? `${quizConfig.title} Settings` : 'Quiz Settings', true);
   
-  // Initialize timer and question count from quiz config
-  useEffect(() => {
-    if (quizConfig) {
-      setTimerDuration(quizConfig.timeLimit);
-      setQuestionCount(quizConfig.questionsPerQuiz);
+  // Function to load settings from localStorage
+  const loadSettingsFromStorage = useCallback(() => {
+    if (!quizType || initialLoadStarted.current) return;
+    
+    initialLoadStarted.current = true;
+    
+    if (quizType === 'flags' || quizType === 'capitals' || 
+        quizType === 'bollards' || quizType === 'licenseplates') {
+      console.log(`Loading settings from localStorage for ${quizType}...`);
+      
+      try {
+        const savedSettings = getSettings(quizType as QuizType);
+        console.log('Loaded settings:', savedSettings);
+        
+        // Apply saved settings to state
+        setTimerEnabled(savedSettings.timerEnabled);
+        setTimerDuration(savedSettings.timerDuration);
+        setQuestionCount(savedSettings.questionCount);
+        setWriteMode(savedSettings.writeMode || false);
+        setSelectedContinent(savedSettings.continent || 'all');
+        setOnlyGeoGuessr(savedSettings.in_geoguessr || false);
+        
+        // Mark initial load as complete
+        initialLoadCompleted.current = true;
+        console.log('Settings loaded successfully');
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        // If loading fails, use quiz config defaults
+        if (quizConfig) {
+          setTimerEnabled(true);
+          setTimerDuration(quizConfig.timeLimit);
+          setQuestionCount(quizConfig.questionsPerQuiz);
+        }
+      }
     }
-  }, [quizConfig]);
+  }, [quizType, quizConfig]);
+  
+  // Load saved settings from localStorage immediately on mount and quiz type changes
+  useEffect(() => {
+    loadSettingsFromStorage();
+  }, [loadSettingsFromStorage]);
+  
+  // Save settings whenever they change, but only after initial load is complete
+  useEffect(() => {
+    // Skip saving during the initial load from localStorage
+    if (!initialLoadCompleted.current) {
+      return;
+    }
+    
+    if (quizType && (quizType === 'flags' || quizType === 'capitals' || 
+                     quizType === 'bollards' || quizType === 'licenseplates')) {
+      console.log('Saving settings to localStorage...');
+      
+      const currentSettings: StoredQuizSettings = {
+        timerEnabled,
+        timerDuration,
+        questionCount,
+        writeMode,
+        continent: selectedContinent,
+        in_geoguessr: onlyGeoGuessr
+      };
+      
+      saveSettings(quizType as QuizType, currentSettings);
+      console.log('Settings saved:', currentSettings);
+    }
+  }, [quizType, timerEnabled, timerDuration, questionCount, writeMode, selectedContinent, onlyGeoGuessr]);
   
   // Fetch continents on component mount
   useEffect(() => {
@@ -98,16 +163,18 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
             const newMaxCount = count !== undefined ? count : 50;
             setMaxQuestionCount(newMaxCount);
             
-            // If current question count is higher than available questions, adjust it
+            // Check if we need to adjust the question count
             if (newMaxCount === 0) {
-              // If count is 0, just set question count to 1 (it will be disabled anyway)
+              // If no questions available, set to 1 (it will be disabled)
               setQuestionCount(1);
             } else if (questionCount > newMaxCount) {
+              // Only adjust if current value exceeds max
+              console.log(`Reducing question count from ${questionCount} to ${newMaxCount} due to filter constraints`);
               setQuestionCount(newMaxCount);
-            } else if (questionCount === 0) {
-              // Ensure question count is at least 1
-              setQuestionCount(1);
             }
+
+            // Log available questions after settings load
+            console.log(`Available questions: ${newMaxCount}, current question count: ${questionCount}`);
           }
         }
       } catch (error) {
@@ -119,8 +186,12 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
       }
     };
     
-    fetchMaxQuestionCount();
-  }, [quizType, selectedContinent, onlyGeoGuessr]);
+    // Only fetch max question count after localStorage settings are loaded
+    // to avoid overwriting the loaded settings
+    if (initialLoadCompleted.current || initialLoadStarted.current) {
+      fetchMaxQuestionCount();
+    }
+  }, [quizType, selectedContinent, onlyGeoGuessr, questionCount]);
   
   const handleStartQuiz = () => {
     // Initialize a new quiz session with filters and settings

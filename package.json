@@ -10,7 +10,7 @@
     "build": "cd client && npm run build && cd ../server && npm run build",
     "start": "cd server && npm start",
     "export:all": "cd server && npm run export:all",
-    "push": "node exportAndPush.js"
+    "exportAndPush": "node exportAndPush.js"
   },
   "devDependencies": {
     "concurrently": "^7.6.0"
