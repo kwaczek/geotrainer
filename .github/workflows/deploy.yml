@@ -1,35 +1,62 @@
-name: Deploy to EC2
+name: Test and Deploy to EC2
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Install server dependencies
+        run: |
+          cd server
+          npm ci
+
+      - name: Run Tests with Coverage
+        run: |
+          cd server
+          npm run test:coverage
+
+      - name: Upload Coverage Reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: server/coverage
+          if-no-files-found: warn
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-      
+
       - name: Test SSH Connection
         run: ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo SSH connection successful"
-   
-         
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-          
+          node-version: "18"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm run install:all
-        
+
       - name: Build application
         run: |
           # Disable treating warnings as errors in CI

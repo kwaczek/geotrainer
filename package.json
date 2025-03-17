@@ -10,13 +10,33 @@
     "build": "cd client && npm run build && cd ../server && npm run build",
     "start": "cd server && npm start",
     "export:all": "cd server && npm run export:all",
-    "exportAndPush": "node exportAndPush.js"
+    "exportAndPush": "node exportAndPush.js",
+    "test": "cd server && npm test",
+    "test:watch": "cd server && npm run test:watch",
+    "test:changed": "cd server && npm run test:changed",
+    "seed": "cd server && npm run seed",
+    "seed:bollards": "cd server && npm run seed:bollards",
+    "seed:plates": "cd server && npm run seed:plates",
+    "seed:all": "cd server && npm run seed:all",
+    "export:countries": "cd server && npm run export:countries",
+    "export:bollards": "cd server && npm run export:bollards",
+    "export:plates": "cd server && npm run export:plates",
+    "export:all": "cd server && npm run export:all",
+    "prepare": "husky",
+    "pre-commit": "lint-staged"
   },
   "devDependencies": {
-    "concurrently": "^7.6.0"
+    "concurrently": "^7.6.0",
+    "husky": "^8.0.3",
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.23",
+    "ts-node": "^10.9.1"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
     "mongoose": "^8.12.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": ["npm run test:changed"]
   }
 }

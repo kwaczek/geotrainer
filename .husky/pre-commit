@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged which will run tests only on changed files
+echo "Running lint-staged before commit..."
+npx lint-staged 
