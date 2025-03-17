@@ -17,7 +17,7 @@ export const countries = [
     "name": "Algeria",
     "capital": "Algiers",
     "continent": "Africa",
-    "in_geoguessr": true,
+    "in_geoguessr": false,
     "code": "dz"
   },
   {
@@ -136,7 +136,7 @@ export const countries = [
     "name": "Bhutan",
     "capital": "Thimphu",
     "continent": "Asia",
-    "in_geoguessr": false,
+    "in_geoguessr": true,
     "code": "bt"
   },
   {
@@ -381,7 +381,7 @@ export const countries = [
     "name": "Eswatini",
     "capital": "Mbabane",
     "continent": "Africa",
-    "in_geoguessr": false,
+    "in_geoguessr": true,
     "code": "sz"
   },
   {
@@ -591,7 +591,7 @@ export const countries = [
     "name": "Jordan",
     "capital": "Amman",
     "continent": "Asia",
-    "in_geoguessr": false,
+    "in_geoguessr": true,
     "code": "jo"
   },
   {
@@ -710,7 +710,7 @@ export const countries = [
     "name": "Madagascar",
     "capital": "Antananarivo",
     "continent": "Africa",
-    "in_geoguessr": false,
+    "in_geoguessr": true,
     "code": "mg"
   },
   {
@@ -836,7 +836,7 @@ export const countries = [
     "name": "Namibia",
     "capital": "Windhoek",
     "continent": "Africa",
-    "in_geoguessr": true,
+    "in_geoguessr": false,
     "code": "na"
   },
   {
@@ -906,7 +906,7 @@ export const countries = [
     "name": "Oman",
     "capital": "Muscat",
     "continent": "Asia",
-    "in_geoguessr": false,
+    "in_geoguessr": true,
     "code": "om"
   },
   {
@@ -976,7 +976,7 @@ export const countries = [
     "name": "Qatar",
     "capital": "Doha",
     "continent": "Asia",
-    "in_geoguessr": false,
+    "in_geoguessr": true,
     "code": "qa"
   },
   {
@@ -997,7 +997,7 @@ export const countries = [
     "name": "Rwanda",
     "capital": "Kigali",
     "continent": "Africa",
-    "in_geoguessr": false,
+    "in_geoguessr": true,
     "code": "rw"
   },
   {
@@ -1256,7 +1256,7 @@ export const countries = [
     "name": "United Arab Emirates",
     "capital": "Abu Dhabi",
     "continent": "Asia",
-    "in_geoguessr": false,
+    "in_geoguessr": true,
     "code": "ae"
   },
   {
@@ -1291,7 +1291,14 @@ export const countries = [
     "name": "Vatican City",
     "capital": "Vatican City",
     "continent": "Europe",
-    "in_geoguessr": true,
+    "in_geoguessr": false,
     "code": "va"
+  },
+  {
+    "name": "Taiwan",
+    "capital": "Taipei",
+    "continent": "Asia",
+    "in_geoguessr": true,
+    "code": "tw"
   }
 ];
