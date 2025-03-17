@@ -55,7 +55,21 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm run install:all
+        run: |
+          # Try up to 3 times with increasing delay between attempts
+          npm_retry_count=0
+          npm_max_retries=3
+          until [ $npm_retry_count -ge $npm_max_retries ]
+          do
+            npm run install:all && break
+            npm_retry_count=$((npm_retry_count+1))
+            echo "npm install attempt $npm_retry_count failed, retrying in 10 seconds..."
+            sleep 10
+          done
+          if [ $npm_retry_count -ge $npm_max_retries ]; then
+            echo "npm install failed after $npm_max_retries attempts"
+            exit 1
+          fi
 
       - name: Build application
         run: |
