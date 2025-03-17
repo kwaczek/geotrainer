@@ -56,6 +56,36 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   // Set the document title for the quiz page
   useDocumentTitle(`${quizConfig.title}`, true);
   
+  // Function to clean up stale quiz sessions (older than 24 hours)
+  const cleanupStaleSessions = useCallback(() => {
+    const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+    const now = new Date().getTime();
+    let cleanupCount = 0;
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('quiz_session_')) {
+        try {
+          const sessionData = JSON.parse(localStorage.getItem(key) || '{}');
+          const lastUpdated = new Date(sessionData.lastUpdated).getTime();
+          
+          if (now - lastUpdated > MAX_AGE_MS) {
+            localStorage.removeItem(key);
+            cleanupCount++;
+          }
+        } catch (e) {
+          // If we can't parse the session data, it's probably corrupted, so remove it
+          localStorage.removeItem(key);
+          cleanupCount++;
+        }
+      }
+    }
+    
+    if (cleanupCount > 0) {
+      console.log(`Cleaned up ${cleanupCount} stale quiz sessions from localStorage`);
+    }
+  }, []);
+  
   // State
   const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,10 +104,11 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   const [previousEntityIds, setPreviousEntityIds] = useState<string[]>([]);
   const questionStartTime = useRef(Date.now());
   const dataFetchedRef = useRef(false);
+  const [quizCompleted, setQuizCompleted] = useState(false);
 
   // Save session state to localStorage
   const saveSessionState = useCallback(() => {
-    if (sessionId) {
+    if (sessionId && !quizCompleted) {  // Don't save if quiz is completed
       const sessionState = {
         sessionId,
         quizType,
@@ -94,7 +125,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
       localStorage.setItem(`quiz_session_${sessionId}`, JSON.stringify(sessionState));
       console.log('Saved session state to localStorage:', sessionState);
     }
-  }, [sessionId, quizType, score, questionCount, attempts, currentQuestionNumber, customSettings, previousQuestionIds, previousEntityIds]);
+  }, [sessionId, quizType, score, questionCount, attempts, currentQuestionNumber, customSettings, previousQuestionIds, previousEntityIds, quizCompleted]);
 
   // Load session state from localStorage
   const loadSessionState = useCallback(() => {
@@ -450,6 +481,11 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     }
   }, [quizInitialized, existingSessionId, fetchQuestion, loadSessionState, currentQuestionNumber]);
 
+  // Clean up stale sessions on component mount
+  useEffect(() => {
+    cleanupStaleSessions();
+  }, [cleanupStaleSessions]);
+
   // Save session state on unmount
   useEffect(() => {
     return () => {
@@ -461,6 +497,9 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   const endQuiz = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // Mark quiz as completed to prevent recreating the localStorage entry
+      setQuizCompleted(true);
       
       // Save the final state
       saveSessionState();
@@ -475,6 +514,12 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           sessionId || '',
           attempts
         );
+        
+        // Clean up localStorage for this session
+        if (sessionId) {
+          localStorage.removeItem(`quiz_session_${sessionId}`);
+          console.log(`Removed completed quiz session from localStorage: quiz_session_${sessionId}`);
+        }
       } catch (err) {
         console.error('Error completing quiz on server:', err);
         // Create a local result if server fails
@@ -508,11 +553,20 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
       });
     } catch (err) {
       console.error('Error ending quiz:', err);
-      setError('Failed to complete quiz');
-    } finally {
+      setError('Failed to end quiz. Please try again.');
       setLoading(false);
     }
-  }, [quizType, sessionId, score, attempts, navigate, saveSessionState, quizId, customSettings.questionCount]);
+  }, [
+    quizType, 
+    sessionId, 
+    attempts, 
+    saveSessionState, 
+    score, 
+    customSettings, 
+    navigate, 
+    quizId,
+    quizCompleted
+  ]);
 
   if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
