@@ -40,14 +40,18 @@ export const initializeQuiz = async (
 export const getNextQuestion = async (
   quizType: QuizType, 
   sessionId?: string, 
-  filters: QuizFilters = {}
+  filters: QuizFilters = {},
+  previousQuestionIds: string[] = [],
+  previousEntityIds: string[] = []
 ): Promise<{ question: QuizQuestion, sessionId: string }> => {
   try {
     console.log(`Fetching ${quizType} question with sessionId: ${sessionId || 'none'}`);
     const response = await axios.get(`/api/quiz-questions/${quizType}`, {
       params: {
         sessionId,
-        filters: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined
+        filters: Object.keys(filters).length > 0 ? JSON.stringify(filters) : undefined,
+        previousQuestionIds: previousQuestionIds.length > 0 ? JSON.stringify(previousQuestionIds) : undefined,
+        previousEntityIds: previousEntityIds.length > 0 ? JSON.stringify(previousEntityIds) : undefined
       }
     });
     

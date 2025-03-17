@@ -259,7 +259,6 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
     } else {
       // In multiple choice mode, check if the selected option is correct
       const isCorrect = selectedOption && question.options.find(opt => opt.id === selectedOption)?.isCorrect;
-      console.log('Multiple choice isCorrect check:', { selectedOption, isCorrect });
       return !!isCorrect;
     }
   };

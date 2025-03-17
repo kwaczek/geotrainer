@@ -184,8 +184,16 @@ export const getNextQuestion = async (req: Request, res: Response) => {
     const { quizType } = req.params;
     const sessionId = req.query.sessionId as string || uuidv4();
     const filters = req.query.filters ? JSON.parse(req.query.filters as string) as QuizFilters : undefined;
+    const previousQuestionIds = req.query.previousQuestionIds 
+      ? JSON.parse(req.query.previousQuestionIds as string) as string[] 
+      : [];
+    const previousEntityIds = req.query.previousEntityIds
+      ? JSON.parse(req.query.previousEntityIds as string) as string[]
+      : [];
     
     console.log(`Getting next question for ${quizType} quiz, sessionId: ${sessionId}, filters:`, filters);
+    console.log(`Excluding previous question IDs (${previousQuestionIds.length}):`, previousQuestionIds);
+    console.log(`Excluding previous entity IDs (${previousEntityIds.length}):`, previousEntityIds);
     
     // Validate quiz type
     if (!quizType || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES].includes(quizType.toLowerCase() as QuizType)) {
@@ -257,16 +265,16 @@ export const getNextQuestion = async (req: Request, res: Response) => {
     try {
       switch (quizType.toLowerCase()) {
         case QuizType.FLAGS:
-          question = await getRandomFlagQuestion(session.filters);
+          question = await getRandomFlagQuestion(session.filters, previousEntityIds);
           break;
         case QuizType.CAPITALS:
-          question = await getRandomCapitalQuestion(session.filters);
+          question = await getRandomCapitalQuestion(session.filters, previousEntityIds);
           break;
         case QuizType.BOLLARDS:
-          question = await getRandomBollardQuestion(session.filters);
+          question = await getRandomBollardQuestion(session.filters, previousEntityIds);
           break;
         case QuizType.LICENSEPLATES:
-          question = await getRandomLicensePlateQuestion(session.filters);
+          question = await getRandomLicensePlateQuestion(session.filters, previousEntityIds);
           break;
         default:
           return res.status(400).json({
@@ -562,40 +570,118 @@ export const completeQuizSession = async (req: Request, res: Response) => {
 
 // Helper functions to get random questions for each quiz type
 
-async function getRandomFlagQuestion(filters?: QuizFilters) {
-  let query: any = { code: { $exists: true, $ne: null } };  // Ensure we only get countries with valid codes
+async function getRandomFlagQuestion(filters?: QuizFilters, previousEntityIds: string[] = []) {
+  let baseQuery: any = { code: { $exists: true, $ne: null } };  // Ensure we only get countries with valid codes
   
   // Apply filters if provided
   if (filters) {
     if (filters.continent && filters.continent !== 'all') {
-      query.continent = filters.continent;
+      baseQuery.continent = filters.continent;
     }
     
     if (filters.in_geoguessr) {
-      query.in_geoguessr = true;
+      baseQuery.in_geoguessr = true;
     }
   }
   
-  // Get random countries for options
-  const countries = await Country.aggregate([
-    { $match: query },
-    { $sample: { size: 4 } }
-  ]);
+  // Create a query for the correct answer that excludes previously seen entities
+  let correctAnswerQuery = { ...baseQuery };
   
-  if (!countries || countries.length === 0) {
-    throw new Error('No countries found with the specified filters');
+  // Filter out countries that were used in previous questions ONLY for the correct answer
+  if (previousEntityIds.length > 0) {
+    // Convert string IDs to ObjectId for MongoDB comparison
+    const objectIds = previousEntityIds.map(id => {
+      try {
+        return new mongoose.Types.ObjectId(id);
+      } catch (e) {
+        return id; // If conversion fails, keep the string (for cases like auto-generated IDs)
+      }
+    });
+    correctAnswerQuery._id = { $nin: objectIds };
   }
   
-  // Select one country as the correct answer
-  const correctIndex = Math.floor(Math.random() * countries.length);
-  const correctCountry = countries[correctIndex];
+  // Get a random country for the correct answer that hasn't been used before
+  const correctCountryCandidates = await Country.aggregate([
+    { $match: correctAnswerQuery },
+    { $sample: { size: 1 } }
+  ]);
   
-  // Create options
-  const options = countries.map((country, index) => ({
-    id: country._id.toString(),
-    text: country.name,
-    isCorrect: index === correctIndex
-  }));
+  // If no countries available with exclusion filter, try without it
+  let correctCountry;
+  if (!correctCountryCandidates || correctCountryCandidates.length === 0) {
+    if (previousEntityIds.length > 0) {
+      console.log('No countries found with exclusion filter for correct answer, retrying without excluding previous countries');
+      const fallbackCountries = await Country.aggregate([
+        { $match: baseQuery },
+        { $sample: { size: 1 } }
+      ]);
+      
+      if (!fallbackCountries || fallbackCountries.length === 0) {
+        throw new Error('No countries found with the specified filters');
+      }
+      
+      correctCountry = fallbackCountries[0];
+    } else {
+      throw new Error('No countries found with the specified filters');
+    }
+  } else {
+    correctCountry = correctCountryCandidates[0];
+  }
+  
+  // Now get random countries for incorrect options - don't exclude previous entity IDs
+  // but do exclude the current correct answer
+  const incorrectOptionsQuery = { 
+    ...baseQuery,
+    _id: { $ne: correctCountry._id } // Only exclude the current correct answer
+  };
+  
+  const incorrectCountries = await Country.aggregate([
+    { $match: incorrectOptionsQuery },
+    { $sample: { size: 3 } }
+  ]);
+  
+  // If we couldn't find enough incorrect options, try with fewer filters
+  if (incorrectCountries.length < 3) {
+    console.log(`Only found ${incorrectCountries.length} incorrect countries with filters, getting more with relaxed filters`);
+    
+    // Simplified query that just excludes the correct answer
+    const fallbackQuery: any = { 
+      code: { $exists: true, $ne: null },
+      _id: { $ne: correctCountry._id }
+    };
+    
+    // Keep any in_geoguessr filter if it was specified
+    if (filters?.in_geoguessr) {
+      fallbackQuery.in_geoguessr = true;
+    }
+    
+    const additionalCountries = await Country.aggregate([
+      { $match: fallbackQuery },
+      { $sample: { size: 3 - incorrectCountries.length } }
+    ]);
+    
+    incorrectCountries.push(...additionalCountries);
+  }
+  
+  // Combine correct and incorrect options
+  const allOptions = [
+    {
+      id: correctCountry._id.toString(),
+      text: correctCountry.name,
+      isCorrect: true
+    },
+    ...incorrectCountries.map(country => ({
+      id: country._id.toString(),
+      text: country.name,
+      isCorrect: false
+    }))
+  ];
+  
+  // Shuffle the options
+  for (let i = allOptions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+  }
   
   // Construct the flag URL based on the country code
   const flagUrl = correctCountry.code 
@@ -606,49 +692,131 @@ async function getRandomFlagQuestion(filters?: QuizFilters) {
     id: new mongoose.Types.ObjectId().toString(),
     question: 'Which country does this flag belong to?',
     imageUrl: flagUrl,
-    options
+    options: allOptions
   };
 }
 
-async function getRandomCapitalQuestion(filters?: QuizFilters) {
-  let query: any = { capital: { $exists: true, $ne: '' } };
+async function getRandomCapitalQuestion(filters?: QuizFilters, previousEntityIds: string[] = []) {
+  let baseQuery: any = { capital: { $exists: true, $ne: '' } };
   
   // Apply filters if provided
   if (filters) {
     if (filters.continent && filters.continent !== 'all') {
-      query.continent = filters.continent;
+      baseQuery.continent = filters.continent;
     }
     
     if (filters.in_geoguessr) {
-      query.in_geoguessr = true;
+      baseQuery.in_geoguessr = true;
     }
   }
   
-  // Get random countries for options
-  const countries = await Country.aggregate([
-    { $match: query },
-    { $sample: { size: 4 } }
+  // Create a query for the correct answer that excludes previously seen entities
+  let correctAnswerQuery = { ...baseQuery };
+  
+  // Filter out countries that were used in previous questions ONLY for the correct answer
+  if (previousEntityIds.length > 0) {
+    // Convert string IDs to ObjectId for MongoDB comparison
+    const objectIds = previousEntityIds.map(id => {
+      try {
+        return new mongoose.Types.ObjectId(id);
+      } catch (e) {
+        return id; // If conversion fails, keep the string (for cases like auto-generated IDs)
+      }
+    });
+    correctAnswerQuery._id = { $nin: objectIds };
+  }
+  
+  // Get a random country for the correct answer that hasn't been used before
+  const correctCountryCandidates = await Country.aggregate([
+    { $match: correctAnswerQuery },
+    { $sample: { size: 1 } }
   ]);
   
-  // Select one country as the correct answer
-  const correctIndex = Math.floor(Math.random() * countries.length);
-  const correctCountry = countries[correctIndex];
+  // If no countries available with exclusion filter, try without it
+  let correctCountry;
+  if (!correctCountryCandidates || correctCountryCandidates.length === 0) {
+    if (previousEntityIds.length > 0) {
+      console.log('No countries found with exclusion filter for correct answer, retrying without excluding previous countries');
+      const fallbackCountries = await Country.aggregate([
+        { $match: baseQuery },
+        { $sample: { size: 1 } }
+      ]);
+      
+      if (!fallbackCountries || fallbackCountries.length === 0) {
+        throw new Error('No countries found with the specified filters');
+      }
+      
+      correctCountry = fallbackCountries[0];
+    } else {
+      throw new Error('No countries found with the specified filters');
+    }
+  } else {
+    correctCountry = correctCountryCandidates[0];
+  }
   
-  // Create options
-  const options = countries.map((country, index) => ({
-    id: country._id.toString(),
-    text: country.capital,
-    isCorrect: index === correctIndex
-  }));
+  // Now get random countries for incorrect options - don't exclude previous entity IDs
+  // but do exclude the current correct answer
+  const incorrectOptionsQuery = { 
+    ...baseQuery,
+    _id: { $ne: correctCountry._id } // Only exclude the current correct answer
+  };
+  
+  const incorrectCountries = await Country.aggregate([
+    { $match: incorrectOptionsQuery },
+    { $sample: { size: 3 } }
+  ]);
+  
+  // If we couldn't find enough incorrect options, try with fewer filters
+  if (incorrectCountries.length < 3) {
+    console.log(`Only found ${incorrectCountries.length} incorrect countries with filters, getting more with relaxed filters`);
+    
+    // Simplified query that just excludes the correct answer
+    const fallbackQuery: any = { 
+      capital: { $exists: true, $ne: '' },
+      _id: { $ne: correctCountry._id }
+    };
+    
+    // Keep any in_geoguessr filter if it was specified
+    if (filters?.in_geoguessr) {
+      fallbackQuery.in_geoguessr = true;
+    }
+    
+    const additionalCountries = await Country.aggregate([
+      { $match: fallbackQuery },
+      { $sample: { size: 3 - incorrectCountries.length } }
+    ]);
+    
+    incorrectCountries.push(...additionalCountries);
+  }
+  
+  // Combine correct and incorrect options
+  const allOptions = [
+    {
+      id: correctCountry._id.toString(),
+      text: correctCountry.capital,
+      isCorrect: true
+    },
+    ...incorrectCountries.map(country => ({
+      id: country._id.toString(),
+      text: country.capital,
+      isCorrect: false
+    }))
+  ];
+  
+  // Shuffle the options
+  for (let i = allOptions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+  }
   
   return {
     id: new mongoose.Types.ObjectId().toString(),
     question: `What is the capital of ${correctCountry.name}?`,
-    options
+    options: allOptions
   };
 }
 
-async function getRandomBollardQuestion(filters?: QuizFilters) {
+async function getRandomBollardQuestion(filters?: QuizFilters, previousEntityIds: string[] = []) {
   // Build the aggregation pipeline based on filters
   const pipeline: any[] = [];
   
@@ -671,7 +839,7 @@ async function getRandomBollardQuestion(filters?: QuizFilters) {
   
   // Add GeoGuessr filter if specified
   if (filters?.in_geoguessr) {
-    if (!pipeline.length) {
+    if (!pipeline.some(stage => stage.$lookup?.as === 'countryDetails')) {
       pipeline.push({
         $lookup: {
           from: 'countries',
@@ -688,17 +856,54 @@ async function getRandomBollardQuestion(filters?: QuizFilters) {
     });
   }
   
+  // Filter out bollards that were used in previous questions
+  if (previousEntityIds.length > 0) {
+    console.log(`Attempting to exclude ${previousEntityIds.length} previous bollard entities`);
+    // Convert string IDs to ObjectId for MongoDB comparison
+    const objectIds = previousEntityIds.map(id => {
+      try {
+        return new mongoose.Types.ObjectId(id);
+      } catch (e) {
+        return id; // If conversion fails, keep the string
+      }
+    });
+    
+    pipeline.push({
+      $match: {
+        _id: { $nin: objectIds }
+      }
+    });
+  }
+  
   // Add random sampling
   pipeline.push({ $sample: { size: 1 } });
   
   // Execute the query
-  const bollards = await Bollard.aggregate(pipeline)
+  let bollards = await Bollard.aggregate(pipeline)
     .lookup({
       from: 'countries',
       localField: 'countries',
       foreignField: '_id',
       as: 'countryDetails'
     });
+  
+  // If no bollards found with the filters + previous exclusion, 
+  // try again without excluding previous questions
+  if (!bollards.length && previousEntityIds.length > 0) {
+    console.log('No bollards found with exclusion filter, retrying without excluding previous bollards');
+    
+    // Rebuild the pipeline without the exclusion
+    const retryPipeline = pipeline.filter(stage => !stage.$match?._id);
+    retryPipeline.push({ $sample: { size: 1 } });
+    
+    bollards = await Bollard.aggregate(retryPipeline)
+      .lookup({
+        from: 'countries',
+        localField: 'countries',
+        foreignField: '_id',
+        as: 'countryDetails'
+      });
+  }
   
   if (!bollards.length) {
     throw new Error('No bollards found matching the criteria');
@@ -745,16 +950,6 @@ async function getRandomBollardQuestion(filters?: QuizFilters) {
     { $sample: { size: 3 } }
   ]);
   
-  // If we couldn't find enough countries with the filters, fall back to countries without filters
-  if (additionalCountries.length < 3) {
-    console.log(`Warning: Could only find ${additionalCountries.length} additional countries with the specified filters. Falling back to countries without filters.`);
-    const fallbackCountries = await Country.aggregate([
-      { $match: { _id: { $nin: [...bollard.countries, ...additionalCountries.map(c => c._id)] } } },
-      { $sample: { size: 3 - additionalCountries.length } }
-    ]);
-    additionalCountries.push(...fallbackCountries);
-  }
-  
   // Create an array with exactly 4 options: 1 correct + 3 incorrect
   const allCountries = [
     selectedCorrectCountry,
@@ -778,18 +973,23 @@ async function getRandomBollardQuestion(filters?: QuizFilters) {
   // This will be used by the client to validate write mode answers
   const allCorrectCountryNames = bollard.countryDetails.map((country: any) => country.name);
   
+  // Store the actual bollard ID in metadata
+  const bollardId = bollard._id.toString();
+  console.log(`Using bollard with ID: ${bollardId}`);
+  
   return {
     id: new mongoose.Types.ObjectId().toString(),
     question: 'In which country can you find this bollard?',
     imageUrl: bollard.imageUrl,
     options,
     metadata: {
-      allCorrectCountryNames
+      allCorrectCountryNames,
+      bollardId // Include the actual bollard ID in metadata for tracking
     }
   };
 }
 
-async function getRandomLicensePlateQuestion(filters?: QuizFilters) {
+async function getRandomLicensePlateQuestion(filters?: QuizFilters, previousEntityIds: string[] = []) {
   // Build the aggregation pipeline based on filters
   const pipeline: any[] = [];
   
@@ -812,7 +1012,7 @@ async function getRandomLicensePlateQuestion(filters?: QuizFilters) {
   
   // Add GeoGuessr filter if specified
   if (filters?.in_geoguessr) {
-    if (!pipeline.length) {
+    if (!pipeline.some(stage => stage.$lookup?.as === 'countryDetails')) {
       pipeline.push({
         $lookup: {
           from: 'countries',
@@ -829,17 +1029,54 @@ async function getRandomLicensePlateQuestion(filters?: QuizFilters) {
     });
   }
   
+  // Filter out license plates that were used in previous questions
+  if (previousEntityIds.length > 0) {
+    console.log(`Attempting to exclude ${previousEntityIds.length} previous license plate entities`);
+    // Convert string IDs to ObjectId for MongoDB comparison
+    const objectIds = previousEntityIds.map(id => {
+      try {
+        return new mongoose.Types.ObjectId(id);
+      } catch (e) {
+        return id; // If conversion fails, keep the string
+      }
+    });
+    
+    pipeline.push({
+      $match: {
+        _id: { $nin: objectIds }
+      }
+    });
+  }
+  
   // Add random sampling
   pipeline.push({ $sample: { size: 1 } });
   
   // Execute the query
-  const licensePlates = await LicensePlate.aggregate(pipeline)
+  let licensePlates = await LicensePlate.aggregate(pipeline)
     .lookup({
       from: 'countries',
       localField: 'countries',
       foreignField: '_id',
       as: 'countryDetails'
     });
+  
+  // If no license plates found with the filters + previous exclusion, 
+  // try again without excluding previous questions
+  if (!licensePlates.length && previousEntityIds.length > 0) {
+    console.log('No license plates found with exclusion filter, retrying without excluding previous license plates');
+    
+    // Rebuild the pipeline without the exclusion
+    const retryPipeline = pipeline.filter(stage => !stage.$match?._id);
+    retryPipeline.push({ $sample: { size: 1 } });
+    
+    licensePlates = await LicensePlate.aggregate(retryPipeline)
+      .lookup({
+        from: 'countries',
+        localField: 'countries',
+        foreignField: '_id',
+        as: 'countryDetails'
+      });
+  }
   
   if (!licensePlates.length) {
     throw new Error('No license plates found matching the criteria');
@@ -919,13 +1156,18 @@ async function getRandomLicensePlateQuestion(filters?: QuizFilters) {
   // This will be used by the client to validate write mode answers
   const allCorrectCountryNames = licensePlate.countryDetails.map((country: any) => country.name);
   
+  // Store the actual license plate ID in metadata
+  const licensePlateId = licensePlate._id.toString();
+  console.log(`Using license plate with ID: ${licensePlateId}`);
+  
   return {
     id: new mongoose.Types.ObjectId().toString(),
     question: 'In which country can you find this license plate?',
     imageUrl: licensePlate.imageUrl,
     options,
     metadata: {
-      allCorrectCountryNames
+      allCorrectCountryNames,
+      licensePlateId // Include the actual license plate ID in metadata for tracking
     }
   };
 }

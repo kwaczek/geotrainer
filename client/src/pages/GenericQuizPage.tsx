@@ -66,6 +66,8 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   const [quizId, setQuizId] = useState<string | null>(null);
   const [currentQuestionNumber, setCurrentQuestionNumber] = useState(1);
   const [quizInitialized, setQuizInitialized] = useState(false);
+  const [previousQuestionIds, setPreviousQuestionIds] = useState<string[]>([]);
+  const [previousEntityIds, setPreviousEntityIds] = useState<string[]>([]);
   const questionStartTime = useRef(Date.now());
   const dataFetchedRef = useRef(false);
 
@@ -81,12 +83,14 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         currentQuestionNumber,
         lastAnswered: questionCount > 0, // Track if we've answered the current question
         lastUpdated: new Date().toISOString(),
-        settings: customSettings // Save custom settings
+        settings: customSettings, // Save custom settings
+        previousQuestionIds,  // Save previous question IDs
+        previousEntityIds     // Save previous entity IDs
       };
       localStorage.setItem(`quiz_session_${sessionId}`, JSON.stringify(sessionState));
       console.log('Saved session state to localStorage:', sessionState);
     }
-  }, [sessionId, quizType, score, questionCount, attempts, currentQuestionNumber, customSettings]);
+  }, [sessionId, quizType, score, questionCount, attempts, currentQuestionNumber, customSettings, previousQuestionIds, previousEntityIds]);
 
   // Load session state from localStorage
   const loadSessionState = useCallback(() => {
@@ -102,6 +106,16 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
             setScore(parsedState.score || 0);
             setQuestionCount(parsedState.questionCount || 0);
             setAttempts(parsedState.attempts || []);
+            
+            // Load previously seen question IDs
+            if (parsedState.previousQuestionIds) {
+              setPreviousQuestionIds(parsedState.previousQuestionIds);
+            }
+            
+            // Load previously seen entity IDs
+            if (parsedState.previousEntityIds) {
+              setPreviousEntityIds(parsedState.previousEntityIds);
+            }
             
             // Load custom settings if available
             if (parsedState.settings) {
@@ -205,6 +219,8 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
       
       console.log(`Fetching question for ${quizType}, session: ${sessionId}, question number: ${currentQuestionNumber}`);
       console.log('Using custom settings:', customSettings);
+      console.log('Previous question IDs:', previousQuestionIds);
+      console.log('Previous entity IDs:', previousEntityIds);
       
       // Add custom settings to the filters
       const enhancedFilters = {
@@ -216,7 +232,9 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
       const response = await quizService.getNextQuestion(
         quizType,
         sessionId || undefined,
-        enhancedFilters
+        enhancedFilters,
+        previousQuestionIds,
+        previousEntityIds
       );
       
       setCurrentQuestion(response.question);
@@ -245,7 +263,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     } finally {
       setLoading(false);
     }
-  }, [quizType, sessionId, filters, navigate, existingSessionId, currentQuestionNumber, customSettings]);
+  }, [quizType, sessionId, filters, navigate, existingSessionId, currentQuestionNumber, customSettings, previousQuestionIds, previousEntityIds]);
 
   // Handle answer submission
   const handleAnswer = async (isCorrect: boolean, optionId: string) => {
@@ -263,7 +281,12 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     
     setQuestionCount(prev => prev + 1);
     
-    // Check if optionId contains a custom input (for write mode)
+    // Add the current question ID to the list of seen questions
+    if (currentQuestionId) {
+      setPreviousQuestionIds(prev => [...prev, currentQuestionId]);
+    }
+    
+    // Extract the actual option ID without any custom input part
     let actualOptionId = optionId;
     let userCustomInput = '';
     if (optionId.includes('|CUSTOM:')) {
@@ -280,6 +303,50 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     if (!correctOption) {
       console.error('Could not find correct option');
       return;
+    }
+    
+    // Add only the correct entity ID to the exclusion list
+    // For flags/capitals, this is the country that was the subject of the question
+    // For bollards/license plates, this is the actual bollard/plate ID
+    if (quizType === 'flags' || quizType === 'capitals') {
+      // For flags and capitals, the entity ID is in the option's ID
+      // (the country whose flag or capital was being asked about)
+      const entityId = correctOption.id;
+      if (!previousEntityIds.includes(entityId)) {
+        setPreviousEntityIds(prev => [...prev, entityId]);
+      }
+      console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId} (${correctOption.text})`);
+    } else if (quizType === 'bollards' || quizType === 'licenseplates') {
+      // For bollards and license plates, we can get the ID from metadata
+      if (currentQuestion.metadata) {
+        // Initialize with empty string (will be replaced if valid ID found)
+        let entityId = '';
+        
+        if (quizType === 'bollards' && currentQuestion.metadata.bollardId) {
+          entityId = String(currentQuestion.metadata.bollardId);
+        } else if (quizType === 'licenseplates' && currentQuestion.metadata.licensePlateId) {
+          entityId = String(currentQuestion.metadata.licensePlateId);
+        }
+        
+        if (entityId) {
+          if (!previousEntityIds.includes(entityId)) {
+            setPreviousEntityIds(prev => [...prev, entityId]);
+            console.log(`Adding entity ID from metadata to exclusion list for ${quizType}: ${entityId}`);
+          }
+        } else {
+          // Fallback to using the question ID if no valid entity ID found
+          if (currentQuestionId && !previousEntityIds.includes(currentQuestionId)) {
+            setPreviousEntityIds(prev => [...prev, currentQuestionId]);
+            console.log(`Fallback: Adding question ID to exclusion list for ${quizType}: ${currentQuestionId}`);
+          }
+        }
+      } else {
+        // Fallback to using the question ID if no metadata is available
+        if (currentQuestionId && !previousEntityIds.includes(currentQuestionId)) {
+          setPreviousEntityIds(prev => [...prev, currentQuestionId]);
+          console.log(`No metadata: Adding question ID to exclusion list for ${quizType}: ${currentQuestionId}`);
+        }
+      }
     }
     
     // Handle case where selected option might not be found (e.g., in write mode)
