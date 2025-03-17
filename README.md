@@ -90,6 +90,24 @@ GeoTrainer is an interactive quiz platform designed to help [GeoGuessr](https://
    DEBUG=true
    ```
 
+   **Admin Environment Variables**
+
+   For admin functionality, add these variables to your client/.env:
+
+   ```
+   REACT_APP_ADMIN_USERNAME=your_admin_username
+   REACT_APP_ADMIN_PASSWORD=your_admin_password
+   REACT_APP_ADMIN_API_KEY=your_api_key
+   ```
+
+   The API key should match the ADMIN_API_KEY in your server/.env:
+
+   ```
+   ADMIN_API_KEY=your_api_key
+   ```
+
+   > Note: For production deployments via GitHub Actions, add these variables as GitHub Secrets with the same names.
+
 4. **Seed the database**
 
    ```bash
@@ -135,4 +153,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - The GeoGuessr community for inspiration and feedback
 - All contributors who help improve this project
+
 ## CODEOWNERS Test
