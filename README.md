@@ -135,4 +135,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - The GeoGuessr community for inspiration and feedback
 - All contributors who help improve this project
-# Test change
