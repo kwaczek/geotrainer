@@ -73,7 +73,7 @@ export const countries = [
     "name": "Azerbaijan",
     "capital": "Baku",
     "continent": "Asia",
-    "in_geoguessr": true,
+    "in_geoguessr": false,
     "code": "az"
   },
   {
