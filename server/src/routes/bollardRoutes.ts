@@ -1,13 +1,14 @@
 import express from 'express';
 import { uploadBollard, createBollard, getGeoGuessrCountries, getAllBollards, deleteBollard, getBollardsByCountry, getBollardCount } from '../controllers/bollardController';
+import { requireApiKey } from '../middleware/apiKeyMiddleware';
 
 const router = express.Router();
 
-// Hidden admin routes - these should be protected in production
-router.post('/upload', uploadBollard, createBollard);
+// Protected admin routes
+router.post('/upload', requireApiKey, uploadBollard, createBollard);
 router.get('/countries', getGeoGuessrCountries);
 router.get('/', getAllBollards);
-router.delete('/:id', deleteBollard);
+router.delete('/:id', requireApiKey, deleteBollard);
 
 // Public routes
 router.get('/count', getBollardCount);

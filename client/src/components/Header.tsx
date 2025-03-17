@@ -45,6 +45,9 @@ const Header: React.FC = () => {
                   Admin
                 </span>
                 <div className="absolute hidden group-hover:block bg-blue-700 p-2 rounded shadow-lg right-0 w-48 z-10">
+                  <Link to="/admin/countries" className="block py-1 px-2 hover:bg-blue-600 rounded transition-colors">
+                    Country Admin
+                  </Link>
                   <Link to="/admin/bollards" className="block py-1 px-2 hover:bg-blue-600 rounded transition-colors">
                     Bollard Admin
                   </Link>
