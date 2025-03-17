@@ -1,191 +1,137 @@
-# GeoTrainer - Unified Quiz System - By Miro
+# GeoTrainer
 
-## Overview
+GeoTrainer is an interactive quiz platform designed to help [GeoGuessr](https://www.geoguessr.com/) players improve their geographic knowledge. Test yourself on capital cities, country flags, bollards, license plates, and more!
 
-GeoTrainer is a geography quiz application that tests users' knowledge of flags, capitals, bollards, and more. This repository contains a unified quiz system that makes it easy to add new quiz types without duplicating code.
+🌐 **Live Demo:** [https://geoprep.fun/](https://geoprep.fun/)
 
-## Architecture
+📱 **Reddit Discussion:** [Join the conversation](https://www.reddit.com/r/geoguessr/comments/1jcm67f/yet_another_bollard_and_more_quiz_test_it_if_you/)
 
-The unified quiz system consists of:
+## Features
 
-1. **Client-side components**:
+### Current Features
 
-   - `types/quiz.ts`: Core types for the quiz systems
-   - `config/quizConfig.ts`: Configuration for each quiz typeaas
-   - `services/quizService.ts`: API service for quiz operations
-   - `components/Quiz/GenericQuizComponent.tsx`: Reusable quiz UI component
-   - `pages/GenericQuizPage.tsx`: Unified quiz page for all quiz types
-   - `pages/GenericQuizResultPage.tsx`: Unified quiz result page
+- **Quiz Types:**
 
-2. **Server-side components**:
-   - `controllers/unifiedQuizController.ts`: Unified controller for all quiz types
-   - `routes/unifiedQuiz.ts`: Routes for the unified quiz system
+  - Capital Cities Quiz
+  - Country Flags Quiz
+  - Bollards Quiz
+  - License Plates Quiz (in progress)
 
-## How to Add a New Quiz Type
+- **Customization Options:**
 
-To add a new quiz type, follow these steps:
+  - Filter by continent
+  - GeoGuessr-only mode
+  - Write mode for non-capitals quizzes
+  - Adjustable timer settings
+  - Customizable question count
 
-1. **Update the QuizType enum** in `client/src/types/quiz.ts`:
+- **Results & Analytics:**
+  - Detailed quiz results
+  - Statistics on accuracy and time
+  - Shareable results via unique quiz ID
 
-   ```typescript
-   export type QuizType = "flags" | "capitals" | "bollards" | "your-new-type";
+### Planned Features
+
+- More quiz types (road signs, cars, potatoes, etc.)
+- Regional content (US license plates, phone prefixes)
+- User accounts with progress tracking
+- Adaptive quizzes based on performance
+
+## Tech Stack
+
+- **Frontend:** React, TypeScript, Tailwind CSS
+- **Backend:** Node.js, Express, TypeScript
+- **Database:** MongoDB
+- **Deployment:** GitHub Actions, EC2
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or later)
+- MongoDB (local or Atlas)
+- Git
+
+### Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/yourusername/geotrainer.git
+   cd geotrainer
    ```
 
-2. **Add a new configuration** in `client/src/config/quizConfig.ts`:
+2. **Install dependencies**
 
-   ```typescript
-   'your-new-type': {
-     type: 'your-new-type',
-     title: 'Your New Quiz',
-     description: 'Description of your new quiz type.',
-     hasImages: true, // or false
-     questionTemplate: "Your question template?",
-     timeLimit: 30,
-     questionsPerQuiz: 10,
-     dataSource: {
-       endpoint: '/api/quizzes/your-new-type',
-       imageField: 'imageUrl', // if hasImages is true
-       correctAnswerField: 'correctAnswer'
-     }
-   }
+   ```bash
+   # Install root dependencies
+   npm install
+
+   # Install client and server dependencies
+   npm run install:all
    ```
 
-3. **Add a helper function** in `server/src/controllers/unifiedQuizController.ts`:
+3. **Configure environment variables**
 
-   ```typescript
-   async function getRandomYourNewTypeQuestion(filters?: QuizFilters) {
-     // Your implementation here
-     // Return a question object with id, question, options, and imageUrl (if applicable)
-   }
+   Create `.env` files in both the client and server directories:
+
+   **server/.env**
+
+   ```
+   PORT=5001
+   MONGO_URI=mongodb://localhost:27017/geotrainer
+   JWT_SECRET=your_secret_key
+   NODE_ENV=development
    ```
 
-4. **Update the getNextQuestion switch statement** in `server/src/controllers/unifiedQuizController.ts`:
+   **client/.env**
 
-   ```typescript
-   switch (quizType.toLowerCase()) {
-     // ... existing cases
-     case QuizType.YOUR_NEW_TYPE:
-       question = await getRandomYourNewTypeQuestion(session.filters);
-       break;
-     // ...
-   }
+   ```
+   DEBUG=true
    ```
 
-5. **Update the QuizType enum** in `server/src/models/QuizResult.ts`:
+4. **Seed the database**
 
-   ```typescript
-   export enum QuizType {
-     FLAGS = "flags",
-     CAPITALS = "capitals",
-     BOLLARDS = "bollards",
-     YOUR_NEW_TYPE = "your-new-type",
-   }
+   ```bash
+   cd server
+   npm run seed:all
    ```
 
-6. **Add a new link** in the `HomePage` component.
+5. **Start the development servers**
 
-## Integration
-
-To integrate the unified quiz system into the existing application:
-
-1. **Register the unified quiz routes** in your server's main file:
-
-   ```typescript
-   import unifiedQuizRoutes from "./routes/unifiedQuiz";
-
-   // ...
-
-   app.use("/api", unifiedQuizRoutes);
+   ```bash
+   # From the root directory
+   npm run dev
    ```
 
-2. **Update the App.tsx** to use the generic components:
+   This will start both the client (on port 3000) and server (on port 5001) concurrently.
 
-   ```typescript
-   // ... existing imports
-   import GenericQuizPage from './pages/GenericQuizPage';
-   import GenericQuizResultPage from './pages/GenericQuizResultPage';
-   import { QuizType } from './types/quiz';
+6. **Access the application**
 
-   // ... existing code
+   Open your browser and navigate to `http://localhost:3000`
 
-   // In your routes:
-   <Route path="/quiz/:id" element={<QuizRouter />} />
-   <Route path="/quiz/:type/session/:sessionId" element={<QuizSessionRouter />} />
-   <Route path="/quiz-result/:quizId" element={<GenericQuizResultPage />} />
+## Contributing
 
-   // ... existing code
+Contributions are welcome! Here's how you can help:
 
-   // Update your router components:
-   const QuizRouter: React.FC = () => {
-     const { id } = useParams<{ id: string }>();
+1. Fork the repository
+2. Create a new branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Commit your changes (`git commit -m 'Add some amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
-     // Validate that the quiz type is supported
-     const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'your-new-type'].includes(id);
+Please make sure your code follows the existing style and includes appropriate tests.
 
-     if (isValidQuizType) {
-       return <GenericQuizPage quizType={id as QuizType} />;
-     }
+## Data Contribution
 
-     return <div className="p-4">Quiz type "{id}" not found or not yet implemented.</div>;
-   };
-   ```
+If you want to help populate the database with more quiz content (especially bollards, license plates, etc.), please reach out through the [Reddit discussion](https://www.reddit.com/r/geoguessr/comments/1jcm67f/yet_another_bollard_and_more_quiz_test_it_if_you/).
 
-## Benefits of the Unified System
+## License
 
-1. **Single source of truth** for quiz configuration
-2. **Reusable components and logic** across quiz types
-3. **Easier to add new quiz types** (just add a new config)
-4. **Consistent behavior** across quiz types
-5. **Centralized state management**
-6. **Easier testing and maintenance**
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Migration Plan
+## Acknowledgments
 
-To migrate existing quiz types to the unified system:
-
-1. Start by adding the new unified components and routes
-2. Test the unified system with a new quiz type
-3. Gradually migrate each existing quiz type to use the unified system
-4. Remove the old, duplicated code once all quiz types are migrated
-
-## Testing
-
-### Running Tests
-
-Tests are set up for the server-side code. You can run tests using the following commands:
-
-```bash
-# From the project root
-npm test                  # Run all tests
-npm run test:watch        # Run tests in watch mode
-npm run test:changed      # Run tests for specific files
-
-# Run only the passing tests
-npm test -- src/tests/setup.test.ts src/tests/capitalQuestions.test.ts src/tests/capitalQuizEndpoint.test.ts src/tests/capitalQuizFlow.test.ts
-
-# From the server directory
-cd server
-npm test                  # Run all tests
-npm run test:watch        # Run tests in watch mode
-npm run test:changed      # Run tests for specific files
-```
-
-### Testing Status
-
-Currently, 4 out of 5 test suites are passing. The quizResultController.test.ts file has mocking issues that will be fixed in future updates. For now, CI is configured to run only the passing tests.
-
-### Automated Testing
-
-The project is configured with:
-
-1. **Pre-commit Hooks**: Tests run automatically before each commit using Husky and lint-staged
-
-   - Only tests related to changed files are run for efficiency
-   - Commits are blocked if tests fail
-
-2. **GitHub Actions**: Tests run automatically on push and pull requests to main/master branches
-   - See `.github/workflows/test.yml` for configuration
-
-### Test Structure
-
-Tests are organized in the `server/src/tests` directory. See the [Server README](./server/README.md) for more details about the test structure.
+- The GeoGuessr community for inspiration and feedback
+- All contributors who help improve this project

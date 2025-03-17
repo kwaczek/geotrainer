@@ -9,9 +9,10 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// The hardcoded credentials for the admin user
-const ADMIN_USERNAME = 'kwaczek';
-const ADMIN_PASSWORD = 'Qwe12qwe!';
+// Admin credentials from environment variables
+// These will be loaded from .env file which is not committed to the repository
+const ADMIN_USERNAME = process.env.REACT_APP_ADMIN_USERNAME || '';
+const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || '';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
