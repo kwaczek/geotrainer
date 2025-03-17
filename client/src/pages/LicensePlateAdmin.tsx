@@ -70,7 +70,11 @@ const LicensePlateAdmin: React.FC = () => {
 
         setDeleting(licensePlateId);
         try {
-            await axios.delete(`/api/licenseplates/${licensePlateId}`);
+            await axios.delete(`/api/licenseplates/${licensePlateId}`, {
+                headers: {
+                    'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
+                }
+            });
             setLicensePlates(prev => prev.filter(lp => lp._id !== licensePlateId));
         } catch (error) {
             console.error('Error deleting license plate:', error);
@@ -97,6 +101,7 @@ const LicensePlateAdmin: React.FC = () => {
             await axios.post('/api/licenseplates/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
                 },
             });
             

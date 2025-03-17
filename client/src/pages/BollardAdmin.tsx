@@ -72,7 +72,11 @@ const BollardAdmin: React.FC = () => {
 
         setDeleting(bollardId);
         try {
-            await axios.delete(`/api/bollards/${bollardId}`);
+            await axios.delete(`/api/bollards/${bollardId}`, {
+                headers: {
+                    'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
+                }
+            });
             setBollards(prev => prev.filter(b => b._id !== bollardId));
         } catch (error) {
             console.error('Error deleting bollard:', error);
@@ -100,6 +104,7 @@ const BollardAdmin: React.FC = () => {
             await axios.post('/api/bollards/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
                 },
             });
             

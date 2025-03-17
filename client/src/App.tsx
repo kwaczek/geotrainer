@@ -9,6 +9,7 @@ import GenericQuizResultPage from './pages/GenericQuizResultPage';
 import QuizSettingsPage from './pages/QuizSettingsPage';
 import BollardAdmin from './pages/BollardAdmin';
 import LicensePlateAdmin from './pages/LicensePlateAdmin';
+import CountryAdmin from './pages/CountryAdmin';
 import Header from './components/Header';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -71,6 +72,7 @@ const App: React.FC = () => {
               <Route element={<ProtectedRoute requireAdmin={true} />}>
                 <Route path="/admin/bollards" element={<BollardAdmin />} />
                 <Route path="/admin/licenseplates" element={<LicensePlateAdmin />} />
+                <Route path="/admin/countries" element={<CountryAdmin />} />
               </Route>
               
               <Route path="*" element={<NotFoundPage />} />
