@@ -50,13 +50,17 @@ jobs:
 
       - name: Backup MongoDB Database
         run: |
-          # First upload our backup script to the server
+          # Upload our Node.js backup script to the server
           echo "Uploading backup script to server..."
-          scp script/backup-mongodb.sh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:~/backup-mongodb.sh
+          scp script/backup-mongodb.js ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:~/backup-mongodb.js
 
-          # Make it executable and run it
-          echo "Running backup script..."
-          if ! ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "chmod +x ~/backup-mongodb.sh && ~/backup-mongodb.sh"; then
+          # Make it executable and install dependencies if needed
+          echo "Setting up backup script on server..."
+          ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "chmod +x ~/backup-mongodb.js && npm list mongodb || npm install mongodb"
+
+          # Run the backup script
+          echo "Running MongoDB backup..."
+          if ! ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "node ~/backup-mongodb.js"; then
             echo "::error::MongoDB backup failed! Stopping deployment."
             exit 1
           fi
