@@ -48,6 +48,21 @@ jobs:
       - name: Test SSH Connection
         run: ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "echo SSH connection successful"
 
+      - name: Backup MongoDB Database
+        run: |
+          # First upload our backup script to the server
+          echo "Uploading backup script to server..."
+          scp script/backup-mongodb.sh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:~/backup-mongodb.sh
+
+          # Make it executable and run it
+          echo "Running backup script..."
+          if ! ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "chmod +x ~/backup-mongodb.sh && ~/backup-mongodb.sh"; then
+            echo "::error::MongoDB backup failed! Stopping deployment."
+            exit 1
+          fi
+
+          echo "MongoDB backup completed successfully"
+
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
