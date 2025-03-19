@@ -411,11 +411,11 @@ const CountriesPage: React.FC = () => {
               }}
             >
               {country.flagUrl && (
-                <div className="aspect-w-16 aspect-h-9 bg-gray-100">
+                <div className="h-40 bg-gray-100">
                   <img 
                     src={country.flagUrl} 
                     alt={`Flag of ${country.name}`} 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     onError={(e) => {
                       // Fallback for broken flag images
                       const target = e.target as HTMLImageElement;
@@ -485,7 +485,7 @@ const CountriesPage: React.FC = () => {
                       <img 
                         src={country.flagUrl} 
                         alt={`Flag of ${country.name}`}
-                        className="h-6 w-10 object-cover rounded shadow-sm"
+                        className="h-8 w-12 object-contain rounded shadow-sm"
                         onError={(e) => {
                           // Fallback for broken flag images
                           const target = e.target as HTMLImageElement;
@@ -494,7 +494,7 @@ const CountriesPage: React.FC = () => {
                         }}
                       />
                     ) : (
-                      <div className="h-6 w-10 bg-gray-200 rounded"></div>
+                      <div className="h-8 w-12 bg-gray-200 rounded"></div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

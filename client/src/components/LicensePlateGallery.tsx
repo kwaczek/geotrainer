@@ -153,7 +153,7 @@ const LicensePlateGallery: React.FC<LicensePlateGalleryProps> = ({ licensePlates
 
       {/* Modal for displaying license plate details */}
       {selectedLicensePlate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={closeModal}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={closeModal}>
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-4">
               <div className="flex justify-between items-start mb-4">

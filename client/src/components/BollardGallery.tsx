@@ -104,38 +104,42 @@ const BollardGallery: React.FC<BollardGalleryProps> = ({ bollards, isLoading }) 
         {bollards.map((bollard) => (
           <div 
             key={bollard._id} 
-            className="bg-gray-50 rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+            className="bg-gray-50 rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => openModal(bollard)}
           >
-            <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-              {bollard.imageUrl && (
-                <img 
-                  src={bollard.imageUrl} 
-                  alt={bollard.description || 'Bollard image'} 
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    target.src = '/images/placeholder.png';
-                  }}
-                />
-              )}
-            </div>
-            <div className="p-4">
-              <p className="text-sm text-gray-600">{bollard.description || 'No description available'}</p>
-              
-              {bollard.googleMapsUrl && (
-                <a 
-                  href={bollard.googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-                >
-                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                  </svg>
-                  View on Google Maps
-                </a>
-              )}
+            <div className="flex">
+              <div className="w-48 h-32 flex-shrink-0 bg-gray-200">
+                {bollard.imageUrl && (
+                  <img 
+                    src={bollard.imageUrl} 
+                    alt={bollard.description || 'Bollard image'} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.onerror = null;
+                      target.src = '/images/placeholder.png';
+                    }}
+                  />
+                )}
+              </div>
+              <div className="flex-1 p-4">
+                <p className="text-sm text-gray-600 mb-2">{bollard.description || 'No description available'}</p>
+                
+                {bollard.googleMapsUrl && (
+                  <a 
+                    href={bollard.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    View on Google Maps
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         ))}
@@ -143,7 +147,7 @@ const BollardGallery: React.FC<BollardGalleryProps> = ({ bollards, isLoading }) 
 
       {/* Modal for displaying bollard details */}
       {selectedBollard && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={closeModal}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={closeModal}>
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-4">
               <div className="flex justify-between items-start mb-4">
