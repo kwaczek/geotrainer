@@ -75,16 +75,20 @@ const BollardGallery: React.FC<BollardGalleryProps> = ({ bollards, isLoading }) 
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-6">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center p-12">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (bollards.length === 0) {
     return (
-      <div className="text-center p-4 bg-gray-50 rounded-lg">
-        <p className="text-gray-500">No bollards found for this country.</p>
+      <div className="text-center py-8">
+        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+        </svg>
+        <h3 className="mt-2 text-sm font-medium text-gray-900">No bollards found</h3>
+        <p className="mt-1 text-sm text-gray-500">There are no bollards associated with this country yet.</p>
       </div>
     );
   }
@@ -100,54 +104,38 @@ const BollardGallery: React.FC<BollardGalleryProps> = ({ bollards, isLoading }) 
         {bollards.map((bollard) => (
           <div 
             key={bollard._id} 
-            className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+            className="bg-gray-50 rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
           >
-            <div className="flex flex-col md:flex-row">
-              {/* Image column */}
-              <div 
-                className="md:w-1/3 cursor-pointer"
-                onClick={() => openModal(bollard)}
-              >
-                <div className="aspect-square overflow-hidden">
-                  <img 
-                    src={getImageUrl(bollard.imageUrl)} 
-                    alt={`Bollard in ${bollard.description}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
+            <div className="aspect-w-16 aspect-h-9 bg-gray-200">
+              {bollard.imageUrl && (
+                <img 
+                  src={bollard.imageUrl} 
+                  alt={bollard.description || 'Bollard image'} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = '/images/placeholder.png';
+                  }}
+                />
+              )}
+            </div>
+            <div className="p-4">
+              <p className="text-sm text-gray-600">{bollard.description || 'No description available'}</p>
               
-              {/* Details column */}
-              <div className="p-4 md:w-2/3">
-                <h3 className="font-semibold text-gray-800 mb-2">Bollard Details</h3>
-                <p className="text-gray-600 mb-3">{bollard.description}</p>
-                
+              {bollard.googleMapsUrl && (
                 <a 
-                  href={bollard.googleMapsUrl} 
-                  target="_blank" 
+                  href={bollard.googleMapsUrl}
+                  target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 flex items-center"
+                  className="mt-2 inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                   </svg>
                   View on Google Maps
                 </a>
-                
-                <div className="mt-3">
-                  <button
-                    onClick={() => openModal(bollard)}
-                    className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    View Details
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         ))}

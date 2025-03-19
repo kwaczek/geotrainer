@@ -1,118 +1,117 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
 interface CountryMapProps {
   countryName: string;
 }
 
-// Default map container style
-const mapContainerStyle = {
-  width: '100%',
-  height: '200px',
-  borderRadius: '0.375rem',
-};
+// Fix Leaflet default icon path issues
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
+  iconUrl: require('leaflet/dist/images/marker-icon.png'),
+  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+});
 
 const CountryMap: React.FC<CountryMapProps> = ({ countryName }) => {
-  // Default center (can be adjusted based on the country)
-  const [center, setCenter] = React.useState({ lat: 0, lng: 0 });
-  const [zoom, setZoom] = React.useState(3);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<boolean>(false);
+  const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
-    // Geocode the country name to get coordinates
-    const geocodeCountry = async () => {
+  useEffect(() => {
+    const fetchCountryBounds = async () => {
       try {
-        // Use OpenStreetMap's Nominatim service for geocoding
+        setLoading(true);
+        setError(false);
+
+        // Use Nominatim to geocode the country name
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(countryName)}&countrycodes=${encodeURIComponent(countryName)}&addressdetails=1&limit=1`
+          `https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(
+            countryName
+          )}&format=json&limit=1`
         );
-        const data = await response.json();
-        
-        if (data && data.length > 0) {
-          setCenter({
-            lat: parseFloat(data[0].lat),
-            lng: parseFloat(data[0].lon)
-          });
-          
-          // Adjust zoom based on country size (if available in response)
-          // Smaller countries get higher zoom values
-          if (data[0].boundingbox) {
-            // Calculate approximate country size
-            const bbox = data[0].boundingbox;
-            const latDiff = Math.abs(parseFloat(bbox[1]) - parseFloat(bbox[0]));
-            const lonDiff = Math.abs(parseFloat(bbox[3]) - parseFloat(bbox[2]));
-            
-            // Adjust zoom based on country size
-            // Smaller countries get higher zoom values
-            if (latDiff < 5 && lonDiff < 5) {
-              setZoom(7); // Very small country
-            } else if (latDiff < 10 && lonDiff < 10) {
-              setZoom(6); // Small country
-            } else if (latDiff < 20 && lonDiff < 20) {
-              setZoom(5); // Medium country
-            } else {
-              setZoom(4); // Large country
-            }
-          } else {
-            setZoom(5); // Default zoom if no bounding box
-          }
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch country data');
         }
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error geocoding country:', error);
-        setIsLoading(false);
+
+        const data = await response.json();
+
+        if (data.length === 0) {
+          throw new Error('Country not found');
+        }
+
+        const { boundingbox, lat, lon } = data[0];
+        const [southLat, northLat, westLng, eastLng] = boundingbox.map(Number);
+
+        // Initialize the map if it hasn't been initialized yet
+        if (!mapRef.current && mapContainerRef.current) {
+          mapRef.current = L.map(mapContainerRef.current);
+          
+          // Add OpenStreetMap tile layer
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }).addTo(mapRef.current);
+        }
+
+        // Set view to the country's bounds
+        if (mapRef.current) {
+          const bounds = L.latLngBounds(
+            [southLat, westLng],
+            [northLat, eastLng]
+          );
+          mapRef.current.fitBounds(bounds);
+          
+          // Add a marker at the country's center
+          L.marker([parseFloat(lat), parseFloat(lon)]).addTo(mapRef.current);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading map:', err);
+        setError(true);
+        setLoading(false);
       }
     };
 
-    if (countryName) {
-      geocodeCountry();
-    }
+    fetchCountryBounds();
+
+    // Cleanup function
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
   }, [countryName]);
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="bg-gray-100 animate-pulse rounded-md" style={mapContainerStyle}>
-        <div className="flex h-full items-center justify-center">
-          <p className="text-gray-500">Loading map...</p>
-        </div>
+      <div className="flex justify-center items-center h-full bg-gray-100">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
-  // Create a simple OpenStreetMap URL that doesn't require an API key
-  // Adjust the bounding box to be smaller for a closer zoom
-  // For smaller countries, use a tighter bounding box
-  const zoomFactor = 2; // Smaller number = closer zoom
-  const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${center.lng-zoomFactor},${center.lat-zoomFactor},${center.lng+zoomFactor},${center.lat+zoomFactor}&layer=mapnik&marker=${center.lat},${center.lng}`;
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-full bg-gray-100 p-4 text-center">
+        <svg className="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <p className="text-gray-600">Unable to load map for {countryName}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="map-container rounded-md overflow-hidden shadow-sm">
-      <div style={mapContainerStyle} className="relative overflow-hidden">
-        <iframe
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          scrolling="no"
-          marginHeight={0}
-          marginWidth={0}
-          src={mapUrl}
-          title={`Map of ${countryName}`}
-          style={{ border: 0 }}
-          onError={(e) => {
-            // This won't actually trigger for iframes, but we'll keep the structure
-            const parent = e.currentTarget.parentElement;
-            if (parent) {
-              const overlay = document.createElement('div');
-              overlay.className = 'absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-80';
-              overlay.innerHTML = '<p class="text-gray-600">Map unavailable</p>';
-              parent.appendChild(overlay);
-            }
-          }}
-        />
-      </div>
-      <div className="text-xs text-gray-500 mt-1 text-center">
-        Map of {countryName}
-      </div>
-    </div>
+    <div 
+      ref={mapContainerRef} 
+      className="h-full w-full rounded-lg overflow-hidden"
+      style={{ minHeight: '400px' }}
+    />
   );
 };
 

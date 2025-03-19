@@ -75,16 +75,20 @@ const LicensePlateGallery: React.FC<LicensePlateGalleryProps> = ({ licensePlates
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-6">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center p-12">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   if (licensePlates.length === 0) {
     return (
-      <div className="text-center p-4 bg-gray-50 rounded-lg">
-        <p className="text-gray-500">No license plates found for this country.</p>
+      <div className="text-center py-8">
+        <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+        </svg>
+        <h3 className="mt-2 text-sm font-medium text-gray-900">No license plates found</h3>
+        <p className="mt-1 text-sm text-gray-500">There are no license plates associated with this country yet.</p>
       </div>
     );
   }
@@ -108,19 +112,26 @@ const LicensePlateGallery: React.FC<LicensePlateGalleryProps> = ({ licensePlates
                 className="md:w-1/3 cursor-pointer"
                 onClick={() => openModal(licensePlate)}
               >
-                <div className="aspect-square overflow-hidden">
-                  <img 
-                    src={getImageUrl(licensePlate.imageUrl)} 
-                    alt={`License plate in ${licensePlate.description}`}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="aspect-w-16 aspect-h-9 bg-gray-200">
+                  {licensePlate.imageUrl && (
+                    <img 
+                      src={licensePlate.imageUrl} 
+                      alt={licensePlate.description || 'License plate image'} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null;
+                        target.src = '/images/placeholder.png';
+                      }}
+                    />
+                  )}
                 </div>
               </div>
               
               {/* Details column */}
               <div className="p-4 md:w-2/3">
                 <h3 className="font-semibold text-gray-800 mb-2">License Plate Details</h3>
-                <p className="text-gray-600 mb-3">{licensePlate.description}</p>
+                <p className="text-gray-600 mb-3">{licensePlate.description || 'No description available'}</p>
                 
                 <div className="mt-3">
                   <button
@@ -168,7 +179,7 @@ const LicensePlateGallery: React.FC<LicensePlateGalleryProps> = ({ licensePlates
               
               <div className="mb-4">
                 <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
-                <p className="text-gray-600">{selectedLicensePlate.description}</p>
+                <p className="text-gray-600">{selectedLicensePlate.description || 'No description available'}</p>
               </div>
               
               {/* Countries section */}
