@@ -18,6 +18,7 @@ import { QuizType } from './types/quiz';
 
 // New learning pages
 import CountriesPage from './pages/CountriesPage';
+import CountryDetailPage from './pages/CountryDetailPage';
 import BollardsPage from './pages/BollardsPage';
 import PlatesPage from './pages/PlatesPage';
 
@@ -69,6 +70,7 @@ const App: React.FC = () => {
               
               {/* Learning Pages */}
               <Route path="/countries" element={<CountriesPage />} />
+              <Route path="/countries/:id" element={<CountryDetailPage />} />
               <Route path="/bollards" element={<BollardsPage />} />
               <Route path="/plates" element={<PlatesPage />} />
               
