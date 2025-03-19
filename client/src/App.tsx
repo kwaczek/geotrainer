@@ -16,6 +16,11 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { QuizType } from './types/quiz';
 
+// New learning pages
+import CountriesPage from './pages/CountriesPage';
+import BollardsPage from './pages/BollardsPage';
+import PlatesPage from './pages/PlatesPage';
+
 // Placeholder components for now
 const Footer = () => <div className="bg-gray-800 p-4 text-white">Footer Placehholder</div>;
 const RegisterPage = () => <div className="p-4">Register Page Placeholder</div>;
@@ -61,7 +66,13 @@ const App: React.FC = () => {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+              
+              {/* Learning Pages */}
+              <Route path="/countries" element={<CountriesPage />} />
+              <Route path="/bollards" element={<BollardsPage />} />
+              <Route path="/plates" element={<PlatesPage />} />
+              
+              {/* Quiz Routes */}
               <Route path="/quiz/:id" element={<QuizRouter />} />
               <Route path="/quiz/:quizType/settings" element={<QuizSettingsPage />} />
               <Route path="/quiz/:type/session/:sessionId" element={<QuizSessionRouter />} />
