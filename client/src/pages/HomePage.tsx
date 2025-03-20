@@ -143,6 +143,10 @@ const HomePage: React.FC = () => {
                   <span className="text-green-600 mr-2">•</span>
                   <span>Shareable quiz results via unique quiz ID</span>
                 </li>
+                <li className="flex items-start">
+                  <span className="text-green-600 mr-2">•</span>
+                  <span>Learning pages for each quiz category</span>
+                </li>
               </ul>
             </div>
             
@@ -196,6 +200,14 @@ const HomePage: React.FC = () => {
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">•</span>
                   <span>Adaptive quizzes based on your performance</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-600 mr-2">•</span>
+                  <span>Quiz history and progress tracking</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-600 mr-2">•</span>
+                  <span>Blurred plates quiz</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">•</span>

@@ -99,9 +99,61 @@ export const getGeoGuessrCountries = async (req: Request, res: Response): Promis
 export const getAllLicensePlates = async (req: Request, res: Response): Promise<void> => {
     try {
         const licensePlates = await LicensePlate.find()
-            .populate('countries', 'name code')
+            .populate({
+                path: 'countries',
+                select: 'name code continent'
+            })
             .sort('-createdAt');
-        res.json(licensePlates);
+        
+        // Define an interface for the populated country
+        interface PopulatedCountry {
+            _id: mongoose.Types.ObjectId;
+            name: string;
+            code: string;
+            continent: string;
+        }
+        
+        // Define an interface for the transformed plate objects
+        interface TransformedPlate {
+            _id: mongoose.Types.ObjectId;
+            imageUrl: string;
+            description: string;
+            countries: PopulatedCountry[];
+            country: string;
+            countryCode: string;
+            continent: string;
+            createdAt: Date;
+            updatedAt: Date;
+            __v: number;
+        }
+        
+        // Transform data to include direct country and continent properties
+        const transformedPlates = licensePlates.map(plate => {
+            // First convert to a plain object
+            const plateObj = plate.toObject();
+            
+            // Create the base transformed object with default values
+            const transformedPlate: any = {
+                ...plateObj,
+                country: 'Unknown',
+                countryCode: 'unknown',
+                continent: 'Unknown'
+            };
+            
+            // Add direct country, countryCode and continent properties if countries exist
+            if (plateObj.countries && Array.isArray(plateObj.countries) && plateObj.countries.length > 0) {
+                const country = plateObj.countries[0] as unknown as PopulatedCountry;
+                if (country && typeof country === 'object') {
+                    if (country.name) transformedPlate.country = country.name;
+                    if (country.code) transformedPlate.countryCode = country.code;
+                    if (country.continent) transformedPlate.continent = country.continent;
+                }
+            }
+            
+            return transformedPlate;
+        });
+        
+        res.json(transformedPlates);
     } catch (error) {
         console.error('Error fetching license plates:', error);
         res.status(500).json({ message: 'Error fetching license plates' });

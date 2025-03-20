@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import BollardGallery from '../components/BollardGallery';
 
 // API Bollard interface as returned from the database
 interface ApiBollard {
@@ -32,52 +33,86 @@ interface Bollard {
   googleMapsUrl: string;
 }
 
+// Define FilterSettings type at the top with other interfaces
+interface FilterSettings {
+  searchTerm: string;
+  country: string;
+  continent: string;
+  sortBy: string;
+  viewMode: 'grid' | 'list';
+}
+
 // Transform API bollard to display bollard
 const transformBollard = (bollard: ApiBollard): Bollard => {
   const country = bollard.countries && bollard.countries.length > 0 ? bollard.countries[0] : null;
   
-  // Lookup continent by country code
-  const getContinent = (countryCode: string, countryName: string): string => {
-    // European countries
-    if (['gb', 'uk', 'fr', 'de', 'es', 'it', 'nl', 'be', 'ch', 'at', 'se', 'no', 'dk', 'fi', 'ie', 'pl', 'pt', 'gr', 'ro', 'cz', 'hu', 'bg', 'hr', 'rs', 'sk', 'si', 'ee', 'lv', 'lt', 'cy', 'mt', 'lu', 'fo', 'tr'].includes(countryCode.toLowerCase())) {
-      return 'Europe';
-    }
-    // North American countries
-    if (['us', 'ca', 'mx', 'gt', 'bz', 'sv', 'hn', 'ni', 'cr', 'pa', 'cu', 'jm', 'ht', 'do', 'pr'].includes(countryCode.toLowerCase())) {
-      return 'North America';
-    }
-    // South American countries
-    if (['br', 'ar', 'co', 'pe', 'cl', 've', 'ec', 'bo', 'py', 'uy', 'gy', 'sr', 'gf'].includes(countryCode.toLowerCase())) {
-      return 'South America';
-    }
-    // Asian countries
-    if (['cn', 'jp', 'in', 'kr', 'id', 'sg', 'my', 'th', 'vn', 'ph', 'pk', 'bd', 'np', 'lk', 'kh', 'la', 'mm', 'kz', 'uz', 'kg', 'tm', 'mn', 'ru', 'hk', 'tw', 'sa', 'ae', 'il', 'jo', 'lb', 'kw', 'om', 'qa', 'bh', 'sy', 'iq', 'ir', 'af', 'ye'].includes(countryCode.toLowerCase())) {
-      return 'Asia';
-    }
-    // African countries
-    if (['za', 'ng', 'eg', 'dz', 'ma', 'ke', 'et', 'gh', 'tz', 'cd', 'ug', 'mg', 'sn', 'cm', 'ci', 'zw', 'rw', 'ml', 'mz', 'bw', 'ga', 'na', 'cg', 'sz', 'ls', 'gm', 'td', 'so', 'bf', 'sd', 'gn', 'bi', 'bj', 'er', 'lr', 'mu', 'tn'].includes(countryCode.toLowerCase())) {
-      return 'Africa';
-    }
-    // Oceania countries
-    if (['au', 'nz', 'pg', 'fj', 'sb', 'vu', 'nc', 'pf', 'ws', 'to', 'nr', 'ck', 'tv', 'pn', 'nu'].includes(countryCode.toLowerCase())) {
-      return 'Oceania';
-    }
-
-    // Fallbacks based on country name
-    const countryNameLower = countryName.toLowerCase();
-    if (countryNameLower.includes('russia') || countryNameLower === 'russia') {
-      return 'Asia'; // Russia spans both Europe and Asia, but let's categorize as Asia
+  // Map continent based on country code for better reliability
+  const getContinent = (countryCode: string): string => {
+    const europe = ['at', 'be', 'bg', 'hr', 'cy', 'cz', 'dk', 'ee', 'fi', 'fr', 'de', 'gr', 'hu', 
+                     'ie', 'it', 'lv', 'lt', 'lu', 'mt', 'nl', 'pl', 'pt', 'ro', 'sk', 'si', 'es', 
+                     'se', 'gb', 'ad', 'al', 'by', 'ba', 'fo', 'gi', 'is', 'li', 'mk', 'md', 'mc', 
+                     'me', 'no', 'ru', 'sm', 'rs', 'ch', 'ua', 'va', 'uk', 'im', 'tr'];
+    
+    const northAmerica = ['ca', 'us', 'mx', 'gt', 'bz', 'hn', 'sv', 'ni', 'cr', 'pa'];
+    
+    const southAmerica = ['ar', 'bo', 'br', 'cl', 'co', 'ec', 'gy', 'py', 'pe', 'sr', 'uy', 've'];
+    
+    const asia = ['af', 'am', 'az', 'bh', 'bd', 'bt', 'bn', 'kh', 'cn', 'cy', 'ge', 'in', 'id', 
+                   'ir', 'iq', 'il', 'jp', 'jo', 'kz', 'kw', 'kg', 'la', 'lb', 'my', 'mv', 'mn', 
+                   'mm', 'np', 'kp', 'om', 'pk', 'ph', 'qa', 'sa', 'sg', 'kr', 'lk', 'sy', 'tw', 
+                   'tj', 'th', 'tl', 'tr', 'tm', 'ae', 'uz', 'vn', 'ye', 'ru'];
+    
+    const africa = ['dz', 'ao', 'bj', 'bw', 'bf', 'bi', 'cm', 'cv', 'cf', 'td', 'km', 'cd', 'cg', 
+                     'ci', 'dj', 'eg', 'gq', 'er', 'et', 'ga', 'gm', 'gh', 'gn', 'gw', 'ke', 'ls', 
+                     'lr', 'ly', 'mg', 'mw', 'ml', 'mr', 'mu', 'ma', 'mz', 'na', 'ne', 'ng', 'rw', 
+                     'st', 'sn', 'sc', 'sl', 'so', 'za', 'ss', 'sd', 'sz', 'tz', 'tg', 'tn', 'ug', 'zm', 'zw'];
+    
+    const oceania = ['au', 'fj', 'ki', 'mh', 'fm', 'nr', 'nz', 'pw', 'pg', 'ws', 'sb', 'to', 'tv', 'vu'];
+    
+    const code = countryCode.toLowerCase();
+    
+    if (europe.includes(code)) return 'Europe';
+    if (northAmerica.includes(code)) return 'North America';
+    if (southAmerica.includes(code)) return 'South America';
+    if (asia.includes(code)) return 'Asia';
+    if (africa.includes(code)) return 'Africa';
+    if (oceania.includes(code)) return 'Oceania';
+    
+    // Fallback mapping for country names if code isn't available
+    if (!code) {
+      const countryName = country?.name || '';
+      const lowerName = countryName.toLowerCase();
+      
+      if (['russia', 'turkey'].includes(lowerName)) return 'Asia';
+      if (['united kingdom', 'uk', 'france', 'germany', 'italy', 'spain'].includes(lowerName)) return 'Europe';
+      if (['united states', 'usa', 'canada', 'mexico'].includes(lowerName)) return 'North America';
+      if (['brazil', 'argentina', 'chile', 'peru'].includes(lowerName)) return 'South America';
+      if (['china', 'japan', 'india', 'thailand'].includes(lowerName)) return 'Asia';
+      if (['australia', 'new zealand'].includes(lowerName)) return 'Oceania';
+      if (['egypt', 'south africa', 'nigeria', 'kenya'].includes(lowerName)) return 'Africa';
     }
     
     return 'Unknown';
   };
+  
+  let continent = 'Unknown';
+  
+  // Try to get the continent from the country object first
+  if (country && country.continent) {
+    continent = country.continent;
+    console.log(`Got continent ${continent} directly from country object for ${country.name}`);
+  } else {
+    // If not available, try to determine from country code
+    continent = getContinent(country?.code || '');
+    console.log(`Determined continent ${continent} from code for ${country?.name}`);
+  }
   
   return {
     id: bollard._id,
     name: bollard.description.split('.')[0].trim(), // Use first sentence as name
     country: country?.name || 'Unknown',
     countryCode: country?.code || '',
-    continent: country?.continent || getContinent(country?.code || '', country?.name || ''),
+    continent: continent,
     imageUrl: bollard.imageUrl,
     description: bollard.description,
     googleMapsUrl: bollard.googleMapsUrl
@@ -138,29 +173,40 @@ const fallbackBollards: Bollard[] = [
   }
 ];
 
-// Local storage keys
-const BOLLARDS_FILTER_KEY = 'geotrainer_bollards_filter';
+// Find and replace the localStorage key to match what's being used
+const STORAGE_KEY = 'geotrainer_bollards_filter';
 
 // Default filter settings
 const defaultFilterSettings = {
   searchTerm: '',
-  country: 'all',
-  continent: 'all',
+  country: 'All Countries',
+  continent: 'All Continents',
   sortBy: 'name',
   viewMode: 'grid' as const
 };
 
-// Get stored settings or default values
-const getStoredSettings = () => {
-  const stored = localStorage.getItem(BOLLARDS_FILTER_KEY);
-  if (stored) {
-    try {
-      return { ...defaultFilterSettings, ...JSON.parse(stored) };
-    } catch (e) {
-      console.warn('Failed to parse stored settings, using defaults');
-      return defaultFilterSettings;
-    }
+// Utility functions for localStorage
+const saveSettingsToStorage = (settings: FilterSettings) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    console.log('Settings saved to localStorage:', settings);
+  } catch (error) {
+    console.error('Error saving settings to localStorage:', error);
   }
+};
+
+const getStoredSettings = (): FilterSettings => {
+  try {
+    const storedSettings = localStorage.getItem(STORAGE_KEY);
+    if (storedSettings) {
+      console.log('Retrieved settings from localStorage:', storedSettings);
+      return JSON.parse(storedSettings);
+    }
+  } catch (error) {
+    console.error('Error retrieving settings from localStorage:', error);
+  }
+  
+  // Default settings if nothing in localStorage or error occurs
   return defaultFilterSettings;
 };
 
@@ -170,93 +216,305 @@ const BollardsPage: React.FC = () => {
   const [filteredBollards, setFilteredBollards] = useState<Bollard[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [availableCountries, setAvailableCountries] = useState<{name: string, continent: string}[]>([]);
+  const [availableContinents, setAvailableContinents] = useState<string[]>([]);
+  const [selectedBollard, setSelectedBollard] = useState<Bollard | null>(null);
   
   // Initialize with values from localStorage or defaults
   const storedSettings = getStoredSettings();
-  const [searchTerm, setSearchTerm] = useState<string>(storedSettings.searchTerm);
-  const [selectedCountry, setSelectedCountry] = useState<string>(storedSettings.country);
-  const [selectedContinent, setSelectedContinent] = useState<string>(storedSettings.continent);
-  const [sortBy, setSortBy] = useState<string>(storedSettings.sortBy);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(storedSettings.viewMode);
-  const [usingFallbackData, setUsingFallbackData] = useState<boolean>(false);
+  console.log('Using stored settings:', storedSettings);
 
-  // Fetch bollards on component mount
+  const [searchTerm, setSearchTerm] = useState<string>(storedSettings.searchTerm || '');
+  const [selectedCountry, setSelectedCountry] = useState<string>(storedSettings.country || 'All Countries');
+  const [selectedContinent, setSelectedContinent] = useState<string>(storedSettings.continent || 'All Continents');
+  const [sortBy, setSortBy] = useState<string>(storedSettings.sortBy || 'country');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(storedSettings.viewMode || 'grid');
+  const [usingFallbackData, setUsingFallbackData] = useState<boolean>(false);
+  
+  // Initialize app and force filter reset
   useEffect(() => {
-    const fetchBollards = async () => {
+    console.log('App initialized, using filters from localStorage');
+    console.log('Currently selected country:', selectedCountry);
+    console.log('Currently selected continent:', selectedContinent);
+  }, []);
+
+  // Debugger effect - trace what happens to state
+  useEffect(() => {
+    console.log('=== Debug State ===');
+    console.log('Bollards count:', bollards.length);
+    console.log('First bollard:', bollards.length > 0 ? bollards[0] : 'none');
+    console.log('Filtered bollards count:', filteredBollards.length);
+    console.log('Selected country:', selectedCountry);
+    console.log('Selected continent:', selectedContinent);
+    console.log('Available continents:', availableContinents);
+    console.log('Available countries:', availableCountries.length);
+    console.log('=== End Debug ===');
+  }, [bollards, filteredBollards, selectedCountry, selectedContinent, availableContinents, availableCountries]);
+
+  // Update the fetchData function to force "All Continents" as the initial selection
+  useEffect(() => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        console.log('Fetching bollards from API...');
-        const response = await axios.get('/api/bollards');
-        console.log('API response received:', response.data);
+        console.log('Fetching data from API...');
+        
+        // Remove forced filter reset
+        // We're now preserving the filters from localStorage
+        
+        // Fetch countries and continents first
+        try {
+          console.log('Fetching countries and continents...');
+          const countriesResponse = await axios.get('/api/countries');
+          console.log('API countries response:', countriesResponse.data);
+          
+          if (countriesResponse.data && Array.isArray(countriesResponse.data)) {
+            const countries = countriesResponse.data.map((country: any) => ({
+              name: country.name,
+              continent: country.continent || 'Unknown'
+            })).sort((a: any, b: any) => a.name.localeCompare(b.name));
+            
+            setAvailableCountries(countries);
+            console.log('Countries loaded from API:', countries.length);
+            
+            // Get unique continents from countries
+            const continents = Array.from(
+              new Set(countries.map((c: any) => c.continent || 'Unknown'))
+            ).filter(Boolean).sort();
+            
+            // Ensure 'All Continents' is in the list but don't overwrite user's selected filter
+            if (!continents.includes('All Continents')) {
+              setAvailableContinents(['All Continents', ...continents]);
+            } else {
+              setAvailableContinents(continents);
+            }
+            console.log('Continents derived from API countries:', continents);
+          }
+        } catch (err) {
+          console.warn('Could not fetch countries from API:', err);
+          // Will fallback to extracting from bollards
+        }
+        
+        // Also try to get continents separately for more reliable data
+        try {
+          const continentsResponse = await axios.get('/api/countries/continents');
+          console.log('API continents response:', continentsResponse.data);
+          
+          if (continentsResponse.data && continentsResponse.data.continents && 
+              Array.isArray(continentsResponse.data.continents) && 
+              continentsResponse.data.continents.length > 0) {
+            const continentList = continentsResponse.data.continents;
+            // Check if All Continents is already in the list
+            if (!continentList.includes('All Continents')) {
+              // Preserve user's selected continent but ensure All Continents is an option
+              const newContinents = ['All Continents', ...continentList];
+              setAvailableContinents(newContinents);
+              console.log('Setting available continents with All Continents added:', newContinents);
+            } else {
+              setAvailableContinents(continentList);
+              console.log('Setting available continents as provided by API:', continentList);
+            }
+            console.log('Continents loaded from API:', continentsResponse.data.continents);
+          }
+        } catch (err) {
+          console.warn('Could not fetch continents from API:', err);
+          // Will fallback to extracting from bollards or countries
+        }
+        
+        // Now fetch bollards
+        const bollardResponse = await axios.get('/api/bollards');
+        console.log('API bollards response received:', bollardResponse.data);
         
         // If we got a response and it's an array, process it
-        if (response.data && Array.isArray(response.data)) {
-          console.log('Response is a direct array of bollards');
-          // Transform the bollards to match our display format
-          const transformedBollards = response.data.map(transformBollard);
+        let transformedBollards: Bollard[] = [];
+        if (bollardResponse.data && Array.isArray(bollardResponse.data)) {
+          console.log('Response is a direct array of bollards with length:', bollardResponse.data.length);
+          transformedBollards = bollardResponse.data.map(transformBollard);
+          console.log('Transformed bollards:', transformedBollards.length);
+          console.log('First transformed bollard:', transformedBollards.length > 0 ? transformedBollards[0] : 'none');
           setBollards(transformedBollards);
           setUsingFallbackData(false);
         }
         // If the response has a bollards property that's an array
-        else if (response.data && Array.isArray(response.data.bollards)) {
+        else if (bollardResponse.data && bollardResponse.data.bollards && Array.isArray(bollardResponse.data.bollards)) {
           console.log('Response has bollards array in data property');
-          const transformedBollards = response.data.bollards.map(transformBollard);
+          transformedBollards = bollardResponse.data.bollards.map(transformBollard);
+          console.log('Transformed bollards:', transformedBollards.length);
           setBollards(transformedBollards);
           setUsingFallbackData(false);
         }
         // If none of the above formats match, use fallback
         else {
-          console.warn('Unexpected API response format, using fallback data:', response.data);
+          console.warn('Unexpected API response format, using fallback data:', bollardResponse.data);
           setBollards(fallbackBollards);
           setUsingFallbackData(true);
+          transformedBollards = fallbackBollards;
         }
+        
+        // Log the result of state update
+        console.log('Total bollards loaded:', transformedBollards.length);
+
+        // If we couldn't get countries from API, extract them from bollards as fallback
+        if (availableCountries.length === 0) {
+          console.log('Extracting countries from bollards as fallback...');
+          const uniqueCountries = Array.from(
+            new Set(transformedBollards.map(bollard => bollard.country))
+          ).map(countryName => {
+            const bollard = transformedBollards.find(b => b.country === countryName);
+            return {
+              name: countryName,
+              continent: bollard?.continent || 'Unknown'
+            };
+          }).sort((a, b) => a.name.localeCompare(b.name));
+          
+          console.log('Extracted countries from bollards:', uniqueCountries.length);
+          setAvailableCountries(uniqueCountries);
+        }
+        
+        // If we couldn't get continents from API, extract them from bollards as fallback
+        if (availableContinents.length === 0) {
+          console.log('Extracting continents from bollards as fallback...');
+          const uniqueContinents = Array.from(
+            new Set(transformedBollards.map(bollard => bollard.continent))
+          ).filter(Boolean).sort();
+          
+          // Add 'All Continents' if not already present
+          if (!uniqueContinents.includes('All Continents')) {
+            uniqueContinents.unshift('All Continents');
+          }
+          
+          console.log('Extracted continents from bollards:', uniqueContinents);
+          setAvailableContinents(uniqueContinents);
+        }
+        
       } catch (error) {
-        console.error('Error fetching bollards:', error);
-        console.warn('Using fallback bollard data due to connection error');
+        console.error('Error fetching data:', error);
+        console.warn('Using fallback data due to connection error');
         setBollards(fallbackBollards);
         setUsingFallbackData(true);
+        
+        // Extract unique countries and continents from fallback data if needed
+        if (availableCountries.length === 0) {
+          const uniqueCountries = Array.from(
+            new Set(fallbackBollards.map(bollard => bollard.country))
+          ).map(countryName => {
+            const bollard = fallbackBollards.find(b => b.country === countryName);
+            return {
+              name: countryName,
+              continent: bollard?.continent || 'Unknown'
+            };
+          }).sort((a, b) => a.name.localeCompare(b.name));
+          
+          console.log('Using fallback countries:', uniqueCountries.length);
+          setAvailableCountries(uniqueCountries);
+        }
+        
+        // Extract unique continents from fallback if needed
+        if (availableContinents.length === 0) {
+          const uniqueContinents = Array.from(
+            new Set(fallbackBollards.map(bollard => bollard.continent))
+          ).filter(Boolean).sort();
+          
+          // Add 'All Continents' if not already present
+          if (!uniqueContinents.includes('All Continents')) {
+            uniqueContinents.unshift('All Continents');
+          }
+          
+          console.log('Using fallback continents:', uniqueContinents);
+          setAvailableContinents(uniqueContinents);
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBollards();
+    fetchData();
   }, []);
 
-  // Save filter settings to localStorage whenever they change
+  // Save settings to localStorage whenever they change
   useEffect(() => {
-    const settings = {
+    const currentSettings: FilterSettings = {
       searchTerm,
       country: selectedCountry,
       continent: selectedContinent,
       sortBy,
       viewMode
     };
-    localStorage.setItem(BOLLARDS_FILTER_KEY, JSON.stringify(settings));
+    
+    saveSettingsToStorage(currentSettings);
   }, [searchTerm, selectedCountry, selectedContinent, sortBy, viewMode]);
 
-  // Apply filters, search, and sort when dependencies change
+  // Remove or modify the initialization effect that was forcibly resetting filters
+  // Instead, we'll check if we need to update the filters when availableCountries or availableContinents change
   useEffect(() => {
-    let result = [...bollards];
+    // Only set default filters if the selected values don't exist in the available options
+    // This prevents invalid filters while preserving user selections
+    if (availableCountries.length > 0 && selectedCountry !== 'All Countries') {
+      const countryExists = availableCountries.some(c => c.name === selectedCountry);
+      if (!countryExists) {
+        console.log('Selected country not found in available countries, resetting to All Countries');
+        setSelectedCountry('All Countries');
+      }
+    }
+    
+    if (availableContinents.length > 0 && selectedContinent !== 'All Continents') {
+      const continentExists = availableContinents.includes(selectedContinent);
+      if (!continentExists) {
+        console.log('Selected continent not found in available continents, resetting to All Continents');
+        setSelectedContinent('All Continents');
+      }
+    }
+  }, [availableCountries, availableContinents, selectedCountry, selectedContinent]);
 
-    // Apply country filter
-    if (selectedCountry !== 'all') {
-      result = result.filter(bollard => bollard.country === selectedCountry);
+  // Update the filtering logic
+  useEffect(() => {
+    console.log('Filtering bollards...');
+    console.log('Total bollards:', bollards.length);
+    console.log('Selected country:', selectedCountry);
+    console.log('Selected continent:', selectedContinent);
+    
+    let result = [...bollards];
+    console.log('Initial result count:', result.length);
+
+    // Don't filter if we have the "All Continents" selected, as that's the default
+    if (selectedContinent && selectedContinent !== 'All Continents') {
+      console.log('Filtering by continent:', selectedContinent);
+      result = result.filter(bollard => {
+        const match = bollard.continent === selectedContinent;
+        if (!match) {
+          console.log('  Excluding bollard:', bollard.name, 'with continent:', bollard.continent);
+        }
+        return match;
+      });
+      console.log('After continent filter:', result.length);
+    } else {
+      console.log('No continent filtering applied');
     }
 
-    // Apply continent filter
-    if (selectedContinent !== 'all') {
-      result = result.filter(bollard => bollard.continent === selectedContinent);
+    // Don't filter if we have "All Countries" selected
+    if (selectedCountry && selectedCountry !== 'All Countries') {
+      console.log('Filtering by country:', selectedCountry);
+      result = result.filter(bollard => {
+        const match = bollard.country === selectedCountry;
+        if (!match) {
+          console.log('  Excluding bollard:', bollard.name, 'with country:', bollard.country);
+        }
+        return match;
+      });
+      console.log('After country filter:', result.length);
+    } else {
+      console.log('No country filtering applied');
     }
 
     // Apply search
     if (searchTerm.trim() !== '') {
+      console.log('Filtering by search term:', searchTerm);
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(bollard => 
         bollard.name.toLowerCase().includes(searchLower) || 
         bollard.country.toLowerCase().includes(searchLower) ||
         bollard.description.toLowerCase().includes(searchLower)
       );
+      console.log('After search filter:', result.length);
     }
 
     // Apply sorting
@@ -273,12 +531,9 @@ const BollardsPage: React.FC = () => {
       }
     });
 
+    console.log('Final filtered count:', result.length);
     setFilteredBollards(result);
   }, [bollards, selectedCountry, selectedContinent, searchTerm, sortBy]);
-
-  // Get unique countries and continents for the filters
-  const countries = Array.from(new Set(bollards.map(bollard => bollard.country))).sort();
-  const continents = Array.from(new Set(bollards.map(bollard => bollard.continent))).sort();
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -307,9 +562,10 @@ const BollardsPage: React.FC = () => {
 
   // Reset all filters
   const resetFilters = () => {
+    console.log('Filter reset requested');
     setSearchTerm('');
-    setSelectedCountry('all');
-    setSelectedContinent('all');
+    setSelectedCountry('All Countries');
+    setSelectedContinent('All Continents');
     // Don't reset sort or view mode on filter reset
   };
 
@@ -334,6 +590,25 @@ const BollardsPage: React.FC = () => {
       </span>
     );
   };
+
+  // Add effect for keyboard support
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && selectedBollard) {
+        setSelectedBollard(null);
+      }
+    };
+
+    // Add event listener when modal is open
+    if (selectedBollard) {
+      document.addEventListener('keydown', handleEscKey);
+    }
+
+    // Clean up event listener
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [selectedBollard]);
 
   // Loading state
   if (loading) {
@@ -398,9 +673,9 @@ const BollardsPage: React.FC = () => {
               onChange={handleCountryChange}
               className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
             >
-              <option value="all">All Countries</option>
-              {countries.map(country => (
-                <option key={country} value={country}>{country}</option>
+              <option value="All Countries">All Countries</option>
+              {availableCountries.map(country => (
+                <option key={country.name} value={country.name}>{country.name}</option>
               ))}
             </select>
           </div>
@@ -414,10 +689,13 @@ const BollardsPage: React.FC = () => {
               onChange={handleContinentChange}
               className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
             >
-              <option value="all">All Continents</option>
-              {continents.map(continent => (
-                <option key={continent} value={continent}>{continent}</option>
-              ))}
+              <option value="All Continents">All Continents</option>
+              {availableContinents
+                .filter(c => c !== 'All Continents') // Filter out "All Continents" since we explicitly add it above
+                .map(continent => (
+                  <option key={continent} value={continent}>{continent}</option>
+                ))
+              }
             </select>
           </div>
 
@@ -463,7 +741,7 @@ const BollardsPage: React.FC = () => {
         </div>
         
         {/* Reset Filters Button */}
-        {(selectedCountry !== 'all' || selectedContinent !== 'all' || searchTerm !== '') && (
+        {(selectedCountry !== 'All Countries' || selectedContinent !== 'All Continents' || searchTerm !== '') && (
           <div className="mt-4 flex justify-end">
             <button
               onClick={resetFilters}
@@ -504,16 +782,10 @@ const BollardsPage: React.FC = () => {
       {viewMode === 'grid' && filteredBollards.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredBollards.map(bollard => (
-            <Link 
-              to={usingFallbackData ? '#' : `/bollards/${bollard.id}`}
+            <div 
               key={bollard.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-gray-200 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onClick={e => {
-                if (usingFallbackData) {
-                  e.preventDefault();
-                  alert('Bollard details are unavailable in demonstration mode.');
-                }
-              }}
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-gray-200 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              onClick={() => setSelectedBollard(bollard)}
             >
               {bollard.imageUrl && (
                 <div className="h-48 bg-gray-100">
@@ -544,7 +816,7 @@ const BollardsPage: React.FC = () => {
                   )}
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}
@@ -559,7 +831,7 @@ const BollardsPage: React.FC = () => {
                   Image
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
+                  Description
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Country
@@ -567,23 +839,14 @@ const BollardsPage: React.FC = () => {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Continent
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Details
-                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredBollards.map(bollard => (
+              {filteredBollards.map((bollard) => (
                 <tr 
-                  key={bollard.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => {
-                    if (usingFallbackData) {
-                      alert('Bollard details are unavailable in demonstration mode.');
-                    } else {
-                      window.location.href = `/bollards/${bollard.id}`;
-                    }
-                  }}
+                  key={bollard.id} 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => setSelectedBollard(bollard)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     {bollard.imageUrl ? (
@@ -606,27 +869,15 @@ const BollardsPage: React.FC = () => {
                     <div className="text-sm font-medium text-gray-900">{bollard.name}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900">{bollard.country}</div>
-                    {bollard.countryCode && (
-                      <div className="text-xs text-gray-500 uppercase">{bollard.countryCode}</div>
-                    )}
+                    <div className="text-sm text-gray-900">
+                      {bollard.country}
+                      {bollard.countryCode && (
+                        <span className="ml-1 text-xs text-gray-500">({bollard.countryCode.toUpperCase()})</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <ContinentBadge continent={bollard.continent} />
-                  </td>
-                  <td className="px-6 py-4">
-                    <a 
-                      href={bollard.googleMapsUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-blue-600 hover:text-blue-800 text-xs inline-flex items-center"
-                    >
-                      <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                      View on Maps
-                    </a>
                   </td>
                 </tr>
               ))}
@@ -643,7 +894,7 @@ const BollardsPage: React.FC = () => {
           They can be found in various designs across different countries, reflecting local architecture and cultural preferences.
         </p>
         <div className="flex flex-wrap gap-4 mt-4">
-          {continents.length > 0 && continents.map(continent => (
+          {availableContinents.length > 0 && availableContinents.map(continent => (
             <div key={continent} className="flex items-center">
               <div className={`h-4 w-4 rounded-full mr-2 ${continent === 'Africa' ? 'bg-yellow-500' : 
                                                           continent === 'Asia' ? 'bg-red-500' : 
@@ -656,6 +907,81 @@ const BollardsPage: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Add BollardGallery Modal */}
+      {selectedBollard && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={() => setSelectedBollard(null)}>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">Bollard Details</h3>
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setSelectedBollard(null)}
+                  aria-label="Close modal"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <img 
+                  src={selectedBollard.imageUrl} 
+                  alt={`Bollard in ${selectedBollard.country}`}
+                  className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = '/images/bollard-placeholder.png';
+                  }}
+                />
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                <p className="text-gray-600">{selectedBollard.description}</p>
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Country</h4>
+                <div className="flex items-center gap-2">
+                  <span className="bg-gray-50 p-2 rounded flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{selectedBollard.country}</span>
+                  </span>
+                  <ContinentBadge continent={selectedBollard.continent} />
+                </div>
+              </div>
+              
+              {selectedBollard.googleMapsUrl && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Location</h4>
+                  <a 
+                    href={selectedBollard.googleMapsUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    View on Google Maps
+                  </a>
+                </div>
+              )}
+              
+              <div className="mt-6 text-center text-sm text-gray-500">
+                Press ESC key or click outside to close
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
