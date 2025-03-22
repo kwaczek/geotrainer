@@ -6,8 +6,8 @@ const Footer: React.FC = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
-            <h3 className="text-xl font-bold">GeoTrainer</h3>
-            <p className="text-gray-400">Improve your GeoGuessr skills</p>
+            <h3 className="text-xl font-bold">GeoPrep</h3>
+            <p className="text-gray-400">Quiz and Preparation for GeoGuessr</p>
           </div>
           
           <div className="flex space-x-4">
@@ -26,7 +26,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
         <div className="mt-4 text-center text-gray-400 text-sm">
-          &copy; {new Date().getFullYear()} GeoTrainer. All rights reserved.
+          &copy; {new Date().getFullYear()} GeoPrep. All rights reserved.
         </div>
       </div>
     </footer>

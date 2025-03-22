@@ -65,7 +65,7 @@ if (process.env.NODE_ENV === 'production') {
 
 // Health check route
 app.get('/', (req, res) => {
-  res.send('GeoTrainer API is running');
+  res.send('GeoPrep API is running');
 });
 
 // Start server

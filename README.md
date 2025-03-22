@@ -155,3 +155,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - All contributors who help improve this project
 
 ## CODEOWNERS Test
+
+## SEO Optimization
+
+The website has been optimized for search engines with the following features:
+
+1. Meta tags for description, keywords, and search engine visibility
+2. Sitemap.xml for search engine crawling
+3. Robots.txt allowing search engines to index the site
+
+To submit the site to Google Search Console:
+
+1. Go to [Google Search Console](https://search.console.google.com)
+2. Add your property (geoprep.fun)
+3. Verify ownership (using one of the provided methods)
+4. Submit your sitemap.xml file
+5. Request indexing of important URLs
+
+Be sure to also submit your site to other search engines like Bing Webmaster Tools.

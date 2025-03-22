@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 const useDocumentTitle = (title: string, includeAppName: boolean = true) => {
   useEffect(() => {
     // Set the document title with or without the app name
-    const appName = 'GeoTrainer';
+    const appName = 'GeoPrep';
     document.title = includeAppName ? `${title} | ${appName}` : title;
     
     // Restore the original title when the component unmounts
