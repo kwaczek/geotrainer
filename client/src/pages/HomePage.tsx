@@ -70,7 +70,8 @@ const HomePage: React.FC = () => {
       {/* Header */}
       <header className="py-6 bg-white shadow-sm">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold text-center text-gray-800">GeoTrainer</h1>
+          <h1 className="text-3xl font-bold text-center text-gray-800">GeoPrep</h1>
+          <p className="text-center text-gray-600 mt-2">Quiz and Preparation for GeoGuessr</p>
         </div>
       </header>
 

@@ -1,6 +1,6 @@
 {
-  "short_name": "GeoTrainer",
-  "name": "GeoTrainer - Geography Quiz App",
+  "short_name": "GeoPrep",
+  "name": "GeoPrep - Quiz and Preparation for GeoGuessr",
   "icons": [
     {
       "src": "favicon.ico",
