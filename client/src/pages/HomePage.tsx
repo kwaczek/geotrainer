@@ -11,6 +11,12 @@ interface QuizCategory {
   supportsFilters?: boolean;
 }
 
+interface QuizCounts {
+  countries: number;
+  bollards: number;
+  licenseplates: number;
+}
+
 const HomePage: React.FC = () => {
   // Set the document title for the home page
   useDocumentTitle('Home', true);
@@ -22,6 +28,11 @@ const HomePage: React.FC = () => {
     'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica'
   ]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [quizCounts, setQuizCounts] = useState<QuizCounts>({
+    countries: 0,
+    bollards: 0,
+    licenseplates: 0
+  });
   
   // Quiz categories
   const categories: QuizCategory[] = [
@@ -32,7 +43,7 @@ const HomePage: React.FC = () => {
     { id: 'road_signs', name: 'Road Signs', description: 'Learn to identify road signs by country', icon: '🚸' },
   ];
   
-  // Fetch continents on component mount
+  // Fetch continents and quiz counts on component mount
   useEffect(() => {
     const fetchContinents = async () => {
       try {
@@ -49,7 +60,26 @@ const HomePage: React.FC = () => {
       }
     };
     
+    const fetchQuizCounts = async () => {
+      try {
+        const [countriesRes, bollardsRes, licenseplatesRes] = await Promise.all([
+          axios.get('/api/countries/count'),
+          axios.get('/api/bollards/count'),
+          axios.get('/api/licenseplates/count')
+        ]);
+        
+        setQuizCounts({
+          countries: countriesRes.data.success ? countriesRes.data.count : 0,
+          bollards: bollardsRes.data.success ? bollardsRes.data.count : 0,
+          licenseplates: licenseplatesRes.data.success ? licenseplatesRes.data.count : 0
+        });
+      } catch (error) {
+        console.error('Error fetching quiz counts:', error);
+      }
+    };
+    
     fetchContinents();
+    fetchQuizCounts();
   }, []);
   
   const handleStartQuiz = (categoryId: string) => {
@@ -63,6 +93,18 @@ const HomePage: React.FC = () => {
       // Standard navigation for other quiz types
       navigate(`/quiz/${categoryId}`);
     }
+  };
+
+  // Helper function to get the count for a category
+  const getCategoryCount = (categoryId: string): number => {
+    if (categoryId === 'flags' || categoryId === 'capitals') {
+      return quizCounts.countries;
+    } else if (categoryId === 'bollards') {
+      return quizCounts.bollards;
+    } else if (categoryId === 'licenseplates') {
+      return quizCounts.licenseplates;
+    }
+    return 0;
   };
 
   return (
@@ -88,6 +130,23 @@ const HomePage: React.FC = () => {
                 <div className="text-5xl mb-4">{category.icon}</div>
                 <h3 className="text-xl font-semibold mb-2 text-center">{category.name}</h3>
                 <p className="text-gray-500 text-sm text-center mb-4">{category.description}</p>
+                
+                {/* Display count badge for quizzes with available counts */}
+                {category.supportsFilters && (
+                  <div className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full mb-4">
+                    {loading ? (
+                      <span>Loading...</span>
+                    ) : (
+                      <span>
+                        {getCategoryCount(category.id)} {category.id === 'capitals' || category.id === 'flags' 
+                          ? 'countries' 
+                          : category.id === 'bollards' 
+                            ? 'bollards' 
+                            : 'license plates'}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
               
               {/* Start button */}
