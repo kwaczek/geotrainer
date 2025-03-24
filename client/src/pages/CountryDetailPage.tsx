@@ -5,7 +5,8 @@ import useDocumentTitle from '../hooks/useDocumentTitle';
 import CountryMap from '../components/CountryMap';
 import BollardGallery from '../components/BollardGallery';
 import LicensePlateGallery from '../components/LicensePlateGallery';
-import { Bollard, LicensePlate } from '../services/countryService';
+import RoadSignGallery from '../components/RoadSignGallery';
+import { Bollard, LicensePlate, RoadSign } from '../services/countryService';
 
 interface CountryDetails {
   id: string;
@@ -67,12 +68,15 @@ const CountryDetailPage: React.FC = () => {
   const [country, setCountry] = useState<CountryDetails | null>(null);
   const [bollards, setBollards] = useState<Bollard[]>([]);
   const [licensePlates, setLicensePlates] = useState<LicensePlate[]>([]);
+  const [roadSigns, setRoadSigns] = useState<RoadSign[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showBollards, setShowBollards] = useState<boolean>(true);
   const [showLicensePlates, setShowLicensePlates] = useState<boolean>(true);
+  const [showRoadSigns, setShowRoadSigns] = useState<boolean>(true);
   const [loadingBollards, setLoadingBollards] = useState<boolean>(false);
   const [loadingLicensePlates, setLoadingLicensePlates] = useState<boolean>(false);
+  const [loadingRoadSigns, setLoadingRoadSigns] = useState<boolean>(false);
   const [usingFallbackData, setUsingFallbackData] = useState<boolean>(false);
 
   // Set document title
@@ -168,6 +172,32 @@ const CountryDetailPage: React.FC = () => {
 
     fetchLicensePlates();
   }, [showLicensePlates, id, usingFallbackData]);
+
+  // Fetch road signs when country ID is available and road signs section is expanded
+  useEffect(() => {
+    const fetchRoadSigns = async () => {
+      if (showRoadSigns && id) {
+        setLoadingRoadSigns(true);
+        try {
+          const response = await axios.get(`/api/roadsigns/country/${id}`);
+          if (response.data.success) {
+            setRoadSigns(response.data.roadSigns);
+          } else if (usingFallbackData) {
+            setRoadSigns([]);
+          }
+        } catch (error) {
+          console.error('Error fetching road signs:', error);
+          if (usingFallbackData) {
+            setRoadSigns([]);
+          }
+        } finally {
+          setLoadingRoadSigns(false);
+        }
+      }
+    };
+
+    fetchRoadSigns();
+  }, [showRoadSigns, id, usingFallbackData]);
 
   // Get continent color
   const getContinentColor = (continent: string) => {
@@ -401,6 +431,35 @@ const CountryDetailPage: React.FC = () => {
         {showBollards && (
           <div className="p-6">
             <BollardGallery bollards={bollards} isLoading={loadingBollards} />
+          </div>
+        )}
+      </div>
+
+      {/* Road Signs section */}
+      <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
+        <button 
+          onClick={() => setShowRoadSigns(!showRoadSigns)}
+          className="w-full flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none"
+        >
+          <div className="flex items-center">
+            <svg className="h-6 w-6 text-purple-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span className="text-xl font-bold text-gray-800">Road Signs in {country.name}</span>
+          </div>
+          <svg 
+            className={`h-5 w-5 text-gray-500 transition-transform ${showRoadSigns ? 'transform rotate-180' : ''}`}
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        
+        {showRoadSigns && (
+          <div className="p-6">
+            <RoadSignGallery roadSigns={roadSigns} isLoading={loadingRoadSigns} />
           </div>
         )}
       </div>
