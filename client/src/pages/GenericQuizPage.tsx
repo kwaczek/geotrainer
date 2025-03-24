@@ -82,7 +82,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     }
     
     if (cleanupCount > 0) {
-      console.log(`Cleaned up ${cleanupCount} stale quiz sessions from localStorage`);
+      console.log(`Cleaned up ${cleanupCount} stale quiz sessions`);
     }
   }, []);
   
@@ -105,6 +105,37 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   const questionStartTime = useRef(Date.now());
   const dataFetchedRef = useRef(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
+  
+  // Function to cleanup duplicate sessions for the current quiz
+  const cleanupDuplicateSessions = useCallback(() => {
+    if (!sessionId) return;
+    
+    // Get all keys from localStorage that are quiz sessions
+    const sessionKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('quiz_session_')) {
+        sessionKeys.push(key);
+      }
+    }
+    
+    // Keep sessions matching our current sessionId, and recent sessions of the same quiz type 
+    sessionKeys.forEach(key => {
+      if (key !== `quiz_session_${sessionId}`) {
+        try {
+          const sessionData = JSON.parse(localStorage.getItem(key) || '{}');
+          // If this is the same quiz type but a different session, remove it
+          if (sessionData.quizType === quizType) {
+            console.log(`Removing duplicate session: ${key}`);
+            localStorage.removeItem(key);
+          }
+        } catch (e) {
+          // If we can't parse the session data, it's probably corrupted, so remove it
+          localStorage.removeItem(key);
+        }
+      }
+    });
+  }, [sessionId, quizType]);
 
   // Save session state to localStorage
   const saveSessionState = useCallback(() => {
@@ -195,9 +226,10 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     return false;
   }, [sessionId, quizType, navigate, filters]);
 
-  // Initialize the quiz if needed
+  // Initialize quiz (only called if we don't already have a session ID)
   const initializeQuiz = useCallback(async () => {
-    if (quizInitialized) return;
+    // If we already have a sessionId from the URL, don't initialize a new quiz
+    if (quizInitialized || existingSessionId) return;
     
     try {
       setLoading(true);
@@ -245,7 +277,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     } finally {
       setLoading(false);
     }
-  }, [quizInitialized, quizType, filters, navigate, customSettings]);
+  }, [quizInitialized, existingSessionId, quizType, filters, navigate, customSettings]);
 
   // Fetch question function
   const fetchQuestion = useCallback(async () => {
@@ -351,8 +383,8 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         setPreviousEntityIds(prev => [...prev, entityId]);
       }
       console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId} (${correctOption.text})`);
-    } else if (quizType === 'bollards' || quizType === 'licenseplates') {
-      // For bollards and license plates, we can get the ID from metadata
+    } else if (quizType === 'bollards' || quizType === 'licenseplates' || quizType === 'roadsigns') {
+      // For bollards, license plates, and road signs, we can get the ID from metadata
       if (currentQuestion.metadata) {
         // Initialize with empty string (will be replaced if valid ID found)
         let entityId = '';
@@ -361,6 +393,18 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           entityId = String(currentQuestion.metadata.bollardId);
         } else if (quizType === 'licenseplates' && currentQuestion.metadata.licensePlateId) {
           entityId = String(currentQuestion.metadata.licensePlateId);
+        } else if (quizType === 'roadsigns' && currentQuestion.metadata.roadSignId) {
+          entityId = String(currentQuestion.metadata.roadSignId);
+        } else if (quizType === 'roadsigns') {
+          // Fallback for road signs, use the question ID
+          entityId = currentQuestionId;
+        }
+        
+        // For license plates, check if we need to add the question ID itself
+        // This is because some older questions might not have the licensePlateId in metadata
+        if (quizType === 'licenseplates' && !entityId && currentQuestionId) {
+          entityId = currentQuestionId;
+          console.log('Using question ID as license plate entity ID');
         }
         
         if (entityId) {
@@ -481,10 +525,13 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     }
   }, [quizInitialized, existingSessionId, fetchQuestion, loadSessionState, currentQuestionNumber]);
 
-  // Clean up stale sessions on component mount
+  // Clean up stale and duplicate sessions on component mount
   useEffect(() => {
     cleanupStaleSessions();
-  }, [cleanupStaleSessions]);
+    if (sessionId) {
+      cleanupDuplicateSessions();
+    }
+  }, [cleanupStaleSessions, cleanupDuplicateSessions, sessionId]);
 
   // Save session state on unmount
   useEffect(() => {

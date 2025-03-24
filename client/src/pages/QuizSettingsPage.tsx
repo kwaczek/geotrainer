@@ -46,7 +46,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     initialLoadStarted.current = true;
     
     if (quizType === 'flags' || quizType === 'capitals' || 
-        quizType === 'bollards' || quizType === 'licenseplates') {
+        quizType === 'bollards' || quizType === 'licenseplates' ||
+        quizType === 'roadsigns') {
       console.log(`Loading settings from localStorage for ${quizType}...`);
       
       try {
@@ -89,7 +90,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     }
     
     if (quizType && (quizType === 'flags' || quizType === 'capitals' || 
-                     quizType === 'bollards' || quizType === 'licenseplates')) {
+                     quizType === 'bollards' || quizType === 'licenseplates' ||
+                     quizType === 'roadsigns')) {
       console.log('Saving settings to localStorage...');
       
       const currentSettings: StoredQuizSettings = {
@@ -141,6 +143,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           endpoint = '/api/bollards/count';
         } else if (quizType === 'licenseplates') {
           endpoint = '/api/licenseplates/count';
+        } else if (quizType === 'roadsigns') {
+          endpoint = '/api/roadsigns/count';
         }
         
         if (endpoint) {

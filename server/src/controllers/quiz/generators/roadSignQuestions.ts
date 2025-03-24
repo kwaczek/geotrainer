@@ -97,26 +97,81 @@ export async function getRandomRoadSignQuestion(filters?: QuizFilters, previousE
     
     // Lookup the country for this road sign
     await RoadSign.populate(selectedRoadSign, { path: 'countries' });
-    const countryId = selectedRoadSign.countries[0]?._id;
     
-    if (!countryId) {
-      throw new Error('Road sign has no associated country');
+    // Handle case where a road sign belongs to multiple countries
+    if (!selectedRoadSign.countries || selectedRoadSign.countries.length === 0) {
+      throw new Error('Road sign has no associated countries');
     }
     
+    // If there are multiple correct countries, randomly select just one for the question
+    const randomIndex = Math.floor(Math.random() * selectedRoadSign.countries.length);
+    const correctCountry = selectedRoadSign.countries[randomIndex];
+    const countryId = correctCountry._id;
+    
+    // Track all correct countries for write mode
+    const allCorrectCountries = selectedRoadSign.countries.map((country: any) => ({
+      id: country._id.toString(),
+      text: country.name,
+      isCorrect: true
+    }));
+    const allCorrectCountryNames = selectedRoadSign.countries.map((country: any) => country.name);
+    
     // Get 3 more random countries for options
-    const otherCountries = await Country.aggregate([
+    let otherCountries = await Country.aggregate([
       { 
         $match: { 
           _id: { $ne: countryId },
           // If GeoGuessr filter is active, only include GeoGuessr countries
-          ...(filters?.in_geoguessr ? { in_geoguessr: true } : {})
+          ...(filters?.in_geoguessr ? { in_geoguessr: true } : {}),
+          // If continent filter is active, only include countries from the same continent
+          ...(filters?.continent && filters.continent !== 'all' ? { continent: filters.continent } : {})
         } 
       },
       { $sample: { size: 3 } }
     ]);
     
+    // If we don't have enough countries with filters, fallback to countries without continent filter
+    if (otherCountries.length < 3 && filters?.continent && filters.continent !== 'all') {
+      console.log(`Only found ${otherCountries.length} countries with continent filter, falling back to any country`);
+      
+      // Get additional countries without continent filter but still respecting GeoGuessr filter if set
+      const additionalCountries = await Country.aggregate([
+        { 
+          $match: { 
+            _id: { 
+              $ne: countryId,
+              $nin: otherCountries.map(c => c._id) // Exclude already selected countries
+            },
+            // Still respect GeoGuessr filter if set
+            ...(filters?.in_geoguessr ? { in_geoguessr: true } : {})
+          } 
+        },
+        { $sample: { size: 3 - otherCountries.length } }
+      ]);
+      
+      otherCountries = [...otherCountries, ...additionalCountries];
+    }
+    
+    // If we still don't have enough countries, as a last resort, get any countries
+    if (otherCountries.length < 3) {
+      console.log(`Only found ${otherCountries.length} countries with filters, falling back to any country`);
+      
+      const lastResortCountries = await Country.aggregate([
+        { 
+          $match: { 
+            _id: { 
+              $ne: countryId,
+              $nin: otherCountries.map(c => c._id) // Exclude already selected countries
+            }
+          } 
+        },
+        { $sample: { size: 3 - otherCountries.length } }
+      ]);
+      
+      otherCountries = [...otherCountries, ...lastResortCountries];
+    }
+    
     // Build the question structure
-    const correctCountry = selectedRoadSign.countries[0];
     
     // Create options array with the correct answer and 3 incorrect ones
     const options = [
@@ -135,16 +190,21 @@ export async function getRandomRoadSignQuestion(filters?: QuizFilters, previousE
     // Shuffle the options
     const shuffledOptions = options.sort(() => Math.random() - 0.5);
     
+    // Get the road sign ID for entity tracking
+    const roadSignId = selectedRoadSign._id.toString();
+    console.log(`Using road sign with ID: ${roadSignId}`);
+    
     // Return the question
     return {
-      id: selectedRoadSign._id.toString(),
+      id: new mongoose.Types.ObjectId().toString(),
       question: 'Which country does this road sign belong to?',
       imageUrl: selectedRoadSign.imageUrl,
       options: shuffledOptions,
       metadata: {
         description: selectedRoadSign.description,
         googleMapsUrl: selectedRoadSign.googleMapsUrl,
-        allCorrectCountryNames: [correctCountry.name]
+        allCorrectCountryNames: allCorrectCountryNames,
+        roadSignId: roadSignId // Include the actual road sign ID in metadata for tracking
       }
     };
   } catch (error) {

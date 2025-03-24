@@ -59,7 +59,8 @@ export const createRoadSign = async (req: Request, res: Response): Promise<void>
         }
 
         // Create a new road sign
-        const countriesArray = Array.isArray(countries) ? countries : [countries];
+        // Parse the JSON string sent from the client
+        const countriesArray = JSON.parse(countries);
         
         const roadSign = new RoadSign({
             imageUrl: `/uploads/roadsigns/${req.file.filename}`,
@@ -83,13 +84,24 @@ export const createRoadSign = async (req: Request, res: Response): Promise<void>
 export const getAllRoadSigns = async (req: Request, res: Response): Promise<void> => {
     try {
         const roadSigns = await RoadSign.find()
-            .populate('countries')
+            .populate({
+                path: 'countries',
+                select: '_id name code flagUrl',
+                model: 'Country'
+            })
             .sort({ createdAt: -1 });
 
-        res.status(200).json(roadSigns);
+        res.status(200).json({
+            success: true,
+            roadSigns
+        });
     } catch (error) {
         console.error('Error fetching road signs:', error);
-        res.status(500).json({ message: 'Error fetching road signs', error: (error as Error).message });
+        res.status(500).json({ 
+            success: false,
+            message: 'Error fetching road signs', 
+            error: (error as Error).message 
+        });
     }
 };
 
@@ -98,18 +110,29 @@ export const getRoadSignsByCountry = async (req: Request, res: Response): Promis
         const { countryId } = req.params;
         
         if (!mongoose.Types.ObjectId.isValid(countryId)) {
-            res.status(400).json({ message: 'Invalid country ID' });
+            res.status(400).json({ success: false, message: 'Invalid country ID' });
             return;
         }
 
         const roadSigns = await RoadSign.find({ countries: countryId })
-            .populate('countries')
+            .populate({
+                path: 'countries',
+                select: '_id name code flagUrl', // Select only needed fields
+                model: 'Country'
+            })
             .sort({ createdAt: -1 });
 
-        res.status(200).json(roadSigns);
+        res.status(200).json({ 
+            success: true,
+            roadSigns 
+        });
     } catch (error) {
         console.error('Error fetching road signs by country:', error);
-        res.status(500).json({ message: 'Error fetching road signs by country', error: (error as Error).message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error fetching road signs by country', 
+            error: (error as Error).message 
+        });
     }
 };
 
@@ -160,10 +183,58 @@ export const deleteRoadSign = async (req: Request, res: Response): Promise<void>
 
 export const getRoadSignCount = async (req: Request, res: Response): Promise<void> => {
     try {
-        const count = await RoadSign.countDocuments();
-        res.status(200).json({ success: true, count });
+        const { continent, in_geoguessr } = req.query;
+        
+        // Build a more sophisticated query based on filters
+        let countryQuery: any = {};
+        
+        // If continent filter is applied, find countries in that continent
+        if (continent && continent !== 'all') {
+            countryQuery.continent = continent;
+        }
+        
+        // If GeoGuessr filter is applied, find countries in GeoGuessr
+        if (in_geoguessr === 'true') {
+            countryQuery.in_geoguessr = true;
+        }
+        
+        // Find countries matching all applied filters
+        let countryIds: mongoose.Types.ObjectId[] = [];
+        
+        // Only query the database for countries if we have filters
+        if (Object.keys(countryQuery).length > 0) {
+            const filteredCountries = await Country.find(countryQuery).select('_id');
+            countryIds = filteredCountries.map(country => country._id as mongoose.Types.ObjectId);
+            
+            // If no countries match the filters, return 0 count
+            if (countryIds.length === 0) {
+                res.status(200).json({
+                    success: true,
+                    count: 0
+                });
+                return;
+            }
+            
+            // Find road signs where at least one of the associated countries matches the filter
+            const count = await RoadSign.countDocuments({
+                countries: { $in: countryIds }
+            });
+            
+            res.status(200).json({
+                success: true,
+                count
+            });
+        } else {
+            // No filters applied, count all road signs
+            const count = await RoadSign.countDocuments({});
+            
+            res.status(200).json({
+                success: true,
+                count
+            });
+        }
     } catch (error) {
-        console.error('Error getting road sign count:', error);
+        console.error('Error counting road signs:', error);
         res.status(500).json({ 
             success: false, 
             message: 'Error getting road sign count', 

@@ -27,6 +27,7 @@ const RoadSignAdmin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [deleting, setDeleting] = useState<string | null>(null);
   
   // Form state
   const [image, setImage] = useState<File | null>(null);
@@ -34,34 +35,48 @@ const RoadSignAdmin: React.FC = () => {
   const [googleMapsUrl, setGoogleMapsUrl] = useState<string>('');
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
   
-  // Fetch countries and road signs on component mount
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [countriesRes, roadSignsRes] = await Promise.all([
-          axios.get('/api/countries'),
-          axios.get('/api/roadsigns')
-        ]);
-        
-        setCountries(countriesRes.data);
-        setRoadSigns(roadSignsRes.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError('Failed to fetch data. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
+    fetchCountries();
+    fetchRoadSigns();
   }, []);
+  
+  const fetchCountries = async () => {
+    try {
+      const response = await axios.get('/api/bollards/countries');
+      setCountries(response.data);
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+      setError('Failed to fetch countries. Please try again.');
+    }
+  };
+  
+  const fetchRoadSigns = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/roadsigns');
+      setRoadSigns(response.data);
+    } catch (error) {
+      console.error('Error fetching road signs:', error);
+      setError('Failed to fetch road signs. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setImage(e.target.files[0]);
     }
+  };
+  
+  const handleCountryToggle = (countryId: string) => {
+    setSelectedCountries(prev => {
+      if (prev.includes(countryId)) {
+        return prev.filter(id => id !== countryId);
+      }
+      return [...prev, countryId];
+    });
   };
   
   // Handle form submission
@@ -94,14 +109,10 @@ const RoadSignAdmin: React.FC = () => {
       formData.append('image', image);
       formData.append('description', description);
       formData.append('googleMapsUrl', googleMapsUrl);
-      
-      // Add selected countries
-      selectedCountries.forEach(countryId => {
-        formData.append('countries[]', countryId);
-      });
+      formData.append('countries', JSON.stringify(selectedCountries));
       
       // Get API key from localStorage
-      const apiKey = localStorage.getItem('apiKey');
+      const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
       
       if (!apiKey) {
         throw new Error('API key not found. Please log in again.');
@@ -131,8 +142,7 @@ const RoadSignAdmin: React.FC = () => {
         }
         
         // Refresh road signs list
-        const roadSignsRes = await axios.get('/api/roadsigns');
-        setRoadSigns(roadSignsRes.data);
+        fetchRoadSigns();
       } else {
         throw new Error(response.data.message || 'Failed to upload road sign');
       }
@@ -150,11 +160,11 @@ const RoadSignAdmin: React.FC = () => {
       return;
     }
     
-    setLoading(true);
+    setDeleting(id);
     
     try {
       // Get API key from localStorage
-      const apiKey = localStorage.getItem('apiKey');
+      const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
       
       if (!apiKey) {
         throw new Error('API key not found. Please log in again.');
@@ -174,13 +184,13 @@ const RoadSignAdmin: React.FC = () => {
       console.error('Error deleting road sign:', error);
       setError(error.message || 'Failed to delete road sign. Please try again.');
     } finally {
-      setLoading(false);
+      setDeleting(null);
     }
   };
   
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Road Sign Admin</h1>
+    <div className="max-w-4xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Road Sign Admin</h1>
       
       {/* Error and success messages */}
       {error && (
@@ -196,72 +206,77 @@ const RoadSignAdmin: React.FC = () => {
       )}
       
       {/* Upload form */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-xl font-semibold mb-4">Upload New Road Sign</h2>
-        
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Image</label>
+      <form onSubmit={handleSubmit} className="mb-8 p-4 border rounded-lg bg-white shadow">
+        <div className="mb-4">
+          <label className="block mb-2">
+            Image:
             <input
               id="file-input"
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="block w-full text-gray-700 border border-gray-300 rounded py-2 px-3"
+              className="mt-1 block w-full"
+              required
             />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Description</label>
+          </label>
+        </div>
+        
+        <div className="mb-4">
+          <label className="block mb-2">
+            Description:
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="block w-full text-gray-700 border border-gray-300 rounded py-2 px-3"
+              className="mt-1 block w-full border rounded p-2"
               rows={3}
+              required
             />
-          </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Google Maps URL</label>
+          </label>
+        </div>
+        
+        <div className="mb-4">
+          <label className="block mb-2">
+            Google Maps URL:
             <input
-              type="text"
+              type="url"
               value={googleMapsUrl}
               onChange={(e) => setGoogleMapsUrl(e.target.value)}
-              className="block w-full text-gray-700 border border-gray-300 rounded py-2 px-3"
+              className="mt-1 block w-full border rounded p-2"
+              placeholder="https://www.google.com/maps/@...."
+              required
             />
+          </label>
+        </div>
+        
+        <div className="mb-4">
+          <label className="block mb-2">Countries:</label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-60 overflow-y-auto p-2 border rounded">
+            {countries.map(country => (
+              <label key={country._id} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedCountries.includes(country._id)}
+                  onChange={() => handleCountryToggle(country._id)}
+                  className="form-checkbox"
+                />
+                <span>{country.name}</span>
+              </label>
+            ))}
           </div>
-          
-          <div className="mb-4">
-            <label className="block text-gray-700 mb-2">Countries</label>
-            <select
-              multiple
-              value={selectedCountries}
-              onChange={(e) => setSelectedCountries(Array.from(e.target.selectedOptions, option => option.value))}
-              className="block w-full text-gray-700 border border-gray-300 rounded py-2 px-3"
-              size={5}
-            >
-              {countries.map(country => (
-                <option key={country._id} value={country._id}>
-                  {country.name}
-                </option>
-              ))}
-            </select>
-            <p className="text-gray-500 text-sm mt-1">Hold Ctrl/Cmd to select multiple countries</p>
-          </div>
-          
-          <button
-            type="submit"
-            className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
-            disabled={loading}
-          >
-            {loading ? 'Uploading...' : 'Upload'}
-          </button>
-        </form>
-      </div>
+        </div>
+        
+        <button
+          type="submit"
+          disabled={loading}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+        >
+          {loading ? 'Uploading...' : 'Upload Road Sign'}
+        </button>
+      </form>
       
       {/* Road signs list */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Existing Road Signs ({roadSigns.length})</h2>
+      <div>
+        <h2 className="text-xl font-bold mb-4">Uploaded Road Signs ({roadSigns.length})</h2>
         
         {loading && <p>Loading...</p>}
         
@@ -269,39 +284,44 @@ const RoadSignAdmin: React.FC = () => {
           <p>No road signs found. Upload some!</p>
         )}
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {roadSigns.map(sign => (
-            <div key={sign._id} className="border rounded-lg overflow-hidden">
+            <div key={sign._id} className="border rounded-lg p-4 bg-white shadow relative">
               <img
                 src={sign.imageUrl}
                 alt={sign.description}
-                className="w-full h-48 object-cover"
+                className="w-full h-48 object-cover rounded mb-2"
               />
               
-              <div className="p-4">
-                <p className="font-semibold mb-2">
-                  {sign.countries.map(country => country.name).join(', ')}
-                </p>
-                
-                <p className="text-gray-700 mb-2">{sign.description}</p>
-                
-                <div className="flex justify-between items-center">
-                  <a
-                    href={sign.googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline"
-                  >
-                    View on Maps
-                  </a>
-                  
-                  <button
-                    onClick={() => handleDelete(sign._id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
+              <p className="text-sm text-gray-600 mb-2">{sign.description}</p>
+              
+              <div className="text-xs text-gray-500">
+                Countries: {Array.isArray(sign.countries) ? sign.countries.map(c => c.name).join(', ') : 'Unknown country'}
+              </div>
+              
+              <div className="text-xs text-gray-500 mt-1">
+                <a
+                  href={sign.googleMapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  View on Google Maps
+                </a>
+              </div>
+              
+              <div className="text-xs text-gray-400 mt-1">
+                Added: {new Date(sign.createdAt).toLocaleDateString()}
+              </div>
+              
+              <div className="absolute top-2 right-2">
+                <button
+                  onClick={() => handleDelete(sign._id)}
+                  disabled={deleting === sign._id}
+                  className="bg-red-500 text-white px-2 py-1 rounded text-sm hover:bg-red-600 disabled:bg-red-300"
+                >
+                  {deleting === sign._id ? 'Deleting...' : 'Delete'}
+                </button>
               </div>
             </div>
           ))}
