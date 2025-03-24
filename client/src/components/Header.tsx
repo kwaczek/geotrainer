@@ -45,6 +45,9 @@ const Header: React.FC = () => {
                 <Link to="/plates" className="block py-1 px-2 hover:bg-blue-600 rounded transition-colors">
                   Plates
                 </Link>
+                <Link to="/roadsigns" className="block py-1 px-2 hover:bg-blue-600 rounded transition-colors">
+                  Road Signs
+                </Link>
               </div>
             </li>
             
@@ -62,6 +65,9 @@ const Header: React.FC = () => {
                   </Link>
                   <Link to="/admin/licenseplates" className="block py-1 px-2 hover:bg-blue-600 rounded transition-colors">
                     License Plate Admin
+                  </Link>
+                  <Link to="/admin/roadsigns" className="block py-1 px-2 hover:bg-blue-600 rounded transition-colors">
+                    Road Sign Admin
                   </Link>
                 </div>
               </li>

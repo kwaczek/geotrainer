@@ -46,6 +46,14 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     writeMode: false,
     continent: 'all',
     in_geoguessr: false
+  },
+  roadsigns: {
+    timerEnabled: true,
+    timerDuration: 30,
+    questionCount: 10,
+    writeMode: false,
+    continent: 'all',
+    in_geoguessr: false
   }
 };
 
@@ -66,7 +74,8 @@ export function getAllSettings(): Record<QuizType, QuizSettings> {
         flags: { ...DEFAULT_SETTINGS.flags, ...parsedSettings.flags },
         capitals: { ...DEFAULT_SETTINGS.capitals, ...parsedSettings.capitals },
         bollards: { ...DEFAULT_SETTINGS.bollards, ...parsedSettings.bollards },
-        licenseplates: { ...DEFAULT_SETTINGS.licenseplates, ...parsedSettings.licenseplates }
+        licenseplates: { ...DEFAULT_SETTINGS.licenseplates, ...parsedSettings.licenseplates },
+        roadsigns: { ...DEFAULT_SETTINGS.roadsigns, ...(parsedSettings.roadsigns || {}) }
       };
       
       console.log('Merged with defaults:', mergedSettings);

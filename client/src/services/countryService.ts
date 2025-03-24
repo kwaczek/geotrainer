@@ -1,13 +1,13 @@
 import axios from 'axios';
 
 export interface CountryInfo {
+  id?: string;
   name: string;
   capital?: string;
   continent?: string;
   flagUrl?: string;
   code?: string;
   in_geoguessr?: boolean;
-  id?: string;
 }
 
 export interface Bollard {
@@ -25,6 +25,16 @@ export interface LicensePlate {
   imageUrl: string;
   description: string;
   countries: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RoadSign {
+  _id: string;
+  imageUrl: string;
+  description: string;
+  googleMapsUrl: string;
+  countries: (string | { _id: string; name: string; code?: string; flagUrl?: string })[];
   createdAt: string;
   updatedAt: string;
 }
@@ -83,6 +93,20 @@ export const fetchLicensePlatesByCountry = async (countryId: string): Promise<Li
     return [];
   } catch (error) {
     console.error('Error fetching license plates for country:', error);
+    return [];
+  }
+};
+
+export const fetchRoadSignsByCountry = async (countryId: string): Promise<RoadSign[]> => {
+  try {
+    const response = await axios.get(`/api/roadsigns/country/${countryId}`);
+    
+    if (response.data && response.data.success) {
+      return response.data.roadSigns;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching road signs for country:', error);
     return [];
   }
 };

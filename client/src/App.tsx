@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useParams, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 
 // Import actual components
@@ -10,6 +10,7 @@ import QuizSettingsPage from './pages/QuizSettingsPage';
 import BollardAdmin from './pages/BollardAdmin';
 import LicensePlateAdmin from './pages/LicensePlateAdmin';
 import CountryAdmin from './pages/CountryAdmin';
+import RoadSignAdmin from './pages/RoadSignAdmin';
 import Header from './components/Header';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -21,6 +22,7 @@ import CountriesPage from './pages/CountriesPage';
 import CountryDetailPage from './pages/CountryDetailPage';
 import BollardsPage from './pages/BollardsPage';
 import PlatesPage from './pages/PlatesPage';
+import RoadSignsPage from './pages/RoadSignsPage';
 
 // Placeholder components for now
 const Footer = () => <div className="bg-gray-800 p-4 text-white">Footer Placehholder</div>;
@@ -31,9 +33,30 @@ const NotFoundPage = () => <div className="p-4">404 - Page Not Found</div>;
 // Generic quiz router component
 const QuizRouter: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   // Validate that the quiz type is supported
-  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates'].includes(id);
+  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns'].includes(id);
+  
+  // For roadsigns, immediately navigate to a session URL to ensure consistency
+  useEffect(() => {
+    if (isValidQuizType) {
+      // Generate a UUID for the session - using a consistent method
+      const uuid = crypto.randomUUID ? crypto.randomUUID() : 
+        'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = Math.random() * 16 | 0;
+          const v = c === 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+        });
+      
+      // Navigate to the session URL with the state preserved
+      navigate(`/quiz/${id}/session/${uuid}`, { 
+        replace: true,
+        state: location.state
+      });
+    }
+  }, [id, navigate, location.state, isValidQuizType]);
   
   if (isValidQuizType) {
     return <GenericQuizPage quizType={id as QuizType} />;
@@ -47,7 +70,7 @@ const QuizSessionRouter: React.FC = () => {
   const { type, sessionId } = useParams<{ type: string; sessionId: string }>();
   
   // Validate that the quiz type is supported
-  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates'].includes(type);
+  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns'].includes(type);
   
   if (isValidQuizType && sessionId) {
     return <GenericQuizPage quizType={type as QuizType} sessionId={sessionId} />;
@@ -73,6 +96,7 @@ const App: React.FC = () => {
               <Route path="/countries/:id" element={<CountryDetailPage />} />
               <Route path="/bollards" element={<BollardsPage />} />
               <Route path="/plates" element={<PlatesPage />} />
+              <Route path="/roadsigns" element={<RoadSignsPage />} />
               
               {/* Quiz Routes */}
               <Route path="/quiz/:id" element={<QuizRouter />} />
@@ -86,6 +110,7 @@ const App: React.FC = () => {
                 <Route path="/admin/bollards" element={<BollardAdmin />} />
                 <Route path="/admin/licenseplates" element={<LicensePlateAdmin />} />
                 <Route path="/admin/countries" element={<CountryAdmin />} />
+                <Route path="/admin/roadsigns" element={<RoadSignAdmin />} />
               </Route>
               
               <Route path="*" element={<NotFoundPage />} />

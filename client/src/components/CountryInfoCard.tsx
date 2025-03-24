@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import CountryMap from './CountryMap';
 import BollardGallery from './BollardGallery';
 import LicensePlateGallery from './LicensePlateGallery';
-import { fetchCountryDetails, fetchBollardsByCountry, fetchLicensePlatesByCountry, CountryInfo, Bollard, LicensePlate } from '../services/countryService';
+import RoadSignGallery from './RoadSignGallery';
+import { fetchCountryDetails, fetchBollardsByCountry, fetchLicensePlatesByCountry, fetchRoadSignsByCountry, CountryInfo, Bollard, LicensePlate, RoadSign } from '../services/countryService';
 
 interface CountryInfoCardProps {
   country: CountryInfo;
@@ -14,10 +15,13 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible })
   const [loading, setLoading] = useState<boolean>(false);
   const [bollards, setBollards] = useState<Bollard[]>([]);
   const [licensePlates, setLicensePlates] = useState<LicensePlate[]>([]);
+  const [roadSigns, setRoadSigns] = useState<RoadSign[]>([]);
   const [loadingBollards, setLoadingBollards] = useState<boolean>(false);
   const [loadingLicensePlates, setLoadingLicensePlates] = useState<boolean>(false);
+  const [loadingRoadSigns, setLoadingRoadSigns] = useState<boolean>(false);
   const [showBollards, setShowBollards] = useState<boolean>(true);
   const [showLicensePlates, setShowLicensePlates] = useState<boolean>(true);
+  const [showRoadSigns, setShowRoadSigns] = useState<boolean>(true);
 
   useEffect(() => {
     const getCountryDetails = async () => {
@@ -83,6 +87,25 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible })
 
     getLicensePlates();
   }, [showLicensePlates, countryDetails.id]);
+
+  // Fetch road signs when country ID is available and road signs section is expanded
+  useEffect(() => {
+    const getRoadSigns = async () => {
+      if (showRoadSigns && countryDetails.id) {
+        setLoadingRoadSigns(true);
+        try {
+          const roadSignData = await fetchRoadSignsByCountry(countryDetails.id);
+          setRoadSigns(roadSignData);
+        } catch (error) {
+          console.error('Error fetching road signs:', error);
+        } finally {
+          setLoadingRoadSigns(false);
+        }
+      }
+    };
+
+    getRoadSigns();
+  }, [showRoadSigns, countryDetails.id]);
 
   if (!isVisible) return null;
   
@@ -216,6 +239,36 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible })
             <div className="rounded-lg overflow-hidden shadow-md">
               <CountryMap countryName={countryDetails.name} />
             </div>
+          </div>
+          
+          {/* Road Signs section */}
+          <div className="mt-6">
+            <button 
+              onClick={() => setShowRoadSigns(!showRoadSigns)}
+              className="w-full flex items-center justify-between bg-gray-50 p-3 rounded-lg shadow-sm hover:bg-gray-100 transition-colors"
+            >
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span className="font-semibold">Road Signs in {countryDetails.name}</span>
+              </div>
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className={`h-5 w-5 transition-transform ${showRoadSigns ? 'transform rotate-180' : ''}`} 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {showRoadSigns && (
+              <div className="mt-4">
+                <RoadSignGallery roadSigns={roadSigns} isLoading={loadingRoadSigns} />
+              </div>
+            )}
           </div>
           
           {/* License Plates section */}

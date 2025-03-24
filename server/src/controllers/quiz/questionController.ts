@@ -8,7 +8,8 @@ import {
   getRandomFlagQuestion,
   getRandomCapitalQuestion,
   getRandomBollardQuestion,
-  getRandomLicensePlateQuestion
+  getRandomLicensePlateQuestion,
+  getRandomRoadSignQuestion
 } from './generators';
 
 /**
@@ -32,10 +33,10 @@ export const getNextQuestion = async (req: Request, res: Response) => {
     console.log(`Excluding previous entity IDs (${previousEntityIds.length}):`, previousEntityIds);
     
     // Validate quiz type
-    if (!quizType || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES].includes(quizType.toLowerCase() as QuizType)) {
+    if (!quizType || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES, QuizType.ROADSIGNS].includes(quizType.toLowerCase() as QuizType)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid quiz type. Must be either "flags", "capitals", "bollards", or "licenseplates"'
+        message: 'Invalid quiz type. Must be either "flags", "capitals", "bollards", "licenseplates", or "roadsigns"'
       });
     }
     
@@ -111,6 +112,9 @@ export const getNextQuestion = async (req: Request, res: Response) => {
           break;
         case QuizType.LICENSEPLATES:
           question = await getRandomLicensePlateQuestion(session.filters, previousEntityIds);
+          break;
+        case QuizType.ROADSIGNS:
+          question = await getRandomRoadSignQuestion(session.filters, previousEntityIds);
           break;
         default:
           return res.status(400).json({

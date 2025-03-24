@@ -3,10 +3,9 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import path from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { connectDB } from './config/db';
 import routes from './routes';
-import bollardRoutes from './routes/bollardRoutes';
-import licensePlateRoutes from './routes/licensePlateRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -14,6 +13,20 @@ dotenv.config();
 // Initialize Express app
 const app: Express = express();
 const PORT = process.env.PORT || 5001;
+
+// Ensure uploads directories exist
+const uploadsDirectories = [
+  path.join(process.cwd(), 'uploads/bollards'),
+  path.join(process.cwd(), 'uploads/licenseplates'),
+  path.join(process.cwd(), 'uploads/roadsigns')
+];
+
+uploadsDirectories.forEach(dir => {
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+    console.log(`Created uploads directory: ${dir}`);
+  }
+});
 
 // Configure CORS
 const corsOptions = {
@@ -33,8 +46,6 @@ connectDB();
 
 // Routes
 app.use('/api', routes);
-app.use('/api/bollards', bollardRoutes);
-app.use('/api/licenseplates', licensePlateRoutes);
 
 // Serve uploaded files - Make sure this comes BEFORE the React app serving code
 app.use('/uploads', (req, res, next) => {
