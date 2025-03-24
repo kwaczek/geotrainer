@@ -54,10 +54,17 @@ const RoadSignAdmin: React.FC = () => {
     try {
       setLoading(true);
       const response = await axios.get('/api/roadsigns');
-      setRoadSigns(response.data);
+      if (response.data && response.data.success && Array.isArray(response.data.roadSigns)) {
+        setRoadSigns(response.data.roadSigns);
+      } else {
+        console.error('Invalid road signs response format:', response.data);
+        setError('Received invalid data format from server.');
+        setRoadSigns([]);
+      }
     } catch (error) {
       console.error('Error fetching road signs:', error);
       setError('Failed to fetch road signs. Please try again.');
+      setRoadSigns([]);
     } finally {
       setLoading(false);
     }
