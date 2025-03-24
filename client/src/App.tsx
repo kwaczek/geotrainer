@@ -10,6 +10,7 @@ import QuizSettingsPage from './pages/QuizSettingsPage';
 import BollardAdmin from './pages/BollardAdmin';
 import LicensePlateAdmin from './pages/LicensePlateAdmin';
 import CountryAdmin from './pages/CountryAdmin';
+import RoadSignAdmin from './pages/RoadSignAdmin';
 import Header from './components/Header';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -33,7 +34,7 @@ const QuizRouter: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   
   // Validate that the quiz type is supported
-  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates'].includes(id);
+  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns'].includes(id);
   
   if (isValidQuizType) {
     return <GenericQuizPage quizType={id as QuizType} />;
@@ -47,7 +48,7 @@ const QuizSessionRouter: React.FC = () => {
   const { type, sessionId } = useParams<{ type: string; sessionId: string }>();
   
   // Validate that the quiz type is supported
-  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates'].includes(type);
+  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns'].includes(type);
   
   if (isValidQuizType && sessionId) {
     return <GenericQuizPage quizType={type as QuizType} sessionId={sessionId} />;
@@ -86,6 +87,7 @@ const App: React.FC = () => {
                 <Route path="/admin/bollards" element={<BollardAdmin />} />
                 <Route path="/admin/licenseplates" element={<LicensePlateAdmin />} />
                 <Route path="/admin/countries" element={<CountryAdmin />} />
+                <Route path="/admin/roadsigns" element={<RoadSignAdmin />} />
               </Route>
               
               <Route path="*" element={<NotFoundPage />} />

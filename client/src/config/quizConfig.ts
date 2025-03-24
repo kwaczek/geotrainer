@@ -55,5 +55,19 @@ export const QUIZ_CONFIGS: Record<QuizType, QuizConfig> = {
       imageField: 'imageUrl',
       correctAnswerField: 'countryName'
     }
+  },
+  roadsigns: {
+    type: 'roadsigns',
+    title: 'Road Signs Quiz',
+    description: 'Test your knowledge of road signs from around the world.',
+    hasImages: true,
+    questionTemplate: "In which country can you find this road sign?",
+    timeLimit: 30,
+    questionsPerQuiz: 10,
+    dataSource: {
+      endpoint: '/api/quiz-questions/roadsigns',
+      imageField: 'imageUrl',
+      correctAnswerField: 'countryName'
+    }
   }
 }; 

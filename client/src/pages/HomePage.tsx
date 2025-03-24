@@ -15,6 +15,7 @@ interface QuizCounts {
   countries: number;
   bollards: number;
   licenseplates: number;
+  roadsigns: number;
 }
 
 const HomePage: React.FC = () => {
@@ -31,7 +32,8 @@ const HomePage: React.FC = () => {
   const [quizCounts, setQuizCounts] = useState<QuizCounts>({
     countries: 0,
     bollards: 0,
-    licenseplates: 0
+    licenseplates: 0,
+    roadsigns: 0
   });
   
   // Quiz categories
@@ -40,7 +42,7 @@ const HomePage: React.FC = () => {
     { id: 'flags', name: 'Flags', description: 'Test your knowledge of country flags', icon: '🏳️', supportsFilters: true },
     { id: 'bollards', name: 'Bollards', description: 'Identify countries by their road bollards', icon: '🚧', supportsFilters: true },
     { id: 'licenseplates', name: 'License Plates', description: 'Recognize license plates from around the world', icon: '🚗', supportsFilters: true },
-    { id: 'road_signs', name: 'Road Signs', description: 'Learn to identify road signs by country', icon: '🚸' },
+    { id: 'roadsigns', name: 'Road Signs', description: 'Learn to identify road signs by country', icon: '🚸', supportsFilters: true },
   ];
   
   // Fetch continents and quiz counts on component mount
@@ -62,16 +64,18 @@ const HomePage: React.FC = () => {
     
     const fetchQuizCounts = async () => {
       try {
-        const [countriesRes, bollardsRes, licenseplatesRes] = await Promise.all([
+        const [countriesRes, bollardsRes, licenseplatesRes, roadsignsRes] = await Promise.all([
           axios.get('/api/countries/count'),
           axios.get('/api/bollards/count'),
-          axios.get('/api/licenseplates/count')
+          axios.get('/api/licenseplates/count'),
+          axios.get('/api/roadsigns/count')
         ]);
         
         setQuizCounts({
           countries: countriesRes.data.success ? countriesRes.data.count : 0,
           bollards: bollardsRes.data.success ? bollardsRes.data.count : 0,
-          licenseplates: licenseplatesRes.data.success ? licenseplatesRes.data.count : 0
+          licenseplates: licenseplatesRes.data.success ? licenseplatesRes.data.count : 0,
+          roadsigns: roadsignsRes.data.success ? roadsignsRes.data.count : 0
         });
       } catch (error) {
         console.error('Error fetching quiz counts:', error);
@@ -103,6 +107,8 @@ const HomePage: React.FC = () => {
       return quizCounts.bollards;
     } else if (categoryId === 'licenseplates') {
       return quizCounts.licenseplates;
+    } else if (categoryId === 'roadsigns') {
+      return quizCounts.roadsigns;
     }
     return 0;
   };
@@ -142,7 +148,9 @@ const HomePage: React.FC = () => {
                           ? 'countries' 
                           : category.id === 'bollards' 
                             ? 'bollards' 
-                            : 'license plates'}
+                            : category.id === 'licenseplates' 
+                              ? 'license plates' 
+                              : 'road signs'}
                       </span>
                     )}
                   </div>

@@ -5,7 +5,8 @@ export enum QuizType {
   FLAGS = 'flags',
   CAPITALS = 'capitals',
   BOLLARDS = 'bollards',
-  LICENSEPLATES = 'licenseplates'
+  LICENSEPLATES = 'licenseplates',
+  ROADSIGNS = 'roadsigns'
 }
 
 // Quiz filters interface
