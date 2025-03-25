@@ -8,6 +8,8 @@ export interface QuizSettings {
   writeMode?: boolean;
   continent?: string;
   in_geoguessr?: boolean;
+  blurred?: boolean;
+  blurIntensity?: number;
 }
 
 // The key used to store all settings in localStorage
@@ -21,7 +23,9 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     questionCount: 10,
     writeMode: false,
     continent: 'all',
-    in_geoguessr: false
+    in_geoguessr: false,
+    blurred: false,
+    blurIntensity: 15
   },
   capitals: {
     timerEnabled: true,
@@ -29,7 +33,9 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     questionCount: 10,
     writeMode: false,
     continent: 'all',
-    in_geoguessr: false
+    in_geoguessr: false,
+    blurred: false,
+    blurIntensity: 15
   },
   bollards: {
     timerEnabled: true,
@@ -37,7 +43,9 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     questionCount: 10,
     writeMode: false,
     continent: 'all',
-    in_geoguessr: false
+    in_geoguessr: false,
+    blurred: false,
+    blurIntensity: 15
   },
   licenseplates: {
     timerEnabled: true,
@@ -45,7 +53,9 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     questionCount: 10,
     writeMode: false,
     continent: 'all',
-    in_geoguessr: false
+    in_geoguessr: false,
+    blurred: false,
+    blurIntensity: 15
   },
   roadsigns: {
     timerEnabled: true,
@@ -53,7 +63,9 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     questionCount: 10,
     writeMode: false,
     continent: 'all',
-    in_geoguessr: false
+    in_geoguessr: false,
+    blurred: false,
+    blurIntensity: 15
   }
 };
 
