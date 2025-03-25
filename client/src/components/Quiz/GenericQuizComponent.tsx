@@ -15,6 +15,11 @@ interface GenericQuizComponentProps {
   quizType?: QuizType;
   isLastQuestion?: boolean;
   writeMode?: boolean;
+  settings?: {
+    blurred?: boolean;
+    blurIntensity?: number;
+  };
+  onSettingsChange?: (settings: { blurred?: boolean; blurIntensity?: number }) => void;
 }
 
 const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
@@ -26,11 +31,14 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
   showFeedback = true,
   quizType = 'flags',
   isLastQuestion = false,
-  writeMode = false
+  writeMode = false,
+  settings,
+  onSettingsChange
 }) => {
   const [timeLeft, setTimeLeft] = useState<number>(timeLimit);
   const [answered, setAnswered] = useState<boolean>(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(selectedOptionId);
+  const [blurIntensity, setBlurIntensity] = useState<number>(settings?.blurIntensity || 15);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [correctCountry, setCorrectCountry] = useState<CountryInfo | null>(null);
   const [showCountryInfo, setShowCountryInfo] = useState<boolean>(false);
@@ -284,6 +292,14 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
     onNextQuestion();
   };
 
+  // Update blur intensity
+  const handleBlurIntensityChange = (value: number) => {
+    setBlurIntensity(value);
+    if (onSettingsChange) {
+      onSettingsChange({ ...settings, blurIntensity: value });
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       {/* Show debug info in development */}
@@ -302,12 +318,34 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4">{question.question}</h2>
         
+        {quizType === 'licenseplates' && settings?.blurred && (
+          <div className="mb-4">
+            <label htmlFor="blur-intensity" className="block text-sm font-medium text-gray-700 mb-2">
+              Blur Intensity: {blurIntensity}px
+            </label>
+            <input
+              type="range"
+              id="blur-intensity"
+              min="1"
+              max="30"
+              value={blurIntensity}
+              onChange={(e) => handleBlurIntensityChange(Number(e.target.value))}
+              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+        )}
+        
         {question.imageUrl && (
           <div className="flex justify-center mb-4">
             <img 
               src={getImageUrl(question.imageUrl)} 
               alt="Quiz question" 
               className="max-h-64 object-contain rounded-md"
+              style={{
+                filter: quizType === 'licenseplates' && settings?.blurred 
+                  ? `blur(${blurIntensity}px)` 
+                  : 'none'
+              }}
             />
           </div>
         )}

@@ -675,6 +675,23 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           quizType={quizType}
           isLastQuestion={currentQuestionNumber === customSettings.questionCount}
           writeMode={customSettings.writeMode}
+          settings={{
+            blurred: location.state?.settings?.blurred,
+            blurIntensity: location.state?.settings?.blurIntensity
+          }}
+          onSettingsChange={(newSettings) => {
+            // Update the location state with new settings
+            navigate(`/quiz/${quizType}/session/${sessionId}`, {
+              replace: true,
+              state: {
+                ...location.state,
+                settings: {
+                  ...location.state?.settings,
+                  ...newSettings
+                }
+              }
+            });
+          }}
         />
       )}
     </div>

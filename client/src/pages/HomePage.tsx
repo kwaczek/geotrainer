@@ -217,7 +217,7 @@ const HomePage: React.FC = () => {
                 </li>
                 <li className="flex items-start">
                   <span className="text-yellow-600 mr-2">•</span>
-                  <span>License Plates Quiz</span>
+                  <span>License Plates Quiz (with blur option)</span>
                 </li>
               </ul>
             </div>
@@ -274,10 +274,7 @@ const HomePage: React.FC = () => {
                   <span className="text-green-600 mr-2">•</span>
                   <span>Quiz history and progress tracking</span>
                 </li>
-                <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
-                  <span>Blurred plates quiz</span>
-                </li>
+
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-2">•</span>
                   <span>And more...</span>

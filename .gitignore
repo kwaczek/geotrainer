@@ -47,3 +47,6 @@ logs
 temp/
 tmp/
 .history
+
+# dev uploads
+/server/uploads

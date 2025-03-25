@@ -23,6 +23,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   const [selectedContinent, setSelectedContinent] = useState<string>('all');
   const [onlyGeoGuessr, setOnlyGeoGuessr] = useState<boolean>(false);
   const [writeMode, setWriteMode] = useState<boolean>(false);
+  const [blurred, setBlurred] = useState<boolean>(false);
   const [continents, setContinents] = useState<string[]>([
     'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica'
   ]);
@@ -61,6 +62,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         setWriteMode(savedSettings.writeMode || false);
         setSelectedContinent(savedSettings.continent || 'all');
         setOnlyGeoGuessr(savedSettings.in_geoguessr || false);
+        setBlurred(savedSettings.blurred || false);
         
         // Mark initial load as complete
         initialLoadCompleted.current = true;
@@ -100,13 +102,14 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         questionCount,
         writeMode,
         continent: selectedContinent,
-        in_geoguessr: onlyGeoGuessr
+        in_geoguessr: onlyGeoGuessr,
+        blurred
       };
       
       saveSettings(quizType as QuizType, currentSettings);
       console.log('Settings saved:', currentSettings);
     }
-  }, [quizType, timerEnabled, timerDuration, questionCount, writeMode, selectedContinent, onlyGeoGuessr]);
+  }, [quizType, timerEnabled, timerDuration, questionCount, writeMode, selectedContinent, onlyGeoGuessr, blurred]);
   
   // Fetch continents on component mount
   useEffect(() => {
@@ -209,7 +212,9 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           timerEnabled,
           timerDuration,
           questionCount,
-          writeMode
+          writeMode,
+          blurred,
+          blurIntensity: 15 // Default value
         }
       }
     });
@@ -306,6 +311,24 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
               <p className="mt-1 ml-6 text-sm text-gray-500">
                 Type the country name instead of selecting from multiple choice options
               </p>
+            </div>
+          )}
+          
+          {/* Blurred Mode Setting - Only for license plates quiz */}
+          {quizConfig.type === 'licenseplates' && (
+            <div className="mb-6">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="blurred-toggle"
+                  checked={blurred}
+                  onChange={(e) => setBlurred(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="blurred-toggle" className="ml-2 block text-sm font-medium text-gray-700">
+                  Blurred
+                </label>
+              </div>
             </div>
           )}
           
