@@ -5,6 +5,7 @@ export interface IRoadSign extends Document {
     description: string;
     googleMapsUrl: string;
     countries: mongoose.Types.ObjectId[];
+    isPedestrian: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -16,17 +17,23 @@ const RoadSignSchema: Schema = new Schema({
     },
     description: {
         type: String,
-        required: true,
+        required: false,
+        default: '',
     },
     googleMapsUrl: {
         type: String,
-        required: true,
+        required: false,
+        default: '',
     },
     countries: [{
         type: Schema.Types.ObjectId,
         ref: 'Country',
         required: true,
     }],
+    isPedestrian: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true,
 });
