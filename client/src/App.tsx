@@ -25,7 +25,7 @@ import PlatesPage from './pages/PlatesPage';
 import RoadSignsPage from './pages/RoadSignsPage';
 
 // Placeholder components for now
-const Footer = () => <div className="bg-gray-800 p-4 text-white">Footer Placehholder</div>;
+const Footer = () => <div className="bg-blue-500 p-2 text-white text-xs text-center">© {new Date().getFullYear()} GeoPrep</div>;
 const RegisterPage = () => <div className="p-4">Register Page Placeholder</div>;
 const ProfilePage = () => <div className="p-4">Profile Page Placeholder</div>;
 const NotFoundPage = () => <div className="p-4">404 - Page Not Found</div>;
@@ -83,7 +83,7 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen bg-gradient-to-b from-indigo-100 to-blue-100">
           <Header />
           <main className="flex-grow">
             <Routes>
