@@ -24,6 +24,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   const [onlyGeoGuessr, setOnlyGeoGuessr] = useState<boolean>(false);
   const [writeMode, setWriteMode] = useState<boolean>(false);
   const [blurred, setBlurred] = useState<boolean>(false);
+  const [pedestrianSigns, setPedestrianSigns] = useState<boolean>(false);
   const [continents, setContinents] = useState<string[]>([
     'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica'
   ]);
@@ -63,6 +64,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         setSelectedContinent(savedSettings.continent || 'all');
         setOnlyGeoGuessr(savedSettings.in_geoguessr || false);
         setBlurred(savedSettings.blurred || false);
+        setPedestrianSigns(savedSettings.pedestrianSigns || false);
         
         // Mark initial load as complete
         initialLoadCompleted.current = true;
@@ -103,13 +105,14 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         writeMode,
         continent: selectedContinent,
         in_geoguessr: onlyGeoGuessr,
-        blurred
+        blurred,
+        pedestrianSigns
       };
       
       saveSettings(quizType as QuizType, currentSettings);
       console.log('Settings saved:', currentSettings);
     }
-  }, [quizType, timerEnabled, timerDuration, questionCount, writeMode, selectedContinent, onlyGeoGuessr, blurred]);
+  }, [quizType, timerEnabled, timerDuration, questionCount, writeMode, selectedContinent, onlyGeoGuessr, blurred, pedestrianSigns]);
   
   // Fetch continents on component mount
   useEffect(() => {
@@ -162,6 +165,11 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
             params.in_geoguessr = true;
           }
           
+          // Add pedestrian signs filter for road signs
+          if (quizType === 'roadsigns' && pedestrianSigns) {
+            params.pedestrian = true;
+          }
+          
           const response = await axios.get(endpoint, { params });
           
           if (response.data && response.data.success) {
@@ -198,7 +206,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     if (initialLoadCompleted.current || initialLoadStarted.current) {
       fetchMaxQuestionCount();
     }
-  }, [quizType, selectedContinent, onlyGeoGuessr, questionCount]);
+  }, [quizType, selectedContinent, onlyGeoGuessr, pedestrianSigns, questionCount]);
   
   const handleStartQuiz = () => {
     // Initialize a new quiz session with filters and settings
@@ -206,7 +214,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
       state: { 
         filters: {
           continent: selectedContinent,
-          in_geoguessr: onlyGeoGuessr  // Using snake_case to match server convention
+          in_geoguessr: onlyGeoGuessr,  // Using snake_case to match server convention
+          pedestrian: quizType === 'roadsigns' ? pedestrianSigns : undefined
         },
         settings: {
           timerEnabled,
@@ -329,6 +338,29 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
                   Blurred
                 </label>
               </div>
+            </div>
+          )}
+          
+          {/* Sign Type Section - Only for road signs quiz */}
+          {quizConfig.type === 'roadsigns' && (
+            <div className="mb-6">
+              <h3 className="text-lg font-medium text-gray-700 mb-3">Sign Type</h3>
+              
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="pedestrian-signs-toggle"
+                  checked={pedestrianSigns}
+                  onChange={(e) => setPedestrianSigns(e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="pedestrian-signs-toggle" className="ml-2 block text-sm font-medium text-gray-700">
+                  Pedestrian Signs
+                </label>
+              </div>
+              <p className="mt-1 ml-6 text-sm text-gray-500">
+                Only show pedestrian-related road signs
+              </p>
             </div>
           )}
           

@@ -116,20 +116,28 @@ const RoadSignGallery: React.FC<RoadSignGalleryProps> = ({ roadSigns, isLoading 
               <div className="flex-1 p-4">
                 <p className="text-sm text-gray-600 mb-2">{roadSign.description || 'No description available'}</p>
                 
-                {roadSign.googleMapsUrl && (
-                  <a 
-                    href={roadSign.googleMapsUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    View on Google Maps
-                  </a>
-                )}
+                <div className="flex items-center flex-wrap gap-2">
+                  {roadSign.isPedestrian && (
+                    <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                      Pedestrian
+                    </span>
+                  )}
+                  
+                  {roadSign.googleMapsUrl && (
+                    <a 
+                      href={roadSign.googleMapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      View on Google Maps
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -197,21 +205,34 @@ const RoadSignGallery: React.FC<RoadSignGalleryProps> = ({ roadSigns, isLoading 
                 })()}
               </div>
               
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">Location</h4>
-                <a 
-                  href={selectedRoadSign.googleMapsUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  View on Google Maps
-                </a>
-              </div>
+              {/* Type section */}
+              {selectedRoadSign.isPedestrian && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Type</h4>
+                  <span className="inline-block bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full font-medium">
+                    Pedestrian Sign
+                  </span>
+                </div>
+              )}
+              
+              {/* Location section - only show if Google Maps URL exists */}
+              {selectedRoadSign.googleMapsUrl && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Location</h4>
+                  <a 
+                    href={selectedRoadSign.googleMapsUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    View on Google Maps
+                  </a>
+                </div>
+              )}
               
               <div className="mt-6 text-center text-sm text-gray-500">
                 Press ESC key or click outside to close

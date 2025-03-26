@@ -20,7 +20,38 @@ export const getNextQuestion = async (req: Request, res: Response) => {
   try {
     const { quizType } = req.params;
     const sessionId = req.query.sessionId as string || uuidv4();
-    const filters = req.query.filters ? JSON.parse(req.query.filters as string) as QuizFilters : undefined;
+    
+    // Extract filters from query parameters
+    let filters: QuizFilters | undefined;
+    
+    // First check if filters are explicitly provided as JSON
+    if (req.query.filters) {
+      filters = JSON.parse(req.query.filters as string) as QuizFilters;
+    } 
+    // Otherwise, extract individual filter parameters from query
+    else {
+      const continent = req.query.continent as string;
+      const in_geoguessr = req.query.in_geoguessr === 'true';
+      const pedestrian = req.query.pedestrian === 'true';
+      
+      // Only create filters object if at least one filter is present
+      if (continent || in_geoguessr || pedestrian) {
+        filters = {};
+        
+        if (continent && continent !== 'all') {
+          filters.continent = continent;
+        }
+        
+        if (in_geoguessr) {
+          filters.in_geoguessr = in_geoguessr;
+        }
+        
+        if (pedestrian) {
+          filters.pedestrian = pedestrian;
+        }
+      }
+    }
+    
     const previousQuestionIds = req.query.previousQuestionIds 
       ? JSON.parse(req.query.previousQuestionIds as string) as string[] 
       : [];

@@ -6,6 +6,7 @@ import { QuizType } from '../../models/QuizResult';
 export interface QuizFilters {
   continent?: string;
   in_geoguessr?: boolean;
+  pedestrian?: boolean;
   [key: string]: any;
 }
 

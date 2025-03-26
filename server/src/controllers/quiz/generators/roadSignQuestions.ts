@@ -46,6 +46,15 @@ export async function getRandomRoadSignQuestion(filters?: QuizFilters, previousE
     });
   }
   
+  // Add pedestrian filter if specified
+  if (filters?.pedestrian) {
+    pipeline.push({
+      $match: {
+        isPedestrian: true
+      }
+    });
+  }
+  
   // Filter out road signs that were used in previous questions
   if (previousEntityIds.length > 0) {
     console.log(`Attempting to exclude ${previousEntityIds.length} previous road sign entities`);

@@ -5,6 +5,7 @@ export type QuizType = 'flags' | 'capitals' | 'bollards' | 'licenseplates' | 'ro
 export interface QuizFilters {
   continent?: string;
   in_geoguessr?: boolean;
+  pedestrian?: boolean;
   [key: string]: any;
 }
 
