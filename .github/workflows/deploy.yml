@@ -95,7 +95,7 @@ jobs:
           # Disable treating warnings as errors in CI
           export CI=false
           # Build the client with environment variables
-          cd client && REACT_APP_ADMIN_USERNAME=${{ secrets.REACT_APP_ADMIN_USERNAME }} REACT_APP_ADMIN_PASSWORD=${{ secrets.REACT_APP_ADMIN_PASSWORD }} REACT_APP_ADMIN_API_KEY=${{ secrets.REACT_APP_ADMIN_API_KEY }} npm run build && cd ..
+          cd client && REACT_APP_ADMIN_USERNAMES=${{ secrets.REACT_APP_ADMIN_USERNAMES }} REACT_APP_ADMIN_PASSWORDS=${{ secrets.REACT_APP_ADMIN_PASSWORDS }} REACT_APP_ADMIN_API_KEY=${{ secrets.REACT_APP_ADMIN_API_KEY }} npm run build && cd ..
           # Build the server
           cd server && npm run build && cd ..
 
