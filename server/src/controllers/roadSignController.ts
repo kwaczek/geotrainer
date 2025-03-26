@@ -45,10 +45,10 @@ export const createRoadSign = async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        const { description, countries, googleMapsUrl } = req.body;
+        const { description, countries, googleMapsUrl, isPedestrian } = req.body;
 
-        if (!description || !countries || !googleMapsUrl) {
-            res.status(400).json({ message: 'Description, countries, and Google Maps URL are required' });
+        if (!countries) {
+            res.status(400).json({ message: 'Countries are required' });
             return;
         }
 
@@ -64,9 +64,10 @@ export const createRoadSign = async (req: Request, res: Response): Promise<void>
         
         const roadSign = new RoadSign({
             imageUrl: `/uploads/roadsigns/${req.file.filename}`,
-            description,
-            googleMapsUrl,
-            countries: countriesArray
+            description: description || '',
+            googleMapsUrl: googleMapsUrl || '',
+            countries: countriesArray,
+            isPedestrian: isPedestrian === 'true'
         });
 
         await roadSign.save();

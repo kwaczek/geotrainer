@@ -16,6 +16,7 @@ interface RoadSign {
   googleMapsUrl: string;
   countries: Country[];
   createdAt: string;
+  isPedestrian: boolean;
 }
 
 const RoadSignAdmin: React.FC = () => {
@@ -34,6 +35,7 @@ const RoadSignAdmin: React.FC = () => {
   const [description, setDescription] = useState<string>('');
   const [googleMapsUrl, setGoogleMapsUrl] = useState<string>('');
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
+  const [isPedestrian, setIsPedestrian] = useState<boolean>(false);
   
   useEffect(() => {
     fetchCountries();
@@ -99,14 +101,6 @@ const RoadSignAdmin: React.FC = () => {
         throw new Error('Please select an image');
       }
       
-      if (!description) {
-        throw new Error('Please enter a description');
-      }
-      
-      if (!googleMapsUrl) {
-        throw new Error('Please enter a Google Maps URL');
-      }
-      
       if (selectedCountries.length === 0) {
         throw new Error('Please select at least one country');
       }
@@ -117,6 +111,7 @@ const RoadSignAdmin: React.FC = () => {
       formData.append('description', description);
       formData.append('googleMapsUrl', googleMapsUrl);
       formData.append('countries', JSON.stringify(selectedCountries));
+      formData.append('isPedestrian', String(isPedestrian));
       
       // Get API key from localStorage
       const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
@@ -141,6 +136,7 @@ const RoadSignAdmin: React.FC = () => {
         setDescription('');
         setGoogleMapsUrl('');
         setSelectedCountries([]);
+        setIsPedestrian(false);
         
         // Clear file input
         const fileInput = document.getElementById('file-input') as HTMLInputElement;
@@ -236,7 +232,6 @@ const RoadSignAdmin: React.FC = () => {
               onChange={(e) => setDescription(e.target.value)}
               className="mt-1 block w-full border rounded p-2"
               rows={3}
-              required
             />
           </label>
         </div>
@@ -250,9 +245,26 @@ const RoadSignAdmin: React.FC = () => {
               onChange={(e) => setGoogleMapsUrl(e.target.value)}
               className="mt-1 block w-full border rounded p-2"
               placeholder="https://www.google.com/maps/@...."
-              required
             />
           </label>
+        </div>
+        
+        <div className="mb-4">
+          <h3 className="font-medium text-gray-700 mb-2">Type:</h3>
+          <div className="p-3 border rounded bg-gray-50">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={isPedestrian}
+                  onChange={(e) => setIsPedestrian(e.target.checked)}
+                  className="form-checkbox"
+                />
+                <span>Pedestrian Sign</span>
+              </label>
+              {/* Additional checkboxes can be added here */}
+            </div>
+          </div>
         </div>
         
         <div className="mb-4">
@@ -306,16 +318,24 @@ const RoadSignAdmin: React.FC = () => {
                 Countries: {Array.isArray(sign.countries) ? sign.countries.map(c => c.name).join(', ') : 'Unknown country'}
               </div>
               
-              <div className="text-xs text-gray-500 mt-1">
-                <a
-                  href={sign.googleMapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  View on Google Maps
-                </a>
-              </div>
+              {sign.isPedestrian && (
+                <div className="text-xs text-blue-500 font-semibold mt-1">
+                  Pedestrian Sign
+                </div>
+              )}
+              
+              {sign.googleMapsUrl && (
+                <div className="text-xs text-gray-500 mt-1">
+                  <a
+                    href={sign.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:text-blue-700"
+                  >
+                    View on Google Maps
+                  </a>
+                </div>
+              )}
               
               <div className="text-xs text-gray-400 mt-1">
                 Added: {new Date(sign.createdAt).toLocaleDateString()}
