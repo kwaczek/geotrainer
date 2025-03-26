@@ -95,8 +95,15 @@ GeoTrainer is an interactive quiz platform designed to help [GeoGuessr](https://
    For admin functionality, add these variables to your client/.env:
 
    ```
+   # Single admin (legacy format)
    REACT_APP_ADMIN_USERNAME=your_admin_username
    REACT_APP_ADMIN_PASSWORD=your_admin_password
+
+   # OR for multiple admins (preferred format)
+   REACT_APP_ADMIN_USERNAMES=admin1,admin2,admin3
+   REACT_APP_ADMIN_PASSWORDS=pass1,pass2,pass3
+
+   # API key (required for both formats)
    REACT_APP_ADMIN_API_KEY=your_api_key
    ```
 
