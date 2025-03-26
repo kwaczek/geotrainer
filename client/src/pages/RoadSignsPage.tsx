@@ -17,6 +17,7 @@ interface ApiRoadSign {
   }[];
   createdAt: string;
   updatedAt: string;
+  isPedestrian?: boolean;
   __v: number;
 }
 
@@ -30,6 +31,7 @@ interface RoadSign {
   imageUrl: string;
   description: string;
   googleMapsUrl: string;
+  isPedestrian?: boolean;
 }
 
 // Define FilterSettings type at the top with other interfaces
@@ -185,7 +187,8 @@ const transformRoadSign = (roadSign: ApiRoadSign): RoadSign => {
     continent: continent,
     imageUrl: roadSign.imageUrl,
     description: roadSign.description,
-    googleMapsUrl: roadSign.googleMapsUrl
+    googleMapsUrl: roadSign.googleMapsUrl,
+    isPedestrian: roadSign.isPedestrian
   };
 };
 
@@ -777,6 +780,11 @@ const RoadSignsPage: React.FC = () => {
                 <p className="text-sm text-gray-600 mb-3">{sign.description}</p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <ContinentBadge continent={sign.continent} />
+                  {sign.isPedestrian && (
+                    <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                      Pedestrian
+                    </span>
+                  )}
                   {sign.countryCode && (
                     <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium uppercase">
                       {sign.countryCode}
@@ -806,6 +814,9 @@ const RoadSignsPage: React.FC = () => {
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Continent
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Map
@@ -851,15 +862,24 @@ const RoadSignsPage: React.FC = () => {
                     <ContinentBadge continent={sign.continent} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <a
-                      href={sign.googleMapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      View
-                    </a>
+                    {sign.isPedestrian && (
+                      <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                        Pedestrian
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {sign.googleMapsUrl ? (
+                      <a
+                        href={sign.googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        View
+                      </a>
+                    ) : null}
                   </td>
                 </tr>
               ))}
@@ -950,6 +970,15 @@ const RoadSignsPage: React.FC = () => {
                   <ContinentBadge continent={selectedRoadSign.continent} />
                 </div>
               </div>
+              
+              {selectedRoadSign.isPedestrian && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Type</h4>
+                  <span className="inline-block bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full font-medium">
+                    Pedestrian Sign
+                  </span>
+                </div>
+              )}
               
               {selectedRoadSign.googleMapsUrl && (
                 <div className="mb-4">

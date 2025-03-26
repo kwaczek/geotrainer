@@ -47,6 +47,7 @@ const testRoadSigns: Array<{
   description: string;
   googleMapsUrl: string;
   countries: mongoose.Types.ObjectId[];
+  isPedestrian?: boolean;
 }> = [
   {
     imageUrl: 'https://example.com/roadsign1.jpg',
@@ -59,6 +60,13 @@ const testRoadSigns: Array<{
     description: 'A typical German road sign',
     googleMapsUrl: 'https://maps.google.com/?q=Berlin',
     countries: [] // Will be filled with ObjectIds after countries are inserted
+  },
+  {
+    imageUrl: 'https://example.com/roadsign3.jpg',
+    description: 'A German pedestrian crossing sign',
+    googleMapsUrl: 'https://maps.google.com/?q=Berlin',
+    countries: [], // Will be filled with ObjectIds after countries are inserted
+    isPedestrian: true
   }
 ];
 
@@ -88,6 +96,7 @@ beforeAll(async () => {
   // Update road sign test data with actual country ObjectIds
   testRoadSigns[0].countries = [insertedCountries[0]._id]; // French road sign
   testRoadSigns[1].countries = [insertedCountries[1]._id]; // German road sign
+  testRoadSigns[2].countries = [insertedCountries[1]._id]; // German pedestrian sign
   
   // Insert test road signs
   await RoadSign.insertMany(testRoadSigns);
@@ -224,5 +233,42 @@ describe('Road Sign Quiz API Endpoint', () => {
     expect(result.attempts[0]).toHaveProperty('isCorrect', true);
     expect(result.attempts[0]).toHaveProperty('questionId', question.id);
     expect(result.attempts[0]).toHaveProperty('selectedCountryId', correctOption.id);
+  });
+  
+  test('GET /api/quiz-questions/roadsigns with pedestrian filter - should return a pedestrian sign', async () => {
+    // Add a pedestrian filter to only get pedestrian signs
+    const response = await request(app).get('/api/quiz-questions/roadsigns?pedestrian=true');
+    
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('sessionId');
+    expect(response.body).toHaveProperty('question');
+    
+    const question = response.body.question;
+    expect(question).toHaveProperty('id');
+    expect(question).toHaveProperty('imageUrl');
+    expect(question).toHaveProperty('question');
+    expect(question).toHaveProperty('options');
+    
+    // Verify it's a pedestrian sign
+    expect(question.imageUrl).toBe('https://example.com/roadsign3.jpg');
+    
+    // Verify options structure
+    expect(Array.isArray(question.options)).toBe(true);
+    expect(question.options.length).toBeGreaterThan(0);
+    
+    // Find the correct option
+    const correctOption = question.options.find((opt: any) => opt.isCorrect);
+    expect(correctOption).toBeDefined();
+    
+    // The correct country should be Germany since our pedestrian sign is from Germany
+    expect(correctOption.text).toBe('Germany');
+  });
+  
+  test('GET /api/roadsigns/count with pedestrian filter - should count only pedestrian signs', async () => {
+    const response = await request(app).get('/api/roadsigns/count?pedestrian=true');
+    
+    expect(response.status).toBe(200);
+    expect(response.body).toHaveProperty('success', true);
+    expect(response.body).toHaveProperty('count', 1); // We added 1 pedestrian sign
   });
 }); 

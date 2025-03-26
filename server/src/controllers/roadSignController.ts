@@ -184,10 +184,11 @@ export const deleteRoadSign = async (req: Request, res: Response): Promise<void>
 
 export const getRoadSignCount = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { continent, in_geoguessr } = req.query;
+        const { continent, in_geoguessr, pedestrian } = req.query;
         
         // Build a more sophisticated query based on filters
         let countryQuery: any = {};
+        let signQuery: any = {};
         
         // If continent filter is applied, find countries in that continent
         if (continent && continent !== 'all') {
@@ -197,6 +198,11 @@ export const getRoadSignCount = async (req: Request, res: Response): Promise<voi
         // If GeoGuessr filter is applied, find countries in GeoGuessr
         if (in_geoguessr === 'true') {
             countryQuery.in_geoguessr = true;
+        }
+        
+        // If pedestrian filter is applied
+        if (pedestrian === 'true') {
+            signQuery.isPedestrian = true;
         }
         
         // Find countries matching all applied filters
@@ -216,10 +222,22 @@ export const getRoadSignCount = async (req: Request, res: Response): Promise<voi
                 return;
             }
             
+            // Create the final query by combining country and sign filters
+            let finalQuery: any = {
+                countries: { $in: countryIds },
+                ...signQuery
+            };
+            
             // Find road signs where at least one of the associated countries matches the filter
-            const count = await RoadSign.countDocuments({
-                countries: { $in: countryIds }
+            const count = await RoadSign.countDocuments(finalQuery);
+            
+            res.status(200).json({
+                success: true,
+                count
             });
+        } else if (Object.keys(signQuery).length > 0) {
+            // Only sign filters applied (like pedestrian)
+            const count = await RoadSign.countDocuments(signQuery);
             
             res.status(200).json({
                 success: true,

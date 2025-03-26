@@ -48,6 +48,25 @@ const mockAsianRoadSign = {
   ]
 };
 
+// Mock data for a pedestrian road sign
+const mockPedestrianRoadSign = {
+  _id: 'roadsign-3',
+  imageUrl: 'https://example.com/roadsign3.jpg',
+  description: 'A pedestrian crossing sign',
+  googleMapsUrl: 'https://maps.google.com/?q=Berlin',
+  isPedestrian: true,
+  countries: [
+    {
+      _id: 'country-3',
+      name: 'Germany',
+      capital: 'Berlin',
+      continent: 'Europe',
+      in_geoguessr: true,
+      code: 'de'
+    }
+  ]
+};
+
 // Mock the RoadSign and Country models
 jest.mock('../models/RoadSign', () => ({
   aggregate: jest.fn(),
@@ -194,5 +213,136 @@ describe('Road Sign Questions Generator', () => {
     expect(question.metadata).toBeDefined();
     expect(question.metadata?.allCorrectCountryNames).toEqual(['Japan']);
     expect(question.metadata?.roadSignId).toBe('roadsign-2');
+  });
+
+  test('should apply pedestrian filter correctly', async () => {
+    // Mock the RoadSign.aggregate function for this specific test
+    (RoadSign.aggregate as jest.Mock).mockResolvedValue([mockPedestrianRoadSign]);
+
+    // Mock the Country.aggregate function for incorrect options
+    (Country.aggregate as jest.Mock).mockResolvedValue([
+      {
+        _id: 'country-1',
+        name: 'France',
+        capital: 'Paris',
+        continent: 'Europe',
+        in_geoguessr: true,
+        code: 'fr'
+      },
+      {
+        _id: 'country-2',
+        name: 'Belgium',
+        capital: 'Brussels',
+        continent: 'Europe',
+        in_geoguessr: true,
+        code: 'be'
+      },
+      {
+        _id: 'country-4',
+        name: 'Italy',
+        capital: 'Rome',
+        continent: 'Europe',
+        in_geoguessr: true,
+        code: 'it'
+      }
+    ]);
+
+    // Define filter for pedestrian signs
+    const filters: QuizFilters = {
+      pedestrian: true
+    };
+
+    // Call the function being tested with pedestrian filter
+    const question = await getRandomRoadSignQuestion(filters);
+
+    // Assertions
+    expect(question).toBeDefined();
+    expect(question.question).toBe('Which country does this road sign belong to?');
+    expect(question.imageUrl).toBe('https://example.com/roadsign3.jpg');
+    expect(question.options.length).toBe(4);
+    
+    // Check that one option is correct
+    const correctOptions = question.options.filter(option => option.isCorrect);
+    expect(correctOptions.length).toBe(1);
+    
+    // The correct option should be Germany
+    const correctOption = correctOptions[0];
+    expect(correctOption.id).toBe('country-3');
+    expect(correctOption.text).toBe('Germany');
+
+    // Check that there are 3 incorrect options
+    const incorrectOptions = question.options.filter(option => !option.isCorrect);
+    expect(incorrectOptions.length).toBe(3);
+    
+    // Check that incorrect options contain the expected countries
+    const incorrectCountryNames = incorrectOptions.map(option => option.text);
+    expect(incorrectCountryNames).toEqual(expect.arrayContaining(['France', 'Belgium', 'Italy']));
+    
+    // Check that metadata is correctly set
+    expect(question.metadata).toBeDefined();
+    expect(question.metadata?.allCorrectCountryNames).toEqual(['Germany']);
+    expect(question.metadata?.roadSignId).toBe('roadsign-3');
+  });
+
+  test('should apply both pedestrian and continent filters correctly', async () => {
+    // Mock the RoadSign.aggregate function for this specific test
+    (RoadSign.aggregate as jest.Mock).mockResolvedValue([mockPedestrianRoadSign]);
+
+    // Mock the Country.aggregate function for incorrect European options
+    (Country.aggregate as jest.Mock).mockResolvedValue([
+      {
+        _id: 'country-1',
+        name: 'France',
+        capital: 'Paris',
+        continent: 'Europe',
+        in_geoguessr: true,
+        code: 'fr'
+      },
+      {
+        _id: 'country-2',
+        name: 'Belgium',
+        capital: 'Brussels',
+        continent: 'Europe',
+        in_geoguessr: true,
+        code: 'be'
+      },
+      {
+        _id: 'country-4',
+        name: 'Italy',
+        capital: 'Rome',
+        continent: 'Europe',
+        in_geoguessr: true,
+        code: 'it'
+      }
+    ]);
+
+    // Define filter for both pedestrian signs and Europe continent
+    const filters: QuizFilters = {
+      pedestrian: true,
+      continent: 'Europe'
+    };
+
+    // Call the function being tested with combined filters
+    const question = await getRandomRoadSignQuestion(filters);
+
+    // Assertions
+    expect(question).toBeDefined();
+    expect(question.question).toBe('Which country does this road sign belong to?');
+    expect(question.imageUrl).toBe('https://example.com/roadsign3.jpg');
+    expect(question.options.length).toBe(4);
+    
+    // The correct option should be Germany
+    const correctOption = question.options.find(option => option.isCorrect);
+    expect(correctOption).toBeDefined();
+    expect(correctOption?.id).toBe('country-3');
+    expect(correctOption?.text).toBe('Germany');
+    
+    // Check that the aggregation pipeline was correctly built with both filters
+    expect(RoadSign.aggregate).toHaveBeenCalled();
+    
+    // Check that metadata is correctly set
+    expect(question.metadata).toBeDefined();
+    expect(question.metadata?.allCorrectCountryNames).toEqual(['Germany']);
+    expect(question.metadata?.roadSignId).toBe('roadsign-3');
   });
 }); 

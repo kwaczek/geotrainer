@@ -10,6 +10,7 @@ export interface QuizSettings {
   in_geoguessr?: boolean;
   blurred?: boolean;
   blurIntensity?: number;
+  pedestrianSigns?: boolean;
 }
 
 // The key used to store all settings in localStorage
@@ -25,7 +26,8 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     continent: 'all',
     in_geoguessr: false,
     blurred: false,
-    blurIntensity: 15
+    blurIntensity: 15,
+    pedestrianSigns: false
   },
   capitals: {
     timerEnabled: true,
@@ -35,7 +37,8 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     continent: 'all',
     in_geoguessr: false,
     blurred: false,
-    blurIntensity: 15
+    blurIntensity: 15,
+    pedestrianSigns: false
   },
   bollards: {
     timerEnabled: true,
@@ -45,7 +48,8 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     continent: 'all',
     in_geoguessr: false,
     blurred: false,
-    blurIntensity: 15
+    blurIntensity: 15,
+    pedestrianSigns: false
   },
   licenseplates: {
     timerEnabled: true,
@@ -55,7 +59,8 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     continent: 'all',
     in_geoguessr: false,
     blurred: false,
-    blurIntensity: 15
+    blurIntensity: 15,
+    pedestrianSigns: false
   },
   roadsigns: {
     timerEnabled: true,
@@ -65,7 +70,8 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     continent: 'all',
     in_geoguessr: false,
     blurred: false,
-    blurIntensity: 15
+    blurIntensity: 15,
+    pedestrianSigns: false
   }
 };
 
