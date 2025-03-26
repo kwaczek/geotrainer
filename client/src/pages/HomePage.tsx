@@ -114,178 +114,223 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <header className="py-6 bg-white shadow-sm">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold text-center text-gray-800">GeoPrep</h1>
-          <p className="text-center text-gray-600 mt-2">Quiz and Preparation for GeoGuessr</p>
-        </div>
-      </header>
-
+    <div className="min-h-screen flex flex-col">
       {/* Main Content */}
-      <main className="flex-grow container mx-auto px-4 py-10">
+      <main className="flex-grow container mx-auto px-4 py-6">
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {categories.map((category) => (
-            <div 
-              key={category.id} 
-              className="flex flex-col bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex flex-col items-center">
-                <div className="text-5xl mb-4">{category.icon}</div>
-                <h3 className="text-xl font-semibold mb-2 text-center">{category.name}</h3>
-                <p className="text-gray-500 text-sm text-center mb-4">{category.description}</p>
-                
-                {/* Display count badge for quizzes with available counts */}
-                {category.supportsFilters && (
-                  <div className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full mb-4">
-                    {loading ? (
-                      <span>Loading...</span>
-                    ) : (
-                      <span>
-                        {getCategoryCount(category.id)} {category.id === 'capitals' || category.id === 'flags' 
-                          ? 'countries' 
-                          : category.id === 'bollards' 
-                            ? 'bollards' 
-                            : category.id === 'licenseplates' 
-                              ? 'license plates' 
-                              : 'road signs'}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              {/* Start button */}
-              <button
-                onClick={() => handleStartQuiz(category.id)}
-                className="mt-auto w-full py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
+          {categories.map((category) => {
+            // Define category-specific colors
+            let bgGradient, iconBg, buttonBg, buttonHover;
+            
+            switch(category.id) {
+              case 'capitals':
+                bgGradient = 'from-blue-50 to-blue-100';
+                iconBg = 'bg-blue-100';
+                buttonBg = 'bg-blue-500';
+                buttonHover = 'hover:bg-blue-600';
+                break;
+              case 'flags':
+                bgGradient = 'from-red-50 to-red-100';
+                iconBg = 'bg-red-100';
+                buttonBg = 'bg-red-500';
+                buttonHover = 'hover:bg-red-600';
+                break;
+              case 'bollards':
+                bgGradient = 'from-yellow-50 to-yellow-100';
+                iconBg = 'bg-yellow-100';
+                buttonBg = 'bg-yellow-500';
+                buttonHover = 'hover:bg-yellow-600';
+                break;
+              case 'licenseplates':
+                bgGradient = 'from-green-50 to-green-100';
+                iconBg = 'bg-green-100';
+                buttonBg = 'bg-green-500';
+                buttonHover = 'hover:bg-green-600';
+                break;
+              case 'roadsigns':
+                bgGradient = 'from-purple-50 to-purple-100';
+                iconBg = 'bg-purple-100';
+                buttonBg = 'bg-purple-500';
+                buttonHover = 'hover:bg-purple-600';
+                break;
+              default:
+                bgGradient = 'from-gray-50 to-gray-100';
+                iconBg = 'bg-gray-100';
+                buttonBg = 'bg-blue-500';
+                buttonHover = 'hover:bg-blue-600';
+            }
+            
+            return (
+              <div 
+                key={category.id} 
+                className={`flex flex-col bg-gradient-to-br ${bgGradient} p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 transform hover:-translate-y-1`}
               >
-                Start Quiz
-              </button>
-            </div>
-          ))}
+                <div className="flex flex-col items-center">
+                  <div className={`text-4xl mb-3 ${iconBg} p-4 rounded-full shadow-sm`}>{category.icon}</div>
+                  <h3 className="text-lg font-semibold mb-1 text-center">{category.name}</h3>
+                  <p className="text-gray-600 text-xs text-center mb-3">{category.description}</p>
+                  
+                  {/* Display count badge for quizzes with available counts */}
+                  {category.supportsFilters && (
+                    <div className="bg-white bg-opacity-70 text-gray-700 text-xs font-medium px-3 py-1 rounded-full mb-3 shadow-sm border border-gray-200">
+                      {loading ? (
+                        <span>Loading...</span>
+                      ) : (
+                        <span>
+                          {getCategoryCount(category.id)} {category.id === 'capitals' || category.id === 'flags' 
+                            ? 'countries' 
+                            : category.id === 'bollards' 
+                              ? 'bollards' 
+                              : category.id === 'licenseplates' 
+                                ? 'license plates' 
+                                : 'road signs'}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Start button */}
+                <button
+                  onClick={() => handleStartQuiz(category.id)}
+                  className={`mt-auto w-full py-2 ${buttonBg} text-white rounded-lg ${buttonHover} transition-all duration-200 font-medium text-sm shadow-sm`}
+                >
+                  Start Quiz
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Spacer and divider */}
+        <div className="mb-12 mt-4">
+          <div className="w-full max-w-3xl mx-auto border-b border-gray-300 opacity-30"></div>
         </div>
 
         {/* Release Notes Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-10">
-          <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Release Notes</h2>
+        <div className="bg-gradient-to-br from-slate-100 to-slate-200 backdrop-blur-sm rounded-xl shadow-sm p-5 mb-6 border border-slate-200 max-w-5xl mx-auto">
+          <h2 className="text-lg font-semibold mb-4 text-center text-gray-700">Release Notes</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Completed Features */}
-            <div className="border-t-4 border-green-500 rounded-lg p-4 bg-green-50">
-              <h3 className="text-lg font-semibold mb-3 flex items-center">
-                <span className="text-green-600 mr-2">✓</span> Completed Features
+            <div className="border-t-4 border-green-500 rounded-xl p-3 bg-green-50 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
+              <h3 className="text-base font-semibold mb-2 flex items-center">
+                <span className="text-green-600 mr-1 bg-green-100 w-5 h-5 rounded-full flex items-center justify-center text-xs">✓</span>
+                <span className="ml-1">Completed Features</span>
               </h3>
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-1 text-xs">
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Capital Cities Quiz with multiple choice options</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Country Flags Quiz with multiple choice and write mode</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Bollards Quiz for identifying street poles</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Continent filters for all quizzes</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>GeoGuessr-only country mode</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Customizable timer and question count</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Detailed quiz results and statistics</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Shareable quiz results via unique quiz ID</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Learning pages for each quiz category</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-600 mr-2">•</span>
+                  <span className="text-yellow-600 mr-1">•</span>
                   <span>License Plates Quiz (with blur option)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-yellow-600 mr-1">•</span>
+                  <span>Road Signs Quiz types</span>
                 </li>
               </ul>
             </div>
             
             {/* In Progress Features */}
-            <div className="border-t-4 border-yellow-500 rounded-lg p-4 bg-yellow-50">
-              <h3 className="text-lg font-semibold mb-3 flex items-center">
-                <span className="text-yellow-600 mr-2">⟳</span> In Progress
+            <div className="border-t-4 border-yellow-500 rounded-xl p-3 bg-yellow-50 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
+              <h3 className="text-base font-semibold mb-2 flex items-center">
+                <span className="text-yellow-600 mr-1 bg-yellow-100 w-5 h-5 rounded-full flex items-center justify-center text-xs">⟳</span>
+                <span className="ml-1">In Progress</span>
               </h3>
-              <ul className="space-y-2 text-sm">
-
+              <ul className="space-y-1 text-xs">
                 <li className="flex items-start">
-                  <span className="text-yellow-600 mr-2">•</span>
+                  <span className="text-yellow-600 mr-1">•</span>
                   <span>Road Signs Quiz (uploading more data)</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-600 mr-2">•</span>
+                  <span className="text-yellow-600 mr-1">•</span>
                   <span>Performance optimizations for faster loading</span>
                 </li>
               </ul>
             </div>
             
             {/* Planned Features */}
-            <div className="border-t-4 border-blue-500 rounded-lg p-4 bg-blue-50">
-              <h3 className="text-lg font-semibold mb-3 flex items-center">
-                <span className="text-blue-600 mr-2">○</span> Planned Features
+            <div className="border-t-4 border-blue-500 rounded-xl p-3 bg-blue-50 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
+              <h3 className="text-base font-semibold mb-2 flex items-center">
+                <span className="text-blue-600 mr-1 bg-blue-100 w-5 h-5 rounded-full flex items-center justify-center text-xs">○</span>
+                <span className="ml-1">Planned Features</span>
               </h3>
-              <ul className="space-y-2 text-sm">
+              <ul className="space-y-1 text-xs">
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
+                  <span className="text-blue-600 mr-1">•</span>
                   <span>Cars Quiz for vehicle identification</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
+                  <span className="text-blue-600 mr-1">•</span>
                   <span>Domain quiz</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
+                  <span className="text-blue-600 mr-1">•</span>
                   <span>US License Plates regional quiz</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
+                  <span className="text-blue-600 mr-1">•</span>
                   <span>Phone Prefixes quiz for country codes</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
+                  <span className="text-blue-600 mr-1">•</span>
                   <span>User accounts with progress tracking</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
+                  <span className="text-blue-600 mr-1">•</span>
                   <span>Adaptive quizzes based on your performance</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Quiz history and progress tracking</span>
                 </li>
-
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
+                  <span className="text-blue-600 mr-1">•</span>
                   <span>And more...</span>
                 </li>
               </ul>
             </div>
           </div>
           
-          <div className="mt-6 text-center text-sm text-gray-500">
+          <div className="mt-4 text-center text-xs text-gray-500">
             <p>Last updated: {new Date().toLocaleDateString()}</p>
-            <p className="mt-2">
+            <p className="mt-1">
               Join the discussion on <a href="https://www.reddit.com/r/geoguessr/comments/1jcm67f/yet_another_bollard_and_more_quiz_test_it_if_you/" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Reddit</a>
             </p>
           </div>
