@@ -72,6 +72,9 @@ const Header: React.FC = () => {
                   <Link to="/admin/roadsigns" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
                     Road Sign Admin
                   </Link>
+                  <Link to="/admin/data-migration" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
+                    Data Migration
+                  </Link>
                 </div>
               </li>
             )}

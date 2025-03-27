@@ -77,6 +77,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         isAdmin: true 
       }));
       
+      // Store API key for admin API calls - using the actual password as the API key
+      // This works because our server apiKeyMiddleware accepts the admin passwords as valid API keys
+      localStorage.setItem('apiKey', password);
+      
       return true;
     }
     
@@ -87,6 +91,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsAuthenticated(false);
     setIsAdmin(false);
     localStorage.removeItem('authData');
+    localStorage.removeItem('apiKey'); // Also remove API key on logout
   };
 
   return (
