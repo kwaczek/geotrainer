@@ -260,4 +260,109 @@ export const getRoadSignCount = async (req: Request, res: Response): Promise<voi
             error: (error as Error).message 
         });
     }
+};
+
+export const migrateRoadSignTypes = async (req: Request, res: Response): Promise<void> => {
+    try {
+        // Get all road signs before migration
+        const roadSignsBefore = await RoadSign.find({});
+        
+        // Log raw data for debugging
+        console.log('Raw signs data before migration:');
+        roadSignsBefore.forEach(sign => {
+            console.log(`ID: ${sign._id}, isPedestrian: ${sign.isPedestrian}, type: ${typeof sign.isPedestrian}`);
+        });
+        
+        // Manually update each document to ensure correct conversion
+        let updateCount = 0;
+        for (const sign of roadSignsBefore) {
+            // Convert boolean to proper array
+            let typesArray: string[] = [];
+            
+            // Check explicitly for boolean true (strict comparison)
+            if (sign.isPedestrian === true) {
+                typesArray = ['pedestrian'];
+                updateCount++;
+            }
+            
+            // Update the document with the new types array
+            await RoadSign.updateOne(
+                { _id: sign._id },
+                { $set: { types: typesArray } }
+            );
+        }
+        
+        // Get all road signs after migration to verify changes
+        const roadSignsAfter = await RoadSign.find({});
+        
+        // Log raw data after migration for debugging
+        console.log('Raw signs data after migration:');
+        roadSignsAfter.forEach(sign => {
+            console.log(`ID: ${sign._id}, isPedestrian: ${sign.isPedestrian}, types: ${sign.types}, type: ${typeof sign.isPedestrian}`);
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Road sign types migration completed successfully',
+            migrationResult: {
+                matchedCount: roadSignsBefore.length,
+                modifiedCount: updateCount
+            },
+            beforeCount: roadSignsBefore.length,
+            afterCount: roadSignsAfter.length,
+            roadSignsBefore: roadSignsBefore.map(sign => ({
+                _id: sign._id,
+                imageUrl: sign.imageUrl,
+                description: sign.description.substring(0, 30) + (sign.description.length > 30 ? '...' : ''),
+                isPedestrian: sign.isPedestrian,
+                types: sign.types || []
+            })),
+            roadSignsAfter: roadSignsAfter.map(sign => ({
+                _id: sign._id,
+                imageUrl: sign.imageUrl,
+                description: sign.description.substring(0, 30) + (sign.description.length > 30 ? '...' : ''),
+                isPedestrian: sign.isPedestrian,
+                types: sign.types || []
+            }))
+        });
+    } catch (error) {
+        console.error('Error migrating road sign types:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error migrating road sign types',
+            error: (error as Error).message
+        });
+    }
+};
+
+// Add a debug function to check the raw data
+export const debugRoadSigns = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const roadSigns = await RoadSign.find({});
+        
+        // Format the results with detailed type information
+        const formattedSigns = roadSigns.map(sign => ({
+            _id: sign._id,
+            description: sign.description,
+            isPedestrian: sign.isPedestrian,
+            isPedestrianType: typeof sign.isPedestrian,
+            types: sign.types || [],
+            typesType: typeof sign.types,
+            // Convert to string for inspection
+            rawData: JSON.stringify(sign.toObject())
+        }));
+        
+        res.status(200).json({
+            success: true,
+            count: roadSigns.length,
+            roadSigns: formattedSigns
+        });
+    } catch (error) {
+        console.error('Error debugging road signs:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error debugging road signs',
+            error: (error as Error).message
+        });
+    }
 }; 
