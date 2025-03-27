@@ -286,7 +286,51 @@ const RoadSignAdmin: React.FC = () => {
                 />
                 <span>Stop Sign</span>
               </label>
-              {/* Additional checkboxes can be added here */}
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes('chevrons')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'chevrons']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'chevrons'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Chevrons</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes('back')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'back']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'back'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Back of Sign</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes('yield')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'yield']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'yield'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Yield Sign</span>
+              </label>
             </div>
           </div>
         </div>
