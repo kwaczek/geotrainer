@@ -17,8 +17,8 @@ interface ApiRoadSign {
   }[];
   createdAt: string;
   updatedAt: string;
-  isPedestrian?: boolean;
   __v: number;
+  types: string[];
 }
 
 // Display RoadSign interface used in the UI
@@ -31,7 +31,7 @@ interface RoadSign {
   imageUrl: string;
   description: string;
   googleMapsUrl: string;
-  isPedestrian?: boolean;
+  types: string[];
 }
 
 // Define FilterSettings type at the top with other interfaces
@@ -41,6 +41,7 @@ interface FilterSettings {
   continent: string;
   sortBy: string;
   viewMode: 'grid' | 'list';
+  type: string;
 }
 
 // Fallback data if database connection fails
@@ -53,7 +54,8 @@ const fallbackRoadSigns: RoadSign[] = [
     continent: 'Europe',
     imageUrl: 'https://placehold.co/300x400/e2e8f0/1e40af?text=Priority+Road',
     description: 'Yellow diamond indicating priority road',
-    googleMapsUrl: 'https://www.google.com/maps/@52.5163,13.3779,3a'
+    googleMapsUrl: 'https://www.google.com/maps/@52.5163,13.3779,3a',
+    types: []
   },
   {
     id: 'us-stop',
@@ -63,7 +65,8 @@ const fallbackRoadSigns: RoadSign[] = [
     continent: 'North America',
     imageUrl: 'https://placehold.co/300x400/e2e8f0/1e40af?text=Stop+Sign',
     description: 'Red octagonal stop sign',
-    googleMapsUrl: 'https://www.google.com/maps/@40.7127,-74.0059,3a'
+    googleMapsUrl: 'https://www.google.com/maps/@40.7127,-74.0059,3a',
+    types: []
   },
   {
     id: 'jp-crossing',
@@ -73,7 +76,8 @@ const fallbackRoadSigns: RoadSign[] = [
     continent: 'Asia',
     imageUrl: 'https://placehold.co/300x400/e2e8f0/1e40af?text=Crossing',
     description: 'Blue pedestrian crossing sign',
-    googleMapsUrl: 'https://www.google.com/maps/@35.6895,139.6917,3a'
+    googleMapsUrl: 'https://www.google.com/maps/@35.6895,139.6917,3a',
+    types: []
   }
 ];
 
@@ -86,7 +90,8 @@ const defaultFilterSettings = {
   country: 'All Countries',
   continent: 'All Continents',
   sortBy: 'country',
-  viewMode: 'grid' as const
+  viewMode: 'grid' as const,
+  type: 'All Types'
 };
 
 // Utility functions for localStorage
@@ -188,7 +193,7 @@ const transformRoadSign = (roadSign: ApiRoadSign): RoadSign => {
     imageUrl: roadSign.imageUrl,
     description: roadSign.description,
     googleMapsUrl: roadSign.googleMapsUrl,
-    isPedestrian: roadSign.isPedestrian
+    types: roadSign.types || []
   };
 };
 
@@ -213,9 +218,13 @@ const RoadSignsPage: React.FC = () => {
   const [selectedContinent, setSelectedContinent] = useState<string>(storedSettings.continent || 'All Continents');
   const [sortBy, setSortBy] = useState<string>(storedSettings.sortBy || 'country');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(storedSettings.viewMode || 'grid');
+  const [selectedType, setSelectedType] = useState<string>(storedSettings.type || 'All Types');
   
   const [availableCountries, setAvailableCountries] = useState<{name: string, continent: string}[]>([]);
   const [availableContinents, setAvailableContinents] = useState<string[]>([]);
+  
+  // Define available types for filtering
+  const availableTypes = ['All Types', 'pedestrian', 'stop'];
   
   // Initialize app
   useEffect(() => {
@@ -403,11 +412,12 @@ const RoadSignsPage: React.FC = () => {
       country: selectedCountry,
       continent: selectedContinent,
       sortBy,
-      viewMode
+      viewMode,
+      type: selectedType
     };
     
     saveSettingsToStorage(currentSettings);
-  }, [searchTerm, selectedCountry, selectedContinent, sortBy, viewMode]);
+  }, [searchTerm, selectedCountry, selectedContinent, sortBy, viewMode, selectedType]);
 
   // Check if we need to update the filters when availableCountries or availableContinents change
   useEffect(() => {
@@ -469,6 +479,17 @@ const RoadSignsPage: React.FC = () => {
       console.log('No country filtering applied');
     }
 
+    // Filter by type
+    if (selectedType && selectedType !== 'All Types') {
+      console.log('Filtering by type:', selectedType);
+      result = result.filter(sign => 
+        sign.types && sign.types.includes(selectedType)
+      );
+      console.log('After type filter:', result.length);
+    } else {
+      console.log('No type filtering applied');
+    }
+
     // Apply search
     if (searchTerm.trim() !== '') {
       console.log('Filtering by search term:', searchTerm);
@@ -497,7 +518,7 @@ const RoadSignsPage: React.FC = () => {
 
     console.log('Final filtered count:', result.length);
     setFilteredRoadSigns(result);
-  }, [roadSigns, selectedCountry, selectedContinent, searchTerm, sortBy]);
+  }, [roadSigns, selectedCountry, selectedContinent, searchTerm, sortBy, selectedType]);
 
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -512,6 +533,11 @@ const RoadSignsPage: React.FC = () => {
   // Handle continent filter change
   const handleContinentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedContinent(e.target.value);
+  };
+
+  // Handle type filter change
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedType(e.target.value);
   };
 
   // Handle sort change
@@ -530,6 +556,7 @@ const RoadSignsPage: React.FC = () => {
     setSearchTerm('');
     setSelectedCountry('All Countries');
     setSelectedContinent('All Continents');
+    setSelectedType('All Types');
     // Don't reset sort or view mode on filter reset
   };
 
@@ -663,6 +690,21 @@ const RoadSignsPage: React.FC = () => {
             </select>
           </div>
 
+          {/* Type Filter */}
+          <div>
+            <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Sign Type</label>
+            <select
+              id="type"
+              value={selectedType}
+              onChange={handleTypeChange}
+              className="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md capitalize"
+            >
+              {availableTypes.map(type => (
+                <option key={type} value={type} className="capitalize">{type}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Sorting and View Controls */}
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -705,7 +747,7 @@ const RoadSignsPage: React.FC = () => {
         </div>
         
         {/* Reset Filters Button */}
-        {(selectedCountry !== 'All Countries' || selectedContinent !== 'All Continents' || searchTerm !== '') && (
+        {(selectedCountry !== 'All Countries' || selectedContinent !== 'All Continents' || searchTerm !== '' || selectedType !== 'All Types') && (
           <div className="mt-4 flex justify-end">
             <button
               onClick={resetFilters}
@@ -780,15 +822,16 @@ const RoadSignsPage: React.FC = () => {
                 <p className="text-sm text-gray-600 mb-3">{sign.description}</p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <ContinentBadge continent={sign.continent} />
-                  {sign.isPedestrian && (
-                    <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
-                      Pedestrian
-                    </span>
-                  )}
-                  {sign.countryCode && (
-                    <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full font-medium uppercase">
-                      {sign.countryCode}
-                    </span>
+                  {sign.types && sign.types.length > 0 ? (
+                    <div className="flex flex-wrap gap-1">
+                      {sign.types.map(type => (
+                        <span key={type} className="inline-block bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-medium capitalize">
+                          {type}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">-</span>
                   )}
                 </div>
               </div>
@@ -803,19 +846,19 @@ const RoadSignsPage: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                   Image
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                   Description
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                   Country
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                   Continent
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-r border-gray-200">
                   Type
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -827,7 +870,7 @@ const RoadSignsPage: React.FC = () => {
               {filteredRoadSigns.map((sign) => (
                 <tr 
                   key={sign.id} 
-                  className="cursor-pointer hover:bg-gray-50"
+                  className="cursor-pointer hover:bg-gray-50 divide-x divide-gray-200"
                   onClick={() => setSelectedRoadSign(sign)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -861,11 +904,17 @@ const RoadSignsPage: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <ContinentBadge continent={sign.continent} />
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {sign.isPedestrian && (
-                      <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
-                        Pedestrian
-                      </span>
+                  <td className="px-6 py-4 whitespace-nowrap text-xs">
+                    {sign.types && sign.types.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {sign.types.map(type => (
+                          <span key={type} className="inline-block bg-teal-100 text-teal-800 px-2 py-0.5 rounded-full font-medium capitalize">
+                            {type}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">-</span>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -971,14 +1020,20 @@ const RoadSignsPage: React.FC = () => {
                 </div>
               </div>
               
-              {selectedRoadSign.isPedestrian && (
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Type</h4>
-                  <span className="inline-block bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full font-medium">
-                    Pedestrian Sign
-                  </span>
-                </div>
-              )}
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Type</h4>
+                {selectedRoadSign.types && selectedRoadSign.types.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {selectedRoadSign.types.map(type => (
+                      <span key={type} className="inline-block bg-teal-100 text-teal-800 text-sm px-2 py-1 rounded-full font-medium capitalize">
+                        {type}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </div>
               
               {selectedRoadSign.googleMapsUrl && (
                 <div className="mb-4">

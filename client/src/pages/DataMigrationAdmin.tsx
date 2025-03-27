@@ -35,8 +35,6 @@ interface MigrationResult {
 interface RoadSignDebug {
   _id: string;
   description: string;
-  isPedestrian: boolean;
-  isPedestrianType: string;
   types: string[];
   typesType: string;
   rawData: string;
@@ -46,6 +44,29 @@ interface DebugResponse {
   success: boolean;
   count: number;
   roadSigns: RoadSignDebug[];
+}
+
+interface RoadSignBefore {
+  _id: string;
+  imageUrl: string;
+  description: string;
+  googleMapsUrl: string;
+  countries: string[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface RoadSignAfter {
+  _id: string;
+  imageUrl: string;
+  description: string;
+  googleMapsUrl: string;
+  countries: string[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  types: string[];
 }
 
 const DataMigrationAdmin: React.FC = () => {
@@ -235,19 +256,17 @@ const DataMigrationAdmin: React.FC = () => {
           <p className="text-center py-4">Loading signs data...</p>
         ) : (
           <div className="max-h-96 overflow-y-auto bg-gray-50 p-2 rounded">
-            <table className="min-w-full">
-              <thead className="bg-gray-100 sticky top-0">
+            <table className="min-w-full divide-y divide-gray-200 mt-4">
+              <thead className="bg-gray-50">
                 <tr>
                   <th className="px-2 py-2 text-left"></th>
                   <th className="px-2 py-2 text-left">ID</th>
                   <th className="px-2 py-2 text-left">Description</th>
-                  <th className="px-2 py-2 text-left">isPedestrian</th>
-                  <th className="px-2 py-2 text-left">isPedestrian Type</th>
                   <th className="px-2 py-2 text-left">types</th>
                   <th className="px-2 py-2 text-left">types Type</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white divide-y divide-gray-200">
                 {allSigns.map(sign => (
                   <React.Fragment key={sign._id}>
                     <tr className="border-t hover:bg-gray-100 cursor-pointer" onClick={() => toggleRowExpansion(sign._id)}>
@@ -258,14 +277,12 @@ const DataMigrationAdmin: React.FC = () => {
                       </td>
                       <td className="px-2 py-2 text-xs">{sign._id}</td>
                       <td className="px-2 py-2">{sign.description}</td>
-                      <td className="px-2 py-2">{String(sign.isPedestrian)}</td>
-                      <td className="px-2 py-2">{sign.isPedestrianType}</td>
                       <td className="px-2 py-2">{sign.types.join(', ') || 'empty array'}</td>
                       <td className="px-2 py-2">{sign.typesType}</td>
                     </tr>
                     {expandedRowId === sign._id && (
                       <tr>
-                        <td colSpan={7} className="px-4 py-2 bg-gray-50 border-b">
+                        <td colSpan={5} className="px-4 py-2 bg-gray-50 border-b">
                           <div className="overflow-x-auto">
                             <pre className="text-xs whitespace-pre-wrap bg-gray-100 p-2 rounded">
                               {sign.rawData}
@@ -300,22 +317,22 @@ const DataMigrationAdmin: React.FC = () => {
             <div>
               <h3 className="text-lg font-medium mb-2">Before Migration</h3>
               <div className="max-h-60 overflow-y-auto bg-gray-50 p-2 rounded">
-                <table className="min-w-full">
-                  <thead>
+                <table className="min-w-full divide-y divide-gray-200 mt-2">
+                  <thead className="bg-gray-100">
                     <tr>
                       <th className="px-2 py-1 text-left">ID</th>
-                      <th className="px-2 py-1 text-left">Description</th>
-                      <th className="px-2 py-1 text-left">isPedestrian</th>
-                      <th className="px-2 py-1 text-left">types</th>
+                      <th className="px-2 py-1 text-left">Image</th>
+                      <th className="px-2 py-1 text-left">Types</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="bg-white divide-y divide-gray-200">
                     {migrationResult.roadSignsBefore.map(sign => (
                       <tr key={sign._id} className="border-t">
                         <td className="px-2 py-1 text-xs">{sign._id}</td>
-                        <td className="px-2 py-1">{sign.description}</td>
-                        <td className="px-2 py-1">{sign.isPedestrian ? 'true' : 'false'}</td>
-                        <td className="px-2 py-1">{sign.types?.join(', ') || 'none'}</td>
+                        <td className="px-2 py-1">
+                          <img src={sign.imageUrl} alt="Road Sign" className="h-10 w-10 object-cover" />
+                        </td>
+                        <td className="px-2 py-1">{JSON.stringify(sign.types)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -326,22 +343,22 @@ const DataMigrationAdmin: React.FC = () => {
             <div>
               <h3 className="text-lg font-medium mb-2">After Migration</h3>
               <div className="max-h-60 overflow-y-auto bg-gray-50 p-2 rounded">
-                <table className="min-w-full">
-                  <thead>
+                <table className="min-w-full divide-y divide-gray-200 mt-2">
+                  <thead className="bg-gray-100">
                     <tr>
                       <th className="px-2 py-1 text-left">ID</th>
-                      <th className="px-2 py-1 text-left">Description</th>
-                      <th className="px-2 py-1 text-left">isPedestrian</th>
-                      <th className="px-2 py-1 text-left">types</th>
+                      <th className="px-2 py-1 text-left">Image</th>
+                      <th className="px-2 py-1 text-left">Types</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="bg-white divide-y divide-gray-200">
                     {migrationResult.roadSignsAfter.map(sign => (
                       <tr key={sign._id} className="border-t">
                         <td className="px-2 py-1 text-xs">{sign._id}</td>
-                        <td className="px-2 py-1">{sign.description}</td>
-                        <td className="px-2 py-1">{sign.isPedestrian ? 'true' : 'false'}</td>
-                        <td className="px-2 py-1">{sign.types?.join(', ') || 'none'}</td>
+                        <td className="px-2 py-1">
+                          <img src={sign.imageUrl} alt="Road Sign" className="h-10 w-10 object-cover" />
+                        </td>
+                        <td className="px-2 py-1">{JSON.stringify(sign.types)}</td>
                       </tr>
                     ))}
                   </tbody>

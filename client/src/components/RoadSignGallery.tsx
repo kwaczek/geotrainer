@@ -117,10 +117,18 @@ const RoadSignGallery: React.FC<RoadSignGalleryProps> = ({ roadSigns, isLoading 
                 <p className="text-sm text-gray-600 mb-2">{roadSign.description || 'No description available'}</p>
                 
                 <div className="flex items-center flex-wrap gap-2">
-                  {roadSign.isPedestrian && (
-                    <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
-                      Pedestrian
-                    </span>
+                  {/* Display types from the array */}
+                  {roadSign.types && roadSign.types.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {roadSign.types.map((type) => (
+                        <span 
+                          key={type} 
+                          className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full font-medium capitalize"
+                        >
+                          {type}
+                        </span>
+                      ))}
+                    </div>
                   )}
                   
                   {roadSign.googleMapsUrl && (
@@ -205,13 +213,20 @@ const RoadSignGallery: React.FC<RoadSignGalleryProps> = ({ roadSigns, isLoading 
                 })()}
               </div>
               
-              {/* Type section */}
-              {selectedRoadSign.isPedestrian && (
+              {/* Display types from the array in modal */}
+              {selectedRoadSign.types && selectedRoadSign.types.length > 0 && (
                 <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Type</h4>
-                  <span className="inline-block bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full font-medium">
-                    Pedestrian Sign
-                  </span>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Types</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRoadSign.types.map((type) => (
+                      <span 
+                        key={type} 
+                        className="inline-block bg-purple-100 text-purple-800 text-sm px-3 py-1 rounded-full font-medium capitalize"
+                      >
+                        {type}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               )}
               
