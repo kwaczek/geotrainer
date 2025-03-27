@@ -70,11 +70,10 @@ const Header: React.FC = () => {
                     License Plate Admin
                   </Link>
                   <Link to="/admin/roadsigns" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
-                    Road Sign Admin
+                    Road Signs Admin
                   </Link>
-                  <Link to="/admin/data-migration" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
-                    Data Migration
-                  </Link>
+                  {/* <Link to="/admin/users" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">User Management</Link> */}
+                  {/* <Link to="/admin/feedback" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">Feedback Management</Link> */}
                 </div>
               </li>
             )}

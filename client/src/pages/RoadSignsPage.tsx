@@ -223,8 +223,8 @@ const RoadSignsPage: React.FC = () => {
   const [availableCountries, setAvailableCountries] = useState<{name: string, continent: string}[]>([]);
   const [availableContinents, setAvailableContinents] = useState<string[]>([]);
   
-  // Define available types for filtering
-  const availableTypes = ['All Types', 'pedestrian', 'stop'];
+  // State for dynamically generated types
+  const [availableTypes, setAvailableTypes] = useState<string[]>(['All Types']);
   
   // Initialize app
   useEffect(() => {
@@ -328,6 +328,12 @@ const RoadSignsPage: React.FC = () => {
         
         console.log('Total road signs loaded:', transformedSigns.length);
 
+        // Derive available types dynamically from the loaded signs
+        const allTypesFromData = transformedSigns.flatMap(sign => sign.types || []);
+        const uniqueTypes = [...Array.from(new Set(allTypesFromData))].sort();
+        setAvailableTypes(['All Types', ...uniqueTypes]);
+        console.log('Derived available types:', ['All Types', ...uniqueTypes]);
+
         // If we couldn't get countries from API, extract them from road signs as fallback
         if (availableCountries.length === 0) {
           console.log('Extracting countries from road signs as fallback...');
@@ -360,7 +366,7 @@ const RoadSignsPage: React.FC = () => {
           console.log('Extracted continents from road signs:', uniqueContinents);
           setAvailableContinents(uniqueContinents);
         }
-        
+
       } catch (error) {
         console.error('Error fetching data:', error);
         console.warn('Using fallback data due to connection error');
@@ -397,6 +403,7 @@ const RoadSignsPage: React.FC = () => {
           console.log('Using fallback continents:', uniqueContinents);
           setAvailableContinents(uniqueContinents);
         }
+
       } finally {
         setLoading(false);
       }

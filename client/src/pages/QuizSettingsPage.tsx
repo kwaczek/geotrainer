@@ -5,6 +5,7 @@ import { QuizType } from '../types/quiz';
 import { QUIZ_CONFIGS } from '../config/quizConfig';
 import useDocumentTitle from '../hooks/useDocumentTitle';
 import { getSettings, saveSettings, QuizSettings as StoredQuizSettings } from '../utils/settingsStorage';
+import Tooltip from '../components/Tooltip';
 
 interface QuizSettingsPageProps {}
 
@@ -209,7 +210,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     if (settingsLoaded && quizType) {
       fetchMaxQuestionCount();
     }
-  }, [quizType, selectedContinent, onlyGeoGuessr, selectedTypes, settingsLoaded]);
+  }, [quizType, selectedContinent, onlyGeoGuessr, selectedTypes, settingsLoaded, questionCount]);
   
   // Helper function to handle type checkbox changes
   const handleTypeCheckboxChange = (type: string, checked: boolean) => {
@@ -246,46 +247,51 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   
   if (!quizConfig) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h1 className="text-2xl font-bold mb-2 text-center">Quiz Not Found</h1>
-          <p className="text-gray-500 text-center">The requested quiz type does not exist.</p>
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={() => navigate('/')}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              Back to Home
-            </button>
-          </div>
+      <div className="max-w-2xl mx-auto p-4 sm:p-6">
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6 text-center">
+          <h1 className="text-2xl font-bold mb-2">Quiz Not Found</h1>
+          <p className="text-gray-500 mb-6">The requested quiz type does not exist.</p>
+          <button
+            onClick={() => navigate('/')}
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Back to Home
+          </button>
         </div>
       </div>
     );
   }
   
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <div className="flex flex-col items-center mb-6">
-          <div className="text-5xl mb-4">
-            {quizConfig.type === 'capitals' ? '🏙️' : 
-             quizConfig.type === 'flags' ? '🏳️' : 
-             quizConfig.type === 'bollards' ? '🚧' : 
-             quizConfig.type === 'licenseplates' ? '🚗' : '❓'}
-          </div>
-          <h1 className="text-2xl font-bold mb-2 text-center">{quizConfig.title}</h1>
-          <p className="text-gray-500 text-center">{quizConfig.description}</p>
+    <div className="max-w-xl mx-auto p-4 sm:p-6">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <div className="text-6xl mb-3">
+          {quizConfig.type === 'capitals' ? '🏙️' : 
+           quizConfig.type === 'flags' ? '🏳️' : 
+           quizConfig.type === 'bollards' ? '🚧' : 
+           quizConfig.type === 'licenseplates' ? '🚗' : 
+           quizConfig.type === 'roadsigns' ? '🚦' : '❓'}
         </div>
+        <h1 className="text-3xl font-bold mb-1">{quizConfig.title}</h1>
+        <p className="text-gray-600">{quizConfig.description}</p>
+      </div>
+
+      {/* Settings Sections */}
+      <div className="space-y-6">
         
-        <div className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">Quiz Settings</h2>
+        {/* General Filters */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+          <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Filters</h2>
           
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Continent</label>
+          {/* Continent Select */}
+          <div className="mb-4">
+            <label htmlFor="continent-select" className="block text-sm font-medium text-gray-700 mb-1">Continent</label>
             <select
+              id="continent-select"
               value={selectedContinent}
               onChange={(e) => setSelectedContinent(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
             >
               <option value="all">All Continents</option>
               {continents.map((continent) => (
@@ -294,198 +300,179 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
                 </option>
               ))}
             </select>
-            <p className="mt-1 text-sm text-gray-500">
-              Select a continent to focus on, or choose "All Continents"
-            </p>
           </div>
-          
-          <div className="mb-6">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="geoguessr-toggle"
-                checked={onlyGeoGuessr}
-                onChange={(e) => setOnlyGeoGuessr(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="geoguessr-toggle" className="ml-2 block text-sm font-medium text-gray-700">
-                Only GeoGuessr countries
-              </label>
-            </div>
-            <p className="mt-1 ml-6 text-sm text-gray-500">
-              Limit questions to countries that appear in the GeoGuessr game
-            </p>
-          </div>
-          
-          {/* Write Mode Setting - Only for non-capitals quizzes */}
-          {quizConfig.type !== 'capitals' && (
-            <div className="mb-6">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="write-mode-toggle"
-                  checked={writeMode}
-                  onChange={(e) => setWriteMode(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="write-mode-toggle" className="ml-2 block text-sm font-medium text-gray-700">
-                  Enable Write Mode
-                </label>
-              </div>
-              <p className="mt-1 ml-6 text-sm text-gray-500">
-                Type the country name instead of selecting from multiple choice options
-              </p>
-            </div>
-          )}
-          
-          {/* Blurred Mode Setting - Only for license plates quiz */}
-          {quizConfig.type === 'licenseplates' && (
-            <div className="mb-6">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="blurred-toggle"
-                  checked={blurred}
-                  onChange={(e) => setBlurred(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="blurred-toggle" className="ml-2 block text-sm font-medium text-gray-700">
-                  Blurred
-                </label>
-              </div>
-            </div>
-          )}
-          
-          {/* Sign Type Section - Only for road signs quiz */}
-          {quizConfig.type === 'roadsigns' && (
-            <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700 mb-3">Sign Types</h3>
-              
-              {/* Pedestrian Checkbox */}
-              <div className="flex items-center mb-2">
-                <input
-                  type="checkbox"
-                  id="pedestrian-signs-toggle"
-                  checked={selectedTypes.includes('pedestrian')}
-                  onChange={(e) => handleTypeCheckboxChange('pedestrian', e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="pedestrian-signs-toggle" className="ml-2 block text-sm font-medium text-gray-700">
-                  Pedestrian Signs
-                </label>
-              </div>
 
-              {/* Stop Sign Checkbox - Add this */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="stop-signs-toggle"
-                  checked={selectedTypes.includes('stop')}
-                  onChange={(e) => handleTypeCheckboxChange('stop', e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="stop-signs-toggle" className="ml-2 block text-sm font-medium text-gray-700">
-                  Stop Signs
-                </label>
-              </div>
-
-              <p className="mt-1 ml-6 text-sm text-gray-500">
-                Only show signs matching ANY selected types.
-              </p>
-            </div>
-          )}
-          
-          {/* Timer Settings */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-700 mb-3">Timer Settings</h3>
-            
-            <div className="flex items-center mb-3">
-              <input
-                type="checkbox"
-                id="timer-toggle"
-                checked={timerEnabled}
-                onChange={(e) => setTimerEnabled(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label htmlFor="timer-toggle" className="ml-2 block text-sm font-medium text-gray-700">
-                Enable Timer
-              </label>
-            </div>
-            
-            {timerEnabled && (
-              <div className="ml-6">
-                <label htmlFor="timer-duration" className="block text-sm font-medium text-gray-700 mb-1">
-                  Time per question (seconds)
-                </label>
-                <input
-                  type="number"
-                  id="timer-duration"
-                  min="5"
-                  max="120"
-                  value={timerDuration}
-                  onChange={(e) => setTimerDuration(Math.max(5, Math.min(120, parseInt(e.target.value) || 30)))}
-                  className="w-24 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                />
-                <p className="mt-1 text-sm text-gray-500">
-                  Choose between 5-120 seconds per question
-                </p>
-              </div>
-            )}
-          </div>
-          
-          {/* Question Count Settings */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-700 mb-3">Number of Questions</h3>
-            <div className="flex items-center">
-              <input
-                type="number"
-                id="question-count"
-                min="1"
-                max={maxQuestionCount || 1}
-                value={questionCount}
-                onChange={(e) => setQuestionCount(Math.max(1, Math.min(maxQuestionCount || 1, parseInt(e.target.value) || 10)))}
-                className="w-24 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                disabled={maxQuestionCount === 0}
-              />
-              <label htmlFor="question-count" className="ml-2 block text-sm font-medium text-gray-700">
-                questions
-              </label>
-            </div>
-            {maxQuestionCount > 0 ? (
-              <p className="mt-1 text-sm text-gray-500">
-                Choose between 1-{maxQuestionCount} questions per quiz
-              </p>
-            ) : (
-              <p className="mt-1 text-sm text-red-500 font-medium">
-                No questions available with current filter settings. Try changing continent or GeoGuessr filter.
-              </p>
-            )}
-            {loading && (
-              <p className="mt-1 text-sm text-blue-500">
-                Loading available questions...
-              </p>
-            )}
+          {/* GeoGuessr Toggle */}
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="geoguessr-toggle"
+              checked={onlyGeoGuessr}
+              onChange={(e) => setOnlyGeoGuessr(e.target.checked)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="geoguessr-toggle" className="ml-2 block text-sm font-medium text-gray-700">
+              Only GeoGuessr countries
+            </label>
+            <Tooltip text="Limit questions to countries available in GeoGuessr." />
           </div>
         </div>
-        
-        <div className="flex justify-between">
+
+        {/* Gameplay Settings */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+          <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Gameplay</h2>
+
+          {/* Write Mode Setting - Conditionally rendered */}
+          {quizConfig.type !== 'capitals' && (
+            <div className="mb-4 flex items-center">
+              <input
+                type="checkbox"
+                id="write-mode-toggle"
+                checked={writeMode}
+                onChange={(e) => setWriteMode(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="write-mode-toggle" className="ml-2 block text-sm font-medium text-gray-700">
+                Enable Write Mode
+              </label>
+              <Tooltip text="Type the answer instead of selecting from choices." />
+            </div>
+          )}
+
+          {/* Blurred Mode Setting - Only for license plates */}
+          {quizConfig.type === 'licenseplates' && (
+            <div className="mb-4 flex items-center">
+              <input
+                type="checkbox"
+                id="blurred-toggle"
+                checked={blurred}
+                onChange={(e) => setBlurred(e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label htmlFor="blurred-toggle" className="ml-2 block text-sm font-medium text-gray-700">
+                Blurred Image
+              </label>
+               <Tooltip text="Blur the license plate image for an extra challenge." />
+            </div>
+          )}
+
+          {/* Timer Settings */}
+          <div className="mb-4">
+             <div className="flex items-center mb-2">
+               <input
+                 type="checkbox"
+                 id="timer-toggle"
+                 checked={timerEnabled}
+                 onChange={(e) => setTimerEnabled(e.target.checked)}
+                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+               />
+               <label htmlFor="timer-toggle" className="ml-2 block text-sm font-medium text-gray-700">
+                 Enable Timer
+               </label>
+             </div>
+            
+             {timerEnabled && (
+               <div className="ml-6">
+                 <label htmlFor="timer-duration" className="block text-xs font-medium text-gray-600 mb-1">
+                   Time per question (5-120s)
+                 </label>
+                 <input
+                   type="number"
+                   id="timer-duration"
+                   min="5"
+                   max="120"
+                   value={timerDuration}
+                   onChange={(e) => setTimerDuration(Math.max(5, Math.min(120, parseInt(e.target.value) || 30)))}
+                   className="w-20 p-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+                 />
+               </div>
+             )}
+           </div>
+           
+          {/* Question Count Settings */}
+          <div>
+             <label htmlFor="question-count" className="block text-sm font-medium text-gray-700 mb-1">
+                Number of Questions {maxQuestionCount > 0 ? `(1-${maxQuestionCount})` : ''}
+              </label>
+             <div className="flex items-center">
+               <input
+                 type="number"
+                 id="question-count"
+                 min="1"
+                 max={maxQuestionCount || 1}
+                 value={questionCount}
+                 onChange={(e) => setQuestionCount(Math.max(1, Math.min(maxQuestionCount || 1, parseInt(e.target.value) || 10)))}
+                 className="w-20 p-1.5 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm"
+                 disabled={maxQuestionCount === 0}
+               />
+               {/* <span className="ml-2 text-sm text-gray-600">questions</span> */}
+              {loading && (
+                <span className="ml-3 text-sm text-blue-500">
+                  Loading...
+                </span>
+              )}
+             </div>
+             {maxQuestionCount === 0 && !loading && (
+               <p className="mt-1 text-xs text-red-500 font-medium">
+                 No questions available with current filters.
+               </p>
+             )}
+          </div>
+        </div>
+
+        {/* Sign Type Section - Only for road signs */}
+        {quizConfig.type === 'roadsigns' && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+            <h2 className="text-lg font-semibold mb-4 text-gray-800 border-b pb-2">Sign Types</h2>
+            <p className="text-xs text-gray-500 mb-3">
+              Select specific sign types to include. If none are selected, all types are included.
+            </p>
+            <div className="flex flex-wrap gap-x-4 gap-y-3">
+              {[
+                { id: 'pedestrian', label: '🚶 Pedestrian', description: 'Signs related to pedestrian crossings or paths.' },
+                { id: 'stop', label: '🛑 Stop', description: 'Standard octagonal stop signs.' },
+                { id: 'chevrons', label: '❯❯ Chevrons', description: 'Signs indicating sharp turns or curves.' },
+                { id: 'back', label: '🔙 Back of Sign', description: 'The reverse side of various road signs.' },
+                { id: 'yield', label: '▽ Yield', description: 'Inverted triangle signs indicating yield/give way.' },
+                // Add more types here if needed
+              ].map((signType) => (
+                <div key={signType.id} className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id={`${signType.id}-toggle`}
+                    checked={selectedTypes.includes(signType.id)}
+                    onChange={(e) => handleTypeCheckboxChange(signType.id, e.target.checked)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor={`${signType.id}-toggle`} className="ml-2 block text-sm font-medium text-gray-700">
+                    {signType.label}
+                  </label>
+                  <Tooltip text={signType.description} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex justify-between items-center mt-8 pt-4 border-t border-gray-200">
           <button
             onClick={() => navigate('/')}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out"
           >
             Back to Home
           </button>
           
           <button
             onClick={handleStartQuiz}
-            disabled={maxQuestionCount === 0}
-            className={`px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-              maxQuestionCount === 0 
+            disabled={maxQuestionCount === 0 || loading} // Disable while loading too
+            className={`px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition duration-150 ease-in-out ${
+              (maxQuestionCount === 0 || loading)
                 ? 'bg-gray-400 cursor-not-allowed' 
                 : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
             }`}
           >
-            {maxQuestionCount === 0 ? 'No questions available' : 'Start Quiz'}
+            {loading ? 'Loading...' : maxQuestionCount === 0 ? 'No Questions' : 'Start Quiz'}
           </button>
         </div>
       </div>
