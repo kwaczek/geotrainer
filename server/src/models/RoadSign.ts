@@ -3,9 +3,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IRoadSign extends Document {
     imageUrl: string;
     description: string;
-    googleMapsUrl: string;
+    googleMapsUrl?: string;
     countries: mongoose.Types.ObjectId[];
-    isPedestrian: boolean;
     types: string[];
     createdAt: Date;
     updatedAt: Date;
@@ -31,10 +30,6 @@ const RoadSignSchema: Schema = new Schema({
         ref: 'Country',
         required: true,
     }],
-    isPedestrian: {
-        type: Boolean,
-        default: false,
-    },
     types: {
         type: [String],
         default: [],

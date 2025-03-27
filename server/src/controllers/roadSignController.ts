@@ -45,7 +45,7 @@ export const createRoadSign = async (req: Request, res: Response): Promise<void>
             return;
         }
 
-        const { description, countries, googleMapsUrl, isPedestrian } = req.body;
+        const { description, countries, googleMapsUrl, types } = req.body;
 
         if (!countries) {
             res.status(400).json({ message: 'Countries are required' });
@@ -61,13 +61,14 @@ export const createRoadSign = async (req: Request, res: Response): Promise<void>
         // Create a new road sign
         // Parse the JSON string sent from the client
         const countriesArray = JSON.parse(countries);
+        const typesArray = JSON.parse(types || '[]');
         
         const roadSign = new RoadSign({
             imageUrl: `/uploads/roadsigns/${req.file.filename}`,
             description: description || '',
             googleMapsUrl: googleMapsUrl || '',
             countries: countriesArray,
-            isPedestrian: isPedestrian === 'true'
+            types: typesArray
         });
 
         await roadSign.save();
@@ -184,7 +185,7 @@ export const deleteRoadSign = async (req: Request, res: Response): Promise<void>
 
 export const getRoadSignCount = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { continent, in_geoguessr, pedestrian } = req.query;
+        const { continent, in_geoguessr, types } = req.query;
         
         // Build a more sophisticated query based on filters
         let countryQuery: any = {};
@@ -200,9 +201,12 @@ export const getRoadSignCount = async (req: Request, res: Response): Promise<voi
             countryQuery.in_geoguessr = true;
         }
         
-        // If pedestrian filter is applied
-        if (pedestrian === 'true') {
-            signQuery.isPedestrian = true;
+        // If type filter is applied
+        if (types && typeof types === 'string' && types.length > 0) {
+            const typesArray = types.split(',').map(t => t.trim()).filter(t => t);
+            if (typesArray.length > 0) {
+                signQuery.types = { $in: typesArray };
+            }
         }
         
         // Find countries matching all applied filters
@@ -270,27 +274,26 @@ export const migrateRoadSignTypes = async (req: Request, res: Response): Promise
         // Log raw data for debugging
         console.log('Raw signs data before migration:');
         roadSignsBefore.forEach(sign => {
-            console.log(`ID: ${sign._id}, isPedestrian: ${sign.isPedestrian}, type: ${typeof sign.isPedestrian}`);
+            console.log(`ID: ${sign._id}, types: ${sign.types}`);
         });
         
         // Manually update each document to ensure correct conversion
         let updateCount = 0;
         for (const sign of roadSignsBefore) {
-            // Convert boolean to proper array
-            let typesArray: string[] = [];
-            
-            // Check explicitly for boolean true (strict comparison)
-            if (sign.isPedestrian === true) {
-                typesArray = ['pedestrian'];
-                updateCount++;
-            }
-            
-            // Update the document with the new types array
-            await RoadSign.updateOne(
-                { _id: sign._id },
-                { $set: { types: typesArray } }
-            );
+            // Logic here was for converting isPedestrian to types, now redundant?
+            // Let's assume types are already correct and skip the update loop
+            // Or should we remove the entire migration function?
+            // For now, just skip the conditional update based on isPedestrian
+            // let typesArray: string[] = [];
+            // if (sign.isPedestrian === true) { // This would fail now
+            //   typesArray = ['pedestrian'];
+            //   updateCount++;
+            // }
+            // await RoadSign.updateOne(...); // Skip update based on old field
         }
+        // Need to decide if updateCount should be 0 or based on existing types?
+        // Setting to 0 for now as we are not performing updates based on isPedestrian
+        updateCount = 0; 
         
         // Get all road signs after migration to verify changes
         const roadSignsAfter = await RoadSign.find({});
@@ -298,7 +301,7 @@ export const migrateRoadSignTypes = async (req: Request, res: Response): Promise
         // Log raw data after migration for debugging
         console.log('Raw signs data after migration:');
         roadSignsAfter.forEach(sign => {
-            console.log(`ID: ${sign._id}, isPedestrian: ${sign.isPedestrian}, types: ${sign.types}, type: ${typeof sign.isPedestrian}`);
+            console.log(`ID: ${sign._id}, types: ${sign.types}`);
         });
 
         res.status(200).json({
@@ -314,14 +317,12 @@ export const migrateRoadSignTypes = async (req: Request, res: Response): Promise
                 _id: sign._id,
                 imageUrl: sign.imageUrl,
                 description: sign.description.substring(0, 30) + (sign.description.length > 30 ? '...' : ''),
-                isPedestrian: sign.isPedestrian,
                 types: sign.types || []
             })),
             roadSignsAfter: roadSignsAfter.map(sign => ({
                 _id: sign._id,
                 imageUrl: sign.imageUrl,
                 description: sign.description.substring(0, 30) + (sign.description.length > 30 ? '...' : ''),
-                isPedestrian: sign.isPedestrian,
                 types: sign.types || []
             }))
         });
@@ -344,8 +345,6 @@ export const debugRoadSigns = async (req: Request, res: Response): Promise<void>
         const formattedSigns = roadSigns.map(sign => ({
             _id: sign._id,
             description: sign.description,
-            isPedestrian: sign.isPedestrian,
-            isPedestrianType: typeof sign.isPedestrian,
             types: sign.types || [],
             typesType: typeof sign.types,
             // Convert to string for inspection

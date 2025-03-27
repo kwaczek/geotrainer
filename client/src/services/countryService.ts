@@ -37,7 +37,7 @@ export interface RoadSign {
   countries: (string | { _id: string; name: string; code?: string; flagUrl?: string })[];
   createdAt: string;
   updatedAt: string;
-  isPedestrian?: boolean;
+  types: string[];
 }
 
 export const fetchCountryDetails = async (countryName: string, initialFlagUrl?: string): Promise<CountryInfo> => {

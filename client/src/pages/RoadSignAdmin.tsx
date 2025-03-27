@@ -17,6 +17,7 @@ interface RoadSign {
   countries: Country[];
   createdAt: string;
   isPedestrian: boolean;
+  types: string[];
 }
 
 const RoadSignAdmin: React.FC = () => {
@@ -35,7 +36,7 @@ const RoadSignAdmin: React.FC = () => {
   const [description, setDescription] = useState<string>('');
   const [googleMapsUrl, setGoogleMapsUrl] = useState<string>('');
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
-  const [isPedestrian, setIsPedestrian] = useState<boolean>(false);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   
   useEffect(() => {
     fetchCountries();
@@ -111,7 +112,9 @@ const RoadSignAdmin: React.FC = () => {
       formData.append('description', description);
       formData.append('googleMapsUrl', googleMapsUrl);
       formData.append('countries', JSON.stringify(selectedCountries));
-      formData.append('isPedestrian', String(isPedestrian));
+      
+      // Directly use the selectedTypes state
+      formData.append('types', JSON.stringify(selectedTypes));
       
       // Get API key from localStorage
       const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
@@ -136,7 +139,7 @@ const RoadSignAdmin: React.FC = () => {
         setDescription('');
         setGoogleMapsUrl('');
         setSelectedCountries([]);
-        setIsPedestrian(false);
+        setSelectedTypes([]);
         
         // Clear file input
         const fileInput = document.getElementById('file-input') as HTMLInputElement;
@@ -256,11 +259,32 @@ const RoadSignAdmin: React.FC = () => {
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
-                  checked={isPedestrian}
-                  onChange={(e) => setIsPedestrian(e.target.checked)}
+                  checked={selectedTypes.includes('pedestrian')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'pedestrian']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'pedestrian'));
+                    }
+                  }}
                   className="form-checkbox"
                 />
                 <span>Pedestrian Sign</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes('stop')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'stop']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'stop'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Stop Sign</span>
               </label>
               {/* Additional checkboxes can be added here */}
             </div>
@@ -318,9 +342,9 @@ const RoadSignAdmin: React.FC = () => {
                 Countries: {Array.isArray(sign.countries) ? sign.countries.map(c => c.name).join(', ') : 'Unknown country'}
               </div>
               
-              {sign.isPedestrian && (
+              {sign.types && sign.types.length > 0 && (
                 <div className="text-xs text-blue-500 font-semibold mt-1">
-                  Pedestrian Sign
+                  Types: {sign.types.join(', ')}
                 </div>
               )}
               

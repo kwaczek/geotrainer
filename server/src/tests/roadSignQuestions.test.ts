@@ -54,7 +54,7 @@ const mockPedestrianRoadSign = {
   imageUrl: 'https://example.com/roadsign3.jpg',
   description: 'A pedestrian crossing sign',
   googleMapsUrl: 'https://maps.google.com/?q=Berlin',
-  isPedestrian: true,
+  types: ['pedestrian'],
   countries: [
     {
       _id: 'country-3',
@@ -215,7 +215,7 @@ describe('Road Sign Questions Generator', () => {
     expect(question.metadata?.roadSignId).toBe('roadsign-2');
   });
 
-  test('should apply pedestrian filter correctly', async () => {
+  test('should apply type filter correctly (e.g., pedestrian)', async () => {
     // Mock the RoadSign.aggregate function for this specific test
     (RoadSign.aggregate as jest.Mock).mockResolvedValue([mockPedestrianRoadSign]);
 
@@ -247,12 +247,12 @@ describe('Road Sign Questions Generator', () => {
       }
     ]);
 
-    // Define filter for pedestrian signs
+    // Define filter for pedestrian signs using 'types'
     const filters: QuizFilters = {
-      pedestrian: true
+      types: ['pedestrian']
     };
 
-    // Call the function being tested with pedestrian filter
+    // Call the function being tested with type filter
     const question = await getRandomRoadSignQuestion(filters);
 
     // Assertions
@@ -284,7 +284,7 @@ describe('Road Sign Questions Generator', () => {
     expect(question.metadata?.roadSignId).toBe('roadsign-3');
   });
 
-  test('should apply both pedestrian and continent filters correctly', async () => {
+  test('should apply both type and continent filters correctly', async () => {
     // Mock the RoadSign.aggregate function for this specific test
     (RoadSign.aggregate as jest.Mock).mockResolvedValue([mockPedestrianRoadSign]);
 
@@ -318,7 +318,7 @@ describe('Road Sign Questions Generator', () => {
 
     // Define filter for both pedestrian signs and Europe continent
     const filters: QuizFilters = {
-      pedestrian: true,
+      types: ['pedestrian'],
       continent: 'Europe'
     };
 

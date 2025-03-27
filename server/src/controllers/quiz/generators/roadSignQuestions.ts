@@ -46,11 +46,11 @@ export async function getRandomRoadSignQuestion(filters?: QuizFilters, previousE
     });
   }
   
-  // Add pedestrian filter if specified
-  if (filters?.pedestrian) {
+  // Add type filter if specified
+  if (filters?.types && Array.isArray(filters.types) && filters.types.length > 0) {
     pipeline.push({
       $match: {
-        isPedestrian: true
+        types: { $in: filters.types } // Use $in for OR logic
       }
     });
   }

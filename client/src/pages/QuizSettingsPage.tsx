@@ -15,16 +15,15 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   // Get quiz config early for setting initial values
   const quizConfig = quizType && QUIZ_CONFIGS[quizType as QuizType];
   
-  // Add a ref to track if settings are being loaded from localStorage
-  const initialLoadCompleted = useRef<boolean>(false);
-  const initialLoadStarted = useRef<boolean>(false);
+  // Replace refs with a loading state
+  const [settingsLoaded, setSettingsLoaded] = useState<boolean>(false);
   
   // Initialize state with empty/default values first
   const [selectedContinent, setSelectedContinent] = useState<string>('all');
   const [onlyGeoGuessr, setOnlyGeoGuessr] = useState<boolean>(false);
   const [writeMode, setWriteMode] = useState<boolean>(false);
   const [blurred, setBlurred] = useState<boolean>(false);
-  const [pedestrianSigns, setPedestrianSigns] = useState<boolean>(false);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [continents, setContinents] = useState<string[]>([
     'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica'
   ]);
@@ -43,9 +42,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   
   // Function to load settings from localStorage
   const loadSettingsFromStorage = useCallback(() => {
-    if (!quizType || initialLoadStarted.current) return;
+    // Keep only quizType check
+    if (!quizType) return;
     
-    initialLoadStarted.current = true;
+    if (settingsLoaded) return;
     
     if (quizType === 'flags' || quizType === 'capitals' || 
         quizType === 'bollards' || quizType === 'licenseplates' ||
@@ -64,10 +64,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         setSelectedContinent(savedSettings.continent || 'all');
         setOnlyGeoGuessr(savedSettings.in_geoguessr || false);
         setBlurred(savedSettings.blurred || false);
-        setPedestrianSigns(savedSettings.pedestrianSigns || false);
+        setSelectedTypes(savedSettings.types || []);
         
-        // Mark initial load as complete
-        initialLoadCompleted.current = true;
+        // Mark initial load as complete using state
+        setSettingsLoaded(true);
         console.log('Settings loaded successfully');
       } catch (error) {
         console.error('Error loading settings:', error);
@@ -77,9 +77,11 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           setTimerDuration(quizConfig.timeLimit);
           setQuestionCount(quizConfig.questionsPerQuiz);
         }
+        // Also mark as loaded even if defaults are used
+        setSettingsLoaded(true); 
       }
     }
-  }, [quizType, quizConfig]);
+  }, [quizType, quizConfig, settingsLoaded]);
   
   // Load saved settings from localStorage immediately on mount and quiz type changes
   useEffect(() => {
@@ -88,8 +90,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
   
   // Save settings whenever they change, but only after initial load is complete
   useEffect(() => {
-    // Skip saving during the initial load from localStorage
-    if (!initialLoadCompleted.current) {
+    // Use settingsLoaded state for guard
+    if (!settingsLoaded) {
       return;
     }
     
@@ -106,13 +108,14 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         continent: selectedContinent,
         in_geoguessr: onlyGeoGuessr,
         blurred,
-        pedestrianSigns
+        types: selectedTypes
       };
       
       saveSettings(quizType as QuizType, currentSettings);
       console.log('Settings saved:', currentSettings);
     }
-  }, [quizType, timerEnabled, timerDuration, questionCount, writeMode, selectedContinent, onlyGeoGuessr, blurred, pedestrianSigns]);
+    // Add settingsLoaded to dependencies
+  }, [quizType, timerEnabled, timerDuration, questionCount, writeMode, selectedContinent, onlyGeoGuessr, blurred, selectedTypes, settingsLoaded]);
   
   // Fetch continents on component mount
   useEffect(() => {
@@ -165,9 +168,9 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
             params.in_geoguessr = true;
           }
           
-          // Add pedestrian signs filter for road signs
-          if (quizType === 'roadsigns' && pedestrianSigns) {
-            params.pedestrian = true;
+          // Add selected types filter for road signs
+          if (quizType === 'roadsigns' && selectedTypes.length > 0) {
+            params.types = selectedTypes.join(',');
           }
           
           const response = await axios.get(endpoint, { params });
@@ -203,10 +206,22 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     
     // Only fetch max question count after localStorage settings are loaded
     // to avoid overwriting the loaded settings
-    if (initialLoadCompleted.current || initialLoadStarted.current) {
+    if (settingsLoaded && quizType) {
       fetchMaxQuestionCount();
     }
-  }, [quizType, selectedContinent, onlyGeoGuessr, pedestrianSigns, questionCount]);
+  }, [quizType, selectedContinent, onlyGeoGuessr, selectedTypes, settingsLoaded]);
+  
+  // Helper function to handle type checkbox changes
+  const handleTypeCheckboxChange = (type: string, checked: boolean) => {
+    setSelectedTypes(prev => {
+      if (checked) {
+        // Add type if not already present
+        return prev.includes(type) ? prev : [...prev, type];
+      }
+      // Remove type
+      return prev.filter(t => t !== type);
+    });
+  };
   
   const handleStartQuiz = () => {
     // Initialize a new quiz session with filters and settings
@@ -215,7 +230,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         filters: {
           continent: selectedContinent,
           in_geoguessr: onlyGeoGuessr,  // Using snake_case to match server convention
-          pedestrian: quizType === 'roadsigns' ? pedestrianSigns : undefined
+          types: quizType === 'roadsigns' ? selectedTypes : undefined
         },
         settings: {
           timerEnabled,
@@ -344,22 +359,38 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           {/* Sign Type Section - Only for road signs quiz */}
           {quizConfig.type === 'roadsigns' && (
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-700 mb-3">Sign Type</h3>
+              <h3 className="text-lg font-medium text-gray-700 mb-3">Sign Types</h3>
               
-              <div className="flex items-center">
+              {/* Pedestrian Checkbox */}
+              <div className="flex items-center mb-2">
                 <input
                   type="checkbox"
                   id="pedestrian-signs-toggle"
-                  checked={pedestrianSigns}
-                  onChange={(e) => setPedestrianSigns(e.target.checked)}
+                  checked={selectedTypes.includes('pedestrian')}
+                  onChange={(e) => handleTypeCheckboxChange('pedestrian', e.target.checked)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="pedestrian-signs-toggle" className="ml-2 block text-sm font-medium text-gray-700">
                   Pedestrian Signs
                 </label>
               </div>
+
+              {/* Stop Sign Checkbox - Add this */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="stop-signs-toggle"
+                  checked={selectedTypes.includes('stop')}
+                  onChange={(e) => handleTypeCheckboxChange('stop', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="stop-signs-toggle" className="ml-2 block text-sm font-medium text-gray-700">
+                  Stop Signs
+                </label>
+              </div>
+
               <p className="mt-1 ml-6 text-sm text-gray-500">
-                Only show pedestrian-related road signs
+                Only show signs matching ANY selected types.
               </p>
             </div>
           )}
