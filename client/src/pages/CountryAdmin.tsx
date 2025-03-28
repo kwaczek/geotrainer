@@ -404,6 +404,44 @@ const CountryAdmin: React.FC = () => {
         }
     };
 
+    const handleCopyJsonAndEdit = async (country: Country) => {
+        // Generate clean JSON string
+        const dataToCopy: any = { ...country }; // Clone to avoid modifying state directly
+        // Remove potential React/internal state properties if they creep in
+        delete dataToCopy.id; // Prefer _id from DB
+
+        // Clean up undefined/null and ensure camera_generation is an object
+        const cleanedData: any = {};
+         for (const key in dataToCopy) {
+            if ((dataToCopy as any)[key] !== undefined && (dataToCopy as any)[key] !== null) {
+                 if (key === 'camera_generation' && typeof dataToCopy[key] === 'object') {
+                     cleanedData[key] = dataToCopy[key]; // Already an object likely
+                 } else if (key !== '_id' && key !== 'createdAt' && key !== 'updatedAt' && key !== '__v') {
+                     // Exclude mongo internal fields except _id for copying
+                     cleanedData[key] = dataToCopy[key];
+                 }
+            }
+         }
+         // Ensure _id is present if it exists on original
+         if(country._id) cleanedData._id = country._id;
+
+        const jsonString = JSON.stringify(cleanedData, null, 2);
+
+        try {
+            await navigator.clipboard.writeText(jsonString);
+            // Set edit state
+            handleEdit(country); // This populates form state + jsonInput
+            setEditMode('json');
+            setFormSuccess('JSON copied to clipboard. Switched to JSON edit mode.');
+            clearFormMessages(); // Clear message after a delay
+            scrollToForm();
+        } catch (err) {
+            console.error('Failed to copy JSON: ', err);
+            setFormError('Failed to copy JSON to clipboard.');
+            clearFormMessages();
+        }
+    };
+
     const filteredCountries = countries.filter(country =>
         country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         country.capital.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -647,9 +685,16 @@ const CountryAdmin: React.FC = () => {
                                             <td className="px-6 py-4 whitespace-nowrap">{country.phone_prefix || 'N/A'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">{country.driving_side || 'N/A'}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">{formatCameraGeneration(country.camera_generation) || 'N/A'}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium sticky right-0 bg-white">
-                                                <button onClick={() => handleEdit(country)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
-                                                <button onClick={() => handleDelete(countryId || '')} disabled={deleting === countryId} className="text-red-600 hover:text-red-900 disabled:text-gray-400">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium sticky right-0 bg-white space-x-2">
+                                                <button onClick={() => handleEdit(country)} className="text-indigo-600 hover:text-indigo-900" title="Edit in Form Mode">Edit</button>
+                                                <button 
+                                                    onClick={() => handleCopyJsonAndEdit(country)} 
+                                                    className="text-gray-600 hover:text-gray-900 p-1 rounded hover:bg-gray-100" 
+                                                    title="Copy JSON & Edit in JSON Mode"
+                                                >
+                                                    <span className="font-mono text-xs">{'{ }'}</span>
+                                                </button>
+                                                <button onClick={() => handleDelete(countryId || '')} disabled={deleting === countryId} className="text-red-600 hover:text-red-900 disabled:text-gray-400" title="Delete Country">
                                                     {deleting === countryId ? 'Deleting...' : 'Delete'}
                                                 </button>
                                             </td>
