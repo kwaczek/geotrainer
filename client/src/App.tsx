@@ -23,6 +23,7 @@ import CountryDetailPage from './pages/CountryDetailPage';
 import BollardsPage from './pages/BollardsPage';
 import PlatesPage from './pages/PlatesPage';
 import RoadSignsPage from './pages/RoadSignsPage';
+import ContributePage from './pages/ContributePage';
 
 // Placeholder components for now
 const Footer = () => <div className="bg-blue-500 p-2 text-white text-xs text-center">© {new Date().getFullYear()} GeoPrep</div>;
@@ -90,6 +91,7 @@ const App: React.FC = () => {
               <Route path="/" element={<HomePage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/contribute" element={<ContributePage />} />
               
               {/* Learning Pages */}
               <Route path="/countries" element={<CountriesPage />} />
