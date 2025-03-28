@@ -72,9 +72,15 @@ const BollardAdmin: React.FC = () => {
 
         setDeleting(bollardId);
         try {
+            // Get API key from localStorage or environment variable
+            const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
+            if (!apiKey) {
+                throw new Error('API key not found. Please log in again.');
+            }
+
             await axios.delete(`/api/bollards/${bollardId}`, {
                 headers: {
-                    'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
+                    'X-API-Key': apiKey
                 }
             });
             setBollards(prev => prev.filter(b => b._id !== bollardId));
@@ -101,10 +107,16 @@ const BollardAdmin: React.FC = () => {
         formData.append('countries', JSON.stringify(selectedCountries));
 
         try {
+            // Get API key from localStorage or environment variable
+            const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
+            if (!apiKey) {
+                throw new Error('API key not found. Please log in again.');
+            }
+
             await axios.post('/api/bollards/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
+                    'X-API-Key': apiKey
                 },
             });
             

@@ -70,9 +70,15 @@ const LicensePlateAdmin: React.FC = () => {
 
         setDeleting(licensePlateId);
         try {
+            // Get API key from localStorage or environment variable
+            const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
+            if (!apiKey) {
+                throw new Error('API key not found. Please log in again.');
+            }
+
             await axios.delete(`/api/licenseplates/${licensePlateId}`, {
                 headers: {
-                    'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
+                    'X-API-Key': apiKey
                 }
             });
             setLicensePlates(prev => prev.filter(lp => lp._id !== licensePlateId));
@@ -98,10 +104,16 @@ const LicensePlateAdmin: React.FC = () => {
         formData.append('countries', JSON.stringify(selectedCountries));
 
         try {
+            // Get API key from localStorage or environment variable
+            const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
+            if (!apiKey) {
+                throw new Error('API key not found. Please log in again.');
+            }
+
             await axios.post('/api/licenseplates/upload', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
-                    'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
+                    'X-API-Key': apiKey
                 },
             });
             

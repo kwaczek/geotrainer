@@ -70,9 +70,15 @@ const CountryAdmin: React.FC = () => {
 
         setDeleting(countryId);
         try {
+            // Get API key from localStorage or environment variable
+            const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
+            if (!apiKey) {
+                throw new Error('API key not found. Please log in again.');
+            }
+
             await axios.delete(`/api/countries/${countryId}`, {
                 headers: {
-                    'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
+                    'X-API-Key': apiKey
                 }
             });
             setCountries(prev => prev.filter(c => {
@@ -125,6 +131,15 @@ const CountryAdmin: React.FC = () => {
         setFormError(null);
         setFormSuccess(null);
 
+        // Get API key from localStorage or environment variable
+        const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
+        if (!apiKey) {
+            setFormError('API key not found. Please log in again.');
+            clearFormMessages();
+            setLoading(false);
+            return;
+        }
+
         const countryData = {
             name,
             capital,
@@ -146,7 +161,7 @@ const CountryAdmin: React.FC = () => {
                 
                 const response = await axios.put(`/api/countries/${countryId}`, countryData, {
                     headers: {
-                        'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
+                        'X-API-Key': apiKey
                     }
                 });
                 
@@ -163,7 +178,7 @@ const CountryAdmin: React.FC = () => {
                 // Create new country
                 const response = await axios.post('/api/countries', countryData, {
                     headers: {
-                        'X-API-Key': process.env.REACT_APP_ADMIN_API_KEY
+                        'X-API-Key': apiKey
                     }
                 });
                 
