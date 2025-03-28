@@ -5,22 +5,13 @@ import mongoose from 'mongoose';
 // Get all countries
 export const getAllCountries = async (req: Request, res: Response): Promise<void> => {
   try {
-    const countries = await Country.find({});
-    
-    // Map countries to a simpler format
-    const formattedCountries = countries.map(country => ({
-      id: country._id,
-      name: country.name,
-      capital: country.capital,
-      continent: country.continent,
-      code: country.code,
-      flagUrl: country.code ? `https://flagcdn.com/w320/${country.code.toLowerCase()}.png` : undefined,
-      in_geoguessr: country.in_geoguessr
-    }));
-    
+    // Fetch all fields for all countries
+    const countries = await Country.find({}); 
+
+    // Send the full country documents
     res.status(200).json({
       success: true,
-      countries: formattedCountries
+      countries: countries // Send the raw documents directly
     });
   } catch (error) {
     console.error('Error fetching countries:', error);
@@ -227,7 +218,11 @@ export const createCountry = async (req: Request, res: Response): Promise<void> 
 export const updateCountry = async (req: Request, res: Response): Promise<void> => {
   try {
     const countryId = req.params.id;
-    const { name, capital, continent, code, in_geoguessr } = req.body;
+    // Destructure all potential fields from the body
+    const {
+      name, capital, continent, code, in_geoguessr,
+      domain, currency, population, area, phone_prefix, driving_side, camera_generation
+    } = req.body;
 
     // Validate if the id is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(countryId)) {
@@ -260,32 +255,53 @@ export const updateCountry = async (req: Request, res: Response): Promise<void> 
       }
     }
 
-    // Update country
+    // Build the update object dynamically
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (capital !== undefined) updateData.capital = capital;
+    if (continent !== undefined) updateData.continent = continent;
+    if (code !== undefined) updateData.code = code; // Allow setting code to empty string or value
+    if (in_geoguessr !== undefined) updateData.in_geoguessr = in_geoguessr;
+    if (domain !== undefined) updateData.domain = domain; // Expecting array from frontend
+    if (currency !== undefined) updateData.currency = currency; // Expecting array of objects
+    if (population !== undefined) updateData.population = population;
+    if (area !== undefined) updateData.area = area;
+    if (phone_prefix !== undefined) updateData.phone_prefix = phone_prefix;
+    if (driving_side !== undefined) updateData.driving_side = driving_side;
+    if (camera_generation !== undefined) updateData.camera_generation = camera_generation; // Expecting object from frontend
+
+    // Update country using the built object
     const updatedCountry = await Country.findByIdAndUpdate(
       countryId,
-      {
-        name: name || country.name,
-        capital: capital || country.capital,
-        continent: continent || country.continent,
-        code: code !== undefined ? code : country.code,
-        in_geoguessr: in_geoguessr !== undefined ? in_geoguessr : country.in_geoguessr
-      },
-      { new: true }
+      updateData, // Use the dynamically built update object
+      { new: true, runValidators: true } // Return the updated doc and run schema validators
     );
 
+    if (!updatedCountry) {
+      // This case should ideally be covered by the findById check earlier,
+      // but added for robustness in case of race conditions or other issues.
+      res.status(404).json({ 
+        success: false,
+        message: 'Country not found after update attempt' 
+      });
+      return;
+    }
+
+    // Return the full updated country object
     res.status(200).json({
       success: true,
       message: 'Country updated successfully',
-      country: {
-        id: updatedCountry?._id,
-        name: updatedCountry?.name,
-        capital: updatedCountry?.capital,
-        continent: updatedCountry?.continent,
-        code: updatedCountry?.code,
-        in_geoguessr: updatedCountry?.in_geoguessr
-      }
+      country: updatedCountry // Send the complete updated document
     });
-  } catch (error) {
+  } catch (error: any) {
+    // Handle potential validation errors from Mongoose
+    if (error.name === 'ValidationError') {
+        res.status(400).json({ 
+            success: false, 
+            message: 'Validation failed', 
+            errors: error.errors 
+        });
+    }
     console.error('Error updating country:', error);
     res.status(500).json({
       success: false,
