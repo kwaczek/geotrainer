@@ -117,6 +117,18 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       {/* Main Content */}
       <main className="flex-grow container mx-auto px-4 py-6">
+        {/* Contribution Banner */}
+        <div className="bg-gradient-to-r from-teal-400 via-cyan-500 to-blue-600 text-white p-4 rounded-lg shadow-md mb-6 text-center">
+          <p className="text-lg font-semibold">Want to help add content to the quizzes?</p>
+          <p className="text-sm mt-1">It's easy! Learn how you can contribute.</p>
+          <Link 
+            to="/contribute" 
+            className="mt-2 inline-block bg-white text-blue-600 font-semibold py-1 px-4 rounded-full shadow hover:bg-gray-100 transition-colors duration-200 text-sm"
+          >
+            Learn More
+          </Link>
+        </div>
+
         {/* Categories Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
           {categories.map((category) => {
