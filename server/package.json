@@ -22,7 +22,9 @@
     "pre-commit": "lint-staged"
   },
   "lint-staged": {
-    "*.{ts,tsx}": ["npm run test:changed"]
+    "*.{ts,tsx}": [
+      "npm run test:changed"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -37,6 +39,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.12.1",
     "multer": "^1.4.5-lts.1",
+    "react-simple-maps": "^3.0.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

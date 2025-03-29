@@ -128,11 +128,9 @@ const QuizComponent: React.FC<QuizComponentProps> = ({
         if (response.data && response.data.success) {
           const { country } = response.data;
           
-          // Update with complete information
+          // Update with complete information - pass the entire country object
           setCountryInfo({
-            name: country.name,
-            capital: country.capital,
-            continent: country.continent,
+            ...country,
             flagUrl: country.flagUrl || question.imageUrl
           });
         }

@@ -2,20 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import useDocumentTitle from '../hooks/useDocumentTitle';
-import CountryMap from '../components/CountryMap';
-import BollardGallery from '../components/BollardGallery';
-import LicensePlateGallery from '../components/LicensePlateGallery';
-import RoadSignGallery from '../components/RoadSignGallery';
-import { Bollard, LicensePlate, RoadSign } from '../services/countryService';
+import CountryInfoCard from '../components/CountryInfoCard';
+
+interface ICurrency {
+  name: string;
+  symbol: string;
+  code: string;
+}
 
 interface CountryDetails {
   id: string;
   name: string;
   capital: string;
   continent: string;
-  code: string;
-  flagUrl: string;
   in_geoguessr: boolean;
+  code?: string;
+  flagUrl?: string;
+  domain?: string[];
+  currency?: ICurrency[];
+  population?: number;
+  area?: number;
+  phone_prefix?: string;
+  driving_side?: 'left' | 'right';
+  camera_generation?: Record<string, string>;
 }
 
 // Fallback data for demonstration if database is unavailable
@@ -27,7 +36,13 @@ const fallbackCountryDetails: Record<string, CountryDetails> = {
     continent: 'North America',
     code: 'us',
     flagUrl: 'https://flagcdn.com/w320/us.png',
-    in_geoguessr: true
+    in_geoguessr: true,
+    population: 331002651,
+    area: 9833520,
+    domain: ['us', 'gov', 'edu', 'mil'],
+    currency: [{ name: 'US Dollar', symbol: '$', code: 'USD' }],
+    phone_prefix: '+1',
+    driving_side: 'right'
   },
   'germany': {
     id: 'germany',
@@ -36,47 +51,21 @@ const fallbackCountryDetails: Record<string, CountryDetails> = {
     continent: 'Europe',
     code: 'de',
     flagUrl: 'https://flagcdn.com/w320/de.png',
-    in_geoguessr: true
+    in_geoguessr: true,
+    population: 83783942,
+    area: 357022,
+    domain: ['de'],
+    currency: [{ name: 'Euro', symbol: '€', code: 'EUR' }],
+    phone_prefix: '+49',
+    driving_side: 'right'
   }
 };
-
-const fallbackBollards: Bollard[] = [
-  {
-    _id: 'bollard1',
-    imageUrl: 'https://i.imgur.com/example1.jpg',
-    description: 'Sample bollard in urban area (demo data)',
-    googleMapsUrl: 'https://maps.google.com',
-    countries: ['usa', 'germany'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
-
-const fallbackLicensePlates: LicensePlate[] = [
-  {
-    _id: 'plate1',
-    imageUrl: 'https://i.imgur.com/example1.jpg',
-    description: 'Sample license plate (demo data)',
-    countries: ['usa'],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
 
 const CountryDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [country, setCountry] = useState<CountryDetails | null>(null);
-  const [bollards, setBollards] = useState<Bollard[]>([]);
-  const [licensePlates, setLicensePlates] = useState<LicensePlate[]>([]);
-  const [roadSigns, setRoadSigns] = useState<RoadSign[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [showBollards, setShowBollards] = useState<boolean>(true);
-  const [showLicensePlates, setShowLicensePlates] = useState<boolean>(true);
-  const [showRoadSigns, setShowRoadSigns] = useState<boolean>(true);
-  const [loadingBollards, setLoadingBollards] = useState<boolean>(false);
-  const [loadingLicensePlates, setLoadingLicensePlates] = useState<boolean>(false);
-  const [loadingRoadSigns, setLoadingRoadSigns] = useState<boolean>(false);
   const [usingFallbackData, setUsingFallbackData] = useState<boolean>(false);
 
   // Set document title
@@ -89,9 +78,31 @@ const CountryDetailPage: React.FC = () => {
       
       setLoading(true);
       try {
+        console.log('Fetching country with ID:', id);
         const response = await axios.get(`/api/countries/${id}`);
-        if (response.data.success) {
-          setCountry(response.data.country);
+        console.log('API Response:', response.data);
+        
+        if (response.data && response.data.success) {
+          // Ensure we have a flagUrl
+          const countryData = response.data.country;
+          console.log('Raw country data from API:', countryData);
+          
+          if (!countryData.flagUrl && countryData.code) {
+            countryData.flagUrl = `https://flagcdn.com/w320/${countryData.code.toLowerCase()}.png`;
+            console.log('Added flag URL:', countryData.flagUrl);
+          }
+          
+          // Check if all fields are present
+          console.log('Country data fields:', Object.keys(countryData));
+          console.log('Population:', countryData.population);
+          console.log('Area:', countryData.area);
+          console.log('Currency:', countryData.currency);
+          console.log('Domain:', countryData.domain);
+          console.log('Phone Prefix:', countryData.phone_prefix);
+          console.log('Driving Side:', countryData.driving_side);
+          console.log('Camera Generation:', countryData.camera_generation);
+          
+          setCountry(countryData);
         } else {
           // Try to use fallback data if available
           if (fallbackCountryDetails[id]) {
@@ -120,98 +131,6 @@ const CountryDetailPage: React.FC = () => {
 
     fetchCountry();
   }, [id]);
-
-  // Fetch bollards when country ID is available and bollards section is expanded
-  useEffect(() => {
-    const fetchBollards = async () => {
-      if (showBollards && id) {
-        setLoadingBollards(true);
-        try {
-          const response = await axios.get(`/api/bollards/country/${id}`);
-          if (response.data.success) {
-            setBollards(response.data.bollards);
-          } else if (usingFallbackData) {
-            setBollards(fallbackBollards);
-          }
-        } catch (error) {
-          console.error('Error fetching bollards:', error);
-          if (usingFallbackData) {
-            setBollards(fallbackBollards);
-          }
-        } finally {
-          setLoadingBollards(false);
-        }
-      }
-    };
-
-    fetchBollards();
-  }, [showBollards, id, usingFallbackData]);
-
-  // Fetch license plates when country ID is available and license plates section is expanded
-  useEffect(() => {
-    const fetchLicensePlates = async () => {
-      if (showLicensePlates && id) {
-        setLoadingLicensePlates(true);
-        try {
-          const response = await axios.get(`/api/licenseplates/country/${id}`);
-          if (response.data.success) {
-            setLicensePlates(response.data.licensePlates);
-          } else if (usingFallbackData) {
-            setLicensePlates(fallbackLicensePlates);
-          }
-        } catch (error) {
-          console.error('Error fetching license plates:', error);
-          if (usingFallbackData) {
-            setLicensePlates(fallbackLicensePlates);
-          }
-        } finally {
-          setLoadingLicensePlates(false);
-        }
-      }
-    };
-
-    fetchLicensePlates();
-  }, [showLicensePlates, id, usingFallbackData]);
-
-  // Fetch road signs when country ID is available and road signs section is expanded
-  useEffect(() => {
-    const fetchRoadSigns = async () => {
-      if (showRoadSigns && id) {
-        setLoadingRoadSigns(true);
-        try {
-          const response = await axios.get(`/api/roadsigns/country/${id}`);
-          if (response.data.success) {
-            setRoadSigns(response.data.roadSigns);
-          } else if (usingFallbackData) {
-            setRoadSigns([]);
-          }
-        } catch (error) {
-          console.error('Error fetching road signs:', error);
-          if (usingFallbackData) {
-            setRoadSigns([]);
-          }
-        } finally {
-          setLoadingRoadSigns(false);
-        }
-      }
-    };
-
-    fetchRoadSigns();
-  }, [showRoadSigns, id, usingFallbackData]);
-
-  // Get continent color
-  const getContinentColor = (continent: string) => {
-    switch (continent) {
-      case 'Africa': return 'bg-yellow-100 text-yellow-800';
-      case 'Asia': return 'bg-red-100 text-red-800';
-      case 'Europe': return 'bg-blue-100 text-blue-800';
-      case 'North America': return 'bg-green-100 text-green-800';
-      case 'South America': return 'bg-purple-100 text-purple-800';
-      case 'Oceania': return 'bg-indigo-100 text-indigo-800';
-      case 'Antarctica': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   // Loading state
   if (loading) {
@@ -269,232 +188,15 @@ const CountryDetailPage: React.FC = () => {
         <span className="text-gray-600">{country.name}</span>
       </nav>
 
-      {/* Country Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-t-lg p-6 text-white">
-        <div className="flex flex-col md:flex-row items-center md:items-start justify-between">
-          <div className="flex items-center mb-4 md:mb-0">
-            {country.flagUrl && (
-              <img 
-                src={country.flagUrl} 
-                alt={`Flag of ${country.name}`} 
-                className="w-16 h-auto rounded shadow-lg mr-4 hidden md:block"
-                onError={(e) => {
-                  // Fallback for broken flag images
-                  const target = e.target as HTMLImageElement;
-                  target.onerror = null;
-                  target.src = '/images/flag-placeholder.png';
-                }}
-              />
-            )}
-            <h1 className="text-3xl font-bold">{country.name}</h1>
-          </div>
-          
-          <div className="flex flex-col items-end">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getContinentColor(country.continent)}`}>
-              {country.continent}
-            </span>
-            {country.code && (
-              <span className="text-sm mt-2 bg-blue-900 bg-opacity-30 px-2 py-1 rounded">
-                Code: {country.code.toUpperCase()}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="bg-white shadow-md rounded-b-lg overflow-hidden mb-8">
-        {/* Flag for mobile */}
-        <div className="md:hidden p-4 flex justify-center">
-          {country.flagUrl && (
-            <div className="w-full max-w-xs">
-              <img 
-                src={country.flagUrl} 
-                alt={`Flag of ${country.name}`} 
-                className="w-full h-auto rounded-lg shadow border border-gray-200"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.onerror = null;
-                  target.src = '/images/flag-placeholder.png';
-                }}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Info Grid */}
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Column */}
-          <div>
-            <div className="grid grid-cols-1 gap-4">
-              {/* Capital */}
-              <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">Capital</h3>
-                    <p className="text-lg font-semibold">{country.capital || 'Not specified'}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* GeoGuessr Status */}
-              <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
-                <div className="flex items-center space-x-3">
-                  <div className="flex-shrink-0">
-                    <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">GeoGuessr Status</h3>
-                    <div className="flex items-center mt-1">
-                      {country.in_geoguessr ? (
-                        <span className="text-green-600 flex items-center font-medium">
-                          <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Available in GeoGuessr
-                        </span>
-                      ) : (
-                        <span className="text-red-600 flex items-center font-medium">
-                          <svg className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                          Not in GeoGuessr
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Flag for desktop */}
-          <div className="hidden md:block">
-            {country.flagUrl && (
-              <div className="rounded-lg overflow-hidden shadow-lg border border-gray-200 h-full flex items-center justify-center bg-gray-50">
-                <img 
-                  src={country.flagUrl} 
-                  alt={`Flag of ${country.name}`} 
-                  className="max-w-full max-h-60 object-contain"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.onerror = null;
-                    target.src = '/images/flag-placeholder.png';
-                  }}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Map section */}
-        <div className="p-6 border-t border-gray-200">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Map</h2>
-          <div className="h-64 rounded-lg overflow-hidden bg-gray-100 shadow-inner">
-            <CountryMap countryName={country.name} />
-          </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            Map data showing the location of {country.name}
-          </p>
-        </div>
-      </div>
-
-      {/* Bollards section */}
-      <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
-        <button 
-          onClick={() => setShowBollards(!showBollards)}
-          className="w-full flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none"
-        >
-          <div className="flex items-center">
-            <svg className="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
-            <span className="text-xl font-bold text-gray-800">Bollards in {country.name}</span>
-          </div>
-          <svg 
-            className={`h-5 w-5 text-gray-500 transition-transform ${showBollards ? 'transform rotate-180' : ''}`}
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        
-        {showBollards && (
-          <div className="p-6">
-            <BollardGallery bollards={bollards} isLoading={loadingBollards} />
-          </div>
-        )}
-      </div>
-
-      {/* Road Signs section */}
-      <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
-        <button 
-          onClick={() => setShowRoadSigns(!showRoadSigns)}
-          className="w-full flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none"
-        >
-          <div className="flex items-center">
-            <svg className="h-6 w-6 text-purple-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span className="text-xl font-bold text-gray-800">Road Signs in {country.name}</span>
-          </div>
-          <svg 
-            className={`h-5 w-5 text-gray-500 transition-transform ${showRoadSigns ? 'transform rotate-180' : ''}`}
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        
-        {showRoadSigns && (
-          <div className="p-6">
-            <RoadSignGallery roadSigns={roadSigns} isLoading={loadingRoadSigns} />
-          </div>
-        )}
-      </div>
-
-      {/* License Plates section */}
-      <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
-        <button 
-          onClick={() => setShowLicensePlates(!showLicensePlates)}
-          className="w-full flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors focus:outline-none"
-        >
-          <div className="flex items-center">
-            <svg className="h-6 w-6 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
-            </svg>
-            <span className="text-xl font-bold text-gray-800">License Plates in {country.name}</span>
-          </div>
-          <svg 
-            className={`h-5 w-5 text-gray-500 transition-transform ${showLicensePlates ? 'transform rotate-180' : ''}`}
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        
-        {showLicensePlates && (
-          <div className="p-6">
-            <LicensePlateGallery licensePlates={licensePlates} isLoading={loadingLicensePlates} />
-          </div>
-        )}
-      </div>
+      {/* Use CountryInfoCard with isFullPage=true */}
+      <CountryInfoCard 
+        country={country} 
+        isVisible={true} 
+        isFullPage={true} 
+      />
 
       {/* Navigation */}
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-8">
         <Link to="/countries">
           <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
