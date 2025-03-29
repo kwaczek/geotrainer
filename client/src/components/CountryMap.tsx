@@ -47,7 +47,7 @@ const CountryMap: React.FC<CountryMapProps> = ({ countryName, countryCode }) => 
           `https://nominatim.openstreetmap.org/search?${queryParam}&format=json&polygon_geojson=1&limit=1`,
           {
             headers: {
-              'User-Agent': 'GeoTrainer/1.0 (https://geotrainer.app; contact@geotrainer.app)',
+              'User-Agent': 'GeoPrep/1.0 (https://geoprep.fun; miro.boto83@gmail.com)',
               'Accept-Language': 'en'
             }
           }
@@ -66,7 +66,7 @@ const CountryMap: React.FC<CountryMapProps> = ({ countryName, countryCode }) => 
               `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(countryName)}&format=json&polygon_geojson=1&limit=1`,
               {
                 headers: {
-                  'User-Agent': 'GeoTrainer/1.0 (https://geotrainer.app; contact@geotrainer.app)',
+                  'User-Agent': 'GeoPrep/1.0 (https://geoprep.fun; miro.boto83@gmail.com)',
                   'Accept-Language': 'en'
                 }
               }
@@ -115,13 +115,6 @@ const CountryMap: React.FC<CountryMapProps> = ({ countryName, countryCode }) => 
             maxZoom: 7 // Limit max zoom to prevent too much detail
           });
           
-          // Add a marker at the country's center
-          const marker = L.marker([parseFloat(lat), parseFloat(lon)]);
-          marker.addTo(mapRef.current);
-          
-          // Add a popup with the country name
-          marker.bindPopup(`<strong>${countryName}</strong>`).openPopup();
-
           // Add country shape if GeoJSON is available
           if (data[0].geojson) {
             L.geoJSON(data[0].geojson, {
