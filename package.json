@@ -21,7 +21,6 @@
     "export:countries": "cd server && npm run export:countries",
     "export:bollards": "cd server && npm run export:bollards",
     "export:plates": "cd server && npm run export:plates",
-    "export:all": "cd server && npm run export:all",
     "prepare": "husky",
     "pre-commit": "lint-staged"
   },
@@ -34,9 +33,12 @@
   },
   "dependencies": {
     "dotenv": "^16.4.7",
-    "mongoose": "^8.12.1"
+    "mongoose": "^8.12.1",
+    "recharts": "^2.15.1"
   },
   "lint-staged": {
-    "*.{ts,tsx}": ["npm run test:changed"]
+    "*.{ts,tsx}": [
+      "npm run test:changed"
+    ]
   }
 }

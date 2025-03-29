@@ -8,6 +8,13 @@ export interface CountryInfo {
   flagUrl?: string;
   code?: string;
   in_geoguessr?: boolean;
+  population?: number;
+  area?: number;
+  phone_prefix?: string;
+  driving_side?: 'left' | 'right';
+  domain?: string[];
+  currency?: { name: string; symbol: string; code: string }[];
+  camera_generation?: Record<string, string>;
 }
 
 export interface Bollard {

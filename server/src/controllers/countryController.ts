@@ -62,7 +62,7 @@ export const getCountryById = async (req: Request, res: Response): Promise<void>
       `https://flagcdn.com/w320/${country.code.toLowerCase()}.png` : 
       undefined;
     
-    // Return country details
+    // Return country details with all available fields
     res.status(200).json({
       success: true,
       country: {
@@ -72,7 +72,14 @@ export const getCountryById = async (req: Request, res: Response): Promise<void>
         continent: country.continent,
         code: country.code,
         flagUrl,
-        in_geoguessr: country.in_geoguessr
+        in_geoguessr: country.in_geoguessr,
+        population: country.population,
+        area: country.area,
+        domain: country.domain,
+        currency: country.currency,
+        phone_prefix: country.phone_prefix,
+        driving_side: country.driving_side,
+        camera_generation: country.camera_generation
       }
     });
   } catch (error) {
@@ -106,7 +113,7 @@ export const getCountryByName = async (req: Request, res: Response): Promise<voi
       `https://flagcdn.com/w320/${country.code.toLowerCase()}.png` : 
       undefined;
     
-    // Return country details
+    // Return country details with all available fields
     res.status(200).json({
       success: true,
       country: {
@@ -116,7 +123,14 @@ export const getCountryByName = async (req: Request, res: Response): Promise<voi
         continent: country.continent,
         code: country.code,
         flagUrl,
-        in_geoguessr: country.in_geoguessr
+        in_geoguessr: country.in_geoguessr,
+        population: country.population,
+        area: country.area,
+        domain: country.domain,
+        currency: country.currency,
+        phone_prefix: country.phone_prefix,
+        driving_side: country.driving_side,
+        camera_generation: country.camera_generation
       }
     });
   } catch (error) {

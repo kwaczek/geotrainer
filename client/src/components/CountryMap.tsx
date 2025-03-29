@@ -4,17 +4,18 @@ import L from 'leaflet';
 
 interface CountryMapProps {
   countryName: string;
+  countryCode?: string;
 }
 
 // Fix Leaflet default icon path issues
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
-  iconUrl: require('leaflet/dist/images/marker-icon.png'),
-  shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png'
 });
 
-const CountryMap: React.FC<CountryMapProps> = ({ countryName }) => {
+const CountryMap: React.FC<CountryMapProps> = ({ countryName, countryCode }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
   const mapRef = useRef<L.Map | null>(null);
@@ -26,21 +27,62 @@ const CountryMap: React.FC<CountryMapProps> = ({ countryName }) => {
         setLoading(true);
         setError(false);
 
-        // Use Nominatim to geocode the country name
+        // Use OpenStreetMap Nominatim API to get country boundaries
+        // We'll try both code and name to maximize chances of finding the country
+        let queryParam = '';
+        
+        if (countryCode) {
+          queryParam = `country=${encodeURIComponent(countryCode.toUpperCase())}`;
+        } else if (countryName) {
+          queryParam = `q=${encodeURIComponent(countryName)}`;
+        }
+        
+        // If we have both, prioritize code but prepare to fall back to name
+        if (countryCode && countryName) {
+          queryParam = `country=${encodeURIComponent(countryCode.toUpperCase())}`;
+        }
+        
+        // Nominatim requires a User-Agent header
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?country=${encodeURIComponent(
-            countryName
-          )}&format=json&limit=1`
+          `https://nominatim.openstreetmap.org/search?${queryParam}&format=json&polygon_geojson=1&limit=1`,
+          {
+            headers: {
+              'User-Agent': 'GeoTrainer/1.0 (https://geotrainer.app; contact@geotrainer.app)',
+              'Accept-Language': 'en'
+            }
+          }
         );
 
         if (!response.ok) {
-          throw new Error('Failed to fetch country data');
+          throw new Error(`Failed to fetch country data: ${response.status} ${response.statusText}`);
         }
 
         const data = await response.json();
 
         if (data.length === 0) {
-          throw new Error('Country not found');
+          // Try again with the country name if code didn't work
+          if (countryCode && countryName) {
+            const nameResponse = await fetch(
+              `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(countryName)}&format=json&polygon_geojson=1&limit=1`,
+              {
+                headers: {
+                  'User-Agent': 'GeoTrainer/1.0 (https://geotrainer.app; contact@geotrainer.app)',
+                  'Accept-Language': 'en'
+                }
+              }
+            );
+            
+            if (nameResponse.ok) {
+              const nameData = await nameResponse.json();
+              if (nameData.length > 0) {
+                data.push(...nameData);
+              }
+            }
+          }
+          
+          if (data.length === 0) {
+            throw new Error(`Country not found: ${countryName || countryCode}`);
+          }
         }
 
         const { boundingbox, lat, lon } = data[0];
@@ -48,7 +90,11 @@ const CountryMap: React.FC<CountryMapProps> = ({ countryName }) => {
 
         // Initialize the map if it hasn't been initialized yet
         if (!mapRef.current && mapContainerRef.current) {
-          mapRef.current = L.map(mapContainerRef.current);
+          mapRef.current = L.map(mapContainerRef.current, {
+            attributionControl: false, // Hide attribution for cleaner look
+            zoomControl: true,
+            dragging: true,
+          });
           
           // Add OpenStreetMap tile layer
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -62,10 +108,32 @@ const CountryMap: React.FC<CountryMapProps> = ({ countryName }) => {
             [southLat, westLng],
             [northLat, eastLng]
           );
-          mapRef.current.fitBounds(bounds);
+          
+          // Fit the map to the country bounds with some padding
+          mapRef.current.fitBounds(bounds, {
+            padding: [20, 20],
+            maxZoom: 7 // Limit max zoom to prevent too much detail
+          });
           
           // Add a marker at the country's center
-          L.marker([parseFloat(lat), parseFloat(lon)]).addTo(mapRef.current);
+          const marker = L.marker([parseFloat(lat), parseFloat(lon)]);
+          marker.addTo(mapRef.current);
+          
+          // Add a popup with the country name
+          marker.bindPopup(`<strong>${countryName}</strong>`).openPopup();
+
+          // Add country shape if GeoJSON is available
+          if (data[0].geojson) {
+            L.geoJSON(data[0].geojson, {
+              style: {
+                color: '#3b82f6',
+                weight: 2,
+                opacity: 0.7,
+                fillColor: '#3b82f6',
+                fillOpacity: 0.2
+              }
+            }).addTo(mapRef.current);
+          }
         }
 
         setLoading(false);
@@ -85,7 +153,7 @@ const CountryMap: React.FC<CountryMapProps> = ({ countryName }) => {
         mapRef.current = null;
       }
     };
-  }, [countryName]);
+  }, [countryName, countryCode]);
 
   if (loading) {
     return (
@@ -101,7 +169,8 @@ const CountryMap: React.FC<CountryMapProps> = ({ countryName }) => {
         <svg className="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
         </svg>
-        <p className="text-gray-600">Unable to load map for {countryName}</p>
+        <p className="text-gray-600 mb-1">Unable to load map for {countryName}</p>
+        <p className="text-sm text-gray-500">{countryCode && `(Code: ${countryCode.toUpperCase()})`}</p>
       </div>
     );
   }
@@ -109,8 +178,8 @@ const CountryMap: React.FC<CountryMapProps> = ({ countryName }) => {
   return (
     <div 
       ref={mapContainerRef} 
-      className="h-full w-full rounded-lg overflow-hidden"
-      style={{ minHeight: '400px' }}
+      className="h-full w-full rounded-lg overflow-hidden bg-gray-50"
+      style={{ minHeight: '300px' }}
     />
   );
 };

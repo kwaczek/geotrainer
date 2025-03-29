@@ -4,6 +4,7 @@ import CountryInfoCard from '../CountryInfoCard';
 import { CountryInfo } from '../../services/countryService';
 import { getImageUrl } from '../../config/apiConfig';
 import WriteAnswerInput from './WriteAnswerInput';
+import axios from 'axios';
 
 interface GenericQuizComponentProps {
   question: QuizQuestion;
@@ -128,27 +129,59 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
       const correctOption = question.options.find(opt => opt.isCorrect);
       
       if (correctOption) {
+        const fetchCountryDetails = async (countryName: string) => {
+          try {
+            // Start with basic info
+            let countryData: CountryInfo = {
+              name: countryName,
+              flagUrl: quizType === 'flags' ? question.imageUrl : undefined
+            };
+            
+            // For capitals quiz, add the capital info
+            if (quizType === 'capitals') {
+              countryData.capital = correctOption.text;
+            }
+            
+            // Show initial data immediately
+            setCorrectCountry(countryData);
+            setShowCountryInfo(true);
+            
+            // Then fetch complete data from API
+            try {
+              const encodedName = encodeURIComponent(countryName);
+              const response = await axios.get(`/api/countries/name/${encodedName}`);
+              
+              if (response.data && response.data.success) {
+                const { country } = response.data;
+                
+                // Update with complete information
+                setCorrectCountry({
+                  ...country,
+                  // Keep the quiz-specific data if not in API response
+                  flagUrl: country.flagUrl || (quizType === 'flags' ? question.imageUrl : undefined),
+                  capital: country.capital || (quizType === 'capitals' ? correctOption.text : undefined)
+                });
+              }
+            } catch (error) {
+              console.log('Could not fetch additional country details, using basic info');
+            }
+          } catch (error) {
+            console.error('Error fetching country details:', error);
+          }
+        };
+
         // For capitals quiz, the question text contains the country name
         // Format: "What is the capital of {country}?"
         if (quizType === 'capitals') {
           const countryNameMatch = question.question.match(/capital of (.+)\?/);
           if (countryNameMatch && countryNameMatch[1]) {
             const countryName = countryNameMatch[1];
-            setCorrectCountry({
-              name: countryName,
-              // The capital is the correct option text
-              capital: correctOption.text
-            });
-            setShowCountryInfo(true);
+            fetchCountryDetails(countryName);
           }
         } 
         // For flags and bollards quiz, the correct option text is the country name
         else {
-          setCorrectCountry({
-            name: correctOption.text,
-            flagUrl: quizType === 'flags' ? question.imageUrl : undefined
-          });
-          setShowCountryInfo(true);
+          fetchCountryDetails(correctOption.text);
         }
       }
     }
@@ -205,7 +238,7 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
   };
 
   // Handle write mode input submission
-  const handleWriteInput = (isCorrect: boolean, inputText: string) => {
+  const handleWriteAnswer = (isCorrect: boolean, inputText: string) => {
     // Update both state and ref immediately before any other operations
     isAnswerCorrectRef.current = isCorrect;
     
@@ -220,7 +253,7 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
     setAnswered(true);
     setLastAnswerCorrect(isCorrect);
     
-    // Find the correct option to get its ID
+    // Find the correct option to get its ID and text (country name)
     const correctOption = question.options.find(opt => opt.isCorrect);
     
     if (!correctOption) {
@@ -244,11 +277,43 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
     // Call the original onAnswer function with the result
     onAnswer(isCorrect, optionId);
     
-    // Show country info for both correct and incorrect answers
-    setCorrectCountry({
-      name: correctOption.text,
-      flagUrl: quizType === 'flags' ? question.imageUrl : undefined
-    });
+    // Show country info by fetching complete details
+    const fetchCountryDetails = async (countryName: string) => {
+      try {
+        // Start with basic info
+        const initialData = {
+          name: countryName,
+          flagUrl: quizType === 'flags' ? question.imageUrl : undefined
+        };
+        
+        // Show initial data immediately
+        setCorrectCountry(initialData);
+        setShowCountryInfo(true);
+        
+        // Then fetch complete details
+        try {
+          const encodedName = encodeURIComponent(countryName);
+          const response = await axios.get(`/api/countries/name/${encodedName}`);
+          
+          if (response.data && response.data.success) {
+            const { country } = response.data;
+            
+            // Update with complete information
+            setCorrectCountry({
+              ...country,
+              flagUrl: country.flagUrl || (quizType === 'flags' ? question.imageUrl : undefined)
+            });
+          }
+        } catch (error) {
+          console.log('Could not fetch additional country details, using basic info');
+        }
+      } catch (error) {
+        console.error('Error fetching country details:', error);
+      }
+    };
+    
+    // Fetch complete country details
+    fetchCountryDetails(correctOption.text);
     
     // Focus the next button after submission
     setTimeout(() => {
@@ -367,7 +432,7 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
       {/* Write mode or multiple choice options */}
       {writeMode ? (
         <WriteAnswerInput 
-          onSubmit={handleWriteInput} 
+          onSubmit={handleWriteAnswer} 
           correctAnswers={
             // If metadata contains allCorrectCountryNames, use that for write mode
             // This handles cases where multiple countries are valid answers (like bollards)

@@ -2,16 +2,58 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import useDocumentTitle from '../hooks/useDocumentTitle';
+import CountryInfoCard from '../components/CountryInfoCard';
 
 interface Country {
   id: string;
+  _id?: string;
   name: string;
   capital: string;
   continent: string;
   code: string;
-  flagUrl: string;
+  flagUrl?: string;
   in_geoguessr: boolean;
+  domain?: string[];
+  currency?: { name: string; symbol: string; code: string }[];
+  population?: number;
+  area?: number;
+  phone_prefix?: string;
+  driving_side?: 'left' | 'right';
+  camera_generation?: Record<string, string>;
+  alpha2Code?: string;
+  code2?: string;
+  alpha2?: string;
 }
+
+// Utility function to get flag URL from country code
+const getFlagUrl = (code: string): string => {
+  if (!code) return '/images/flag-placeholder.png';
+  
+  // Standardize the code - most countries use ISO 2-letter codes
+  const normalizedCode = code.toLowerCase().trim();
+  
+  // Handle special cases if needed
+  const codeMap: Record<string, string> = {
+    'uk': 'gb', // United Kingdom uses 'gb' in flagcdn
+    'korea, south': 'kr',
+    'korea, north': 'kp', 
+    'united states': 'us',
+    'russia': 'ru',
+    'china': 'cn'
+  };
+  
+  const finalCode = codeMap[normalizedCode] || normalizedCode;
+  
+  // If code is longer than 2 characters and doesn't have special handling,
+  // it's likely not a valid ISO country code for flagcdn
+  if (finalCode.length !== 2 && !codeMap[normalizedCode]) {
+    console.warn(`Possibly invalid country code for flag: ${code}`);
+    return '/images/flag-placeholder.png';
+  }
+  
+  console.log(`Generating flag URL for ${code} -> ${finalCode}`);
+  return `https://flagcdn.com/w320/${finalCode}.png`;
+};
 
 // Fallback data if database connection fails
 const fallbackCountries: Country[] = [
@@ -21,7 +63,7 @@ const fallbackCountries: Country[] = [
     capital: 'Washington D.C.',
     continent: 'North America',
     code: 'us',
-    flagUrl: 'https://flagcdn.com/w320/us.png',
+    flagUrl: getFlagUrl('us'),
     in_geoguessr: true
   },
   {
@@ -30,7 +72,7 @@ const fallbackCountries: Country[] = [
     capital: 'Berlin',
     continent: 'Europe',
     code: 'de',
-    flagUrl: 'https://flagcdn.com/w320/de.png',
+    flagUrl: getFlagUrl('de'),
     in_geoguessr: true
   },
   {
@@ -39,7 +81,7 @@ const fallbackCountries: Country[] = [
     capital: 'Tokyo',
     continent: 'Asia',
     code: 'jp',
-    flagUrl: 'https://flagcdn.com/w320/jp.png',
+    flagUrl: getFlagUrl('jp'),
     in_geoguessr: true
   },
   {
@@ -48,8 +90,9 @@ const fallbackCountries: Country[] = [
     capital: 'Canberra',
     continent: 'Oceania',
     code: 'au',
-    flagUrl: 'https://flagcdn.com/w320/au.png',
-    in_geoguessr: true
+    flagUrl: getFlagUrl('au'),
+    in_geoguessr: true,
+    driving_side: 'left'
   },
   {
     id: 'brazil',
@@ -57,7 +100,7 @@ const fallbackCountries: Country[] = [
     capital: 'Brasília',
     continent: 'South America',
     code: 'br',
-    flagUrl: 'https://flagcdn.com/w320/br.png',
+    flagUrl: getFlagUrl('br'),
     in_geoguessr: true
   },
   {
@@ -66,8 +109,9 @@ const fallbackCountries: Country[] = [
     capital: 'Cairo',
     continent: 'Africa',
     code: 'eg',
-    flagUrl: 'https://flagcdn.com/w320/eg.png',
-    in_geoguessr: true
+    flagUrl: getFlagUrl('eg'),
+    in_geoguessr: true,
+    currency: [{name: "Egyptian Pound", symbol: "E£", code: "EGP"}]
   }
 ];
 
@@ -103,6 +147,8 @@ const CountriesPage: React.FC = () => {
   const [filteredCountries, setFilteredCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [showCountryDetails, setShowCountryDetails] = useState<boolean>(false);
   
   // Initialize with values from localStorage or defaults
   const storedSettings = getStoredSettings();
@@ -120,7 +166,32 @@ const CountriesPage: React.FC = () => {
         setLoading(true);
         const response = await axios.get('/api/countries');
         if (response.data.success) {
-          setCountries(response.data.countries);
+          console.log('Raw countries data sample:', response.data.countries.slice(0, 3));
+          
+          // Ensure all countries have flagUrl and valid code
+          const countriesWithFlags = response.data.countries.map((country: Country) => {
+            // Clean and normalize the country code
+            let code = country.code || '';
+            
+            // For codes longer than 2 characters, try to extract valid ISO code
+            if (code.length > 2) {
+              // If it looks like an ISO3 code, convert it or use first 2 chars
+              code = code.substring(0, 2);
+            }
+            
+            // Generate flag URL based on code
+            const flagUrl = country.flagUrl || (code ? getFlagUrl(code) : '/images/flag-placeholder.png');
+            
+            return {
+              ...country,
+              id: country._id || country.id, // Handle both MongoDB _id and id
+              code: code,
+              flagUrl: flagUrl
+            };
+          });
+          
+          setCountries(countriesWithFlags);
+          console.log('Processed first country:', countriesWithFlags[0]);
         } else {
           console.warn('Failed to fetch countries, using fallback data');
           setCountries(fallbackCountries);
@@ -170,7 +241,9 @@ const CountriesPage: React.FC = () => {
       const searchLower = searchTerm.toLowerCase();
       result = result.filter(country => 
         country.name.toLowerCase().includes(searchLower) || 
-        country.capital.toLowerCase().includes(searchLower)
+        country.capital.toLowerCase().includes(searchLower) ||
+        country.code?.toLowerCase().includes(searchLower) || 
+        country.domain?.some(d => d.toLowerCase().includes(searchLower))
       );
     }
 
@@ -398,22 +471,25 @@ const CountriesPage: React.FC = () => {
       {/* Countries Grid View */}
       {viewMode === 'grid' && filteredCountries.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredCountries.map(country => (
-            <Link 
-              to={usingFallbackData ? '#' : `/countries/${country.id}`}
-              key={country.id}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-gray-200 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              onClick={e => {
-                if (usingFallbackData) {
-                  e.preventDefault();
-                  alert('Country details are unavailable in demonstration mode.');
-                }
-              }}
-            >
-              {country.flagUrl && (
+          {filteredCountries.map(country => {
+            // For debugging
+            console.log(`Grid view - Rendering flag for ${country.name}: ${country.flagUrl || 'N/A'}, code: ${country.code || 'N/A'}`);
+            
+            return (
+              <Link 
+                to={usingFallbackData ? '#' : `/countries/${country.id}`}
+                key={country.id}
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow border border-gray-200 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                onClick={(e) => {
+                  if (usingFallbackData) {
+                    e.preventDefault();
+                    alert('Country details are unavailable in demonstration mode.');
+                  }
+                }}
+              >
                 <div className="h-40 bg-gray-100">
                   <img 
-                    src={country.flagUrl} 
+                    src={country.flagUrl || (country.code ? getFlagUrl(country.code) : '/images/flag-placeholder.png')} 
                     alt={`Flag of ${country.name}`} 
                     className="w-full h-full object-contain"
                     onError={(e) => {
@@ -421,113 +497,185 @@ const CountriesPage: React.FC = () => {
                       const target = e.target as HTMLImageElement;
                       target.onerror = null;
                       target.src = '/images/flag-placeholder.png';
+                      console.log(`Flag image error for ${country.name}`);
                     }}
                   />
                 </div>
-              )}
-              <div className="p-4">
-                <div className="flex justify-between items-start">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-1">{country.name}</h3>
-                  {country.in_geoguessr && (
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">GeoGuessr</span>
+                <div className="p-4">
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-1">{country.name}</h3>
+                    {country.in_geoguessr && (
+                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">GeoGuessr</span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    <span className="font-medium">Capital:</span> {country.capital || 'N/A'}
+                  </p>
+                  {/* Display Population and Area if available */}
+                  {country.population !== undefined && (
+                    <p className="text-sm text-gray-600 mb-1">
+                      <span className="font-medium">Population:</span> {country.population.toLocaleString()}
+                    </p>
                   )}
+                  {country.area !== undefined && (
+                    <p className="text-sm text-gray-600 mb-2">
+                      <span className="font-medium">Area:</span> {country.area.toLocaleString()} km²
+                    </p>
+                  )}
+                  <div className="mt-2">
+                    <ContinentBadge continent={country.continent} />
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Capital:</span> {country.capital || 'N/A'}
-                </p>
-                <div className="mt-2">
-                  <ContinentBadge continent={country.continent} />
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
 
       {/* Countries List View */}
       {viewMode === 'list' && filteredCountries.length > 0 && (
         <div className="bg-white shadow overflow-hidden rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Flag
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Country
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Capital
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Continent
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  GeoGuessr
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCountries.map(country => (
-                <tr 
-                  key={country.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => {
-                    if (usingFallbackData) {
-                      alert('Country details are unavailable in demonstration mode.');
-                    } else {
-                      window.location.href = `/countries/${country.id}`;
-                    }
-                  }}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {country.flagUrl ? (
-                      <img 
-                        src={country.flagUrl} 
-                        alt={`Flag of ${country.name}`}
-                        className="h-8 w-12 object-contain rounded shadow-sm"
-                        onError={(e) => {
-                          // Fallback for broken flag images
-                          const target = e.target as HTMLImageElement;
-                          target.onerror = null;
-                          target.src = '/images/flag-placeholder.png';
-                        }}
-                      />
-                    ) : (
-                      <div className="h-8 w-12 bg-gray-200 rounded"></div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{country.name}</div>
-                    {country.code && (
-                      <div className="text-xs text-gray-500">Code: {country.code.toUpperCase()}</div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{country.capital || 'N/A'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <ContinentBadge continent={country.continent} />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {country.in_geoguessr ? (
-                      <span className="text-green-600">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </span>
-                    ) : (
-                      <span className="text-red-600">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </span>
-                    )}
-                  </td>
+          <div className="overflow-x-auto max-h-[70vh]">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50 sticky top-0 z-10">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Flag
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Country
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Capital
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Continent
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Population
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Area (km²)
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Currency
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Driving Side
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Phone Code
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Domain
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    GeoGuessr
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredCountries.map(country => {
+                  // For debugging
+                  console.log(`List view - Rendering flag for ${country.name}: ${country.flagUrl || 'N/A'}, code: ${country.code || 'N/A'}`);
+                  
+                  return (
+                    <tr 
+                      key={country.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={(e) => {
+                        if (usingFallbackData) {
+                          alert('Country details are unavailable in demonstration mode.');
+                        } else {
+                          // Use Link for consistent navigation with history
+                          const link = document.createElement('a');
+                          link.href = `/countries/${country.id}`;
+                          link.click();
+                        }
+                      }}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {country.code ? (
+                          <img 
+                            src={country.flagUrl || getFlagUrl(country.code)} 
+                            alt={`Flag of ${country.name}`}
+                            className="h-8 w-12 object-contain rounded shadow-sm"
+                            onError={(e) => {
+                              // Fallback for broken flag images
+                              const target = e.target as HTMLImageElement;
+                              target.onerror = null;
+                              target.src = '/images/flag-placeholder.png';
+                              console.log(`Flag image error for ${country.name} in list view`);
+                            }}
+                          />
+                        ) : (
+                          <div className="h-8 w-12 bg-gray-200 rounded"></div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{country.name}</div>
+                        {country.code && (
+                          <div className="text-xs text-gray-500">Code: {country.code.toUpperCase()}</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">{country.capital || 'N/A'}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <ContinentBadge continent={country.continent} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {country.population?.toLocaleString() || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {country.area?.toLocaleString() || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {country.currency && country.currency.length > 0 
+                          ? (
+                            <div>
+                              <div>{country.currency[0].name}</div>
+                              <div className="text-xs">{country.currency[0].symbol} ({country.currency[0].code})</div>
+                            </div>
+                          )
+                          : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {country.driving_side 
+                          ? <span className={country.driving_side === 'left' ? 'text-purple-600' : 'text-blue-600'}>
+                              {country.driving_side.charAt(0).toUpperCase() + country.driving_side.slice(1)}
+                            </span>
+                          : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {country.phone_prefix || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {country.domain && country.domain.length > 0 
+                          ? country.domain.map(d => <div key={d}>.{d}</div>)
+                          : 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {country.in_geoguessr ? (
+                          <span className="text-green-600">
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </span>
+                        ) : (
+                          <span className="text-red-600">
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
