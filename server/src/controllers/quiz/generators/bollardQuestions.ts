@@ -174,7 +174,9 @@ export async function getRandomBollardQuestion(filters?: QuizFilters, previousEn
     options,
     metadata: {
       allCorrectCountryNames,
-      bollardId // Include the actual bollard ID in metadata for tracking
+      bollardId, // Include the actual bollard ID in metadata for tracking
+      description: bollard.description,
+      googleMapsUrl: bollard.googleMapsUrl
     }
   };
 } 

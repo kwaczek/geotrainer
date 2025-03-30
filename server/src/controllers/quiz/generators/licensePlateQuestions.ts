@@ -184,7 +184,9 @@ export async function getRandomLicensePlateQuestion(filters?: QuizFilters, previ
     options,
     metadata: {
       allCorrectCountryNames,
-      licensePlateId // Include the actual license plate ID in metadata for tracking
+      licensePlateId, // Include the actual license plate ID in metadata for tracking
+      description: licensePlate.description,
+      googleMapsUrl: licensePlate.googleMapsUrl
     }
   };
 } 
