@@ -434,6 +434,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
                 { id: 'chevrons', label: '❯❯ Chevrons', description: 'Signs indicating sharp turns or curves.' },
                 { id: 'back', label: '🔙 Back of Sign', description: 'The reverse side of various road signs.' },
                 { id: 'yield', label: '▽ Yield', description: 'Inverted triangle signs indicating yield/give way.' },
+                { id: 'direction', label: '↕️ Direction', description: 'Signs showing directions or navigational guidance.' },
                 // Add more types here if needed
               ].map((signType) => (
                 <div key={signType.id} className="flex items-center">
