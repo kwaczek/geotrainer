@@ -409,6 +409,21 @@ const RoadSignAdmin: React.FC = () => {
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
+                  checked={selectedTypes.includes('town')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'town']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'town'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Town Sign</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
                   checked={selectedTypes.includes('other')}
                   onChange={(e) => {
                     if (e.target.checked) {
