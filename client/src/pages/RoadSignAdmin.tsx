@@ -346,6 +346,21 @@ const RoadSignAdmin: React.FC = () => {
                 />
                 <span>Direction Sign</span>
               </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes('street')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'street']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'street'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Street Sign</span>
+              </label>
             </div>
           </div>
         </div>
