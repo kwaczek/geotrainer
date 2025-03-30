@@ -361,6 +361,51 @@ const RoadSignAdmin: React.FC = () => {
                 />
                 <span>Street Sign</span>
               </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes('speed')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'speed']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'speed'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Speed Limit</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes('bus')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'bus']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'bus'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Bus</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedTypes.includes('other')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'other']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'other'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Other</span>
+              </label>
             </div>
           </div>
         </div>
