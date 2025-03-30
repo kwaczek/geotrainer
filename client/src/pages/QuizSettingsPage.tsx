@@ -436,6 +436,9 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
                 { id: 'yield', label: '▽ Yield', description: 'Inverted triangle signs indicating yield/give way.' },
                 { id: 'direction', label: '↕️ Direction', description: 'Signs showing directions or navigational guidance.' },
                 { id: 'street', label: '🏙️ Street', description: 'Street name signs and markers.' },
+                { id: 'speed', label: '🚗 Speed Limit', description: 'Speed limit and speed regulation signs.' },
+                { id: 'bus', label: '🚌 Bus', description: 'Bus stops and bus-related signage.' },
+                { id: 'other', label: '📍 Other', description: 'Other miscellaneous road signs.' },
                 // Add more types here if needed
               ].map((signType) => (
                 <div key={signType.id} className="flex items-center">
