@@ -5,6 +5,7 @@ import { getImageUrl } from '../config/apiConfig';
 import BollardGallery from './BollardGallery';
 import RoadSignGallery from './RoadSignGallery';
 import LicensePlateGallery from './LicensePlateGallery';
+import { fetchRoadSignsByCountry, RoadSign } from '../services/countryService';
 
 // Define some custom styles for scrollbars
 const scrollbarStyles = `
@@ -54,6 +55,11 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
   const [selectedSign, setSelectedSign] = useState<any>(null);
   const [selectedPlate, setSelectedPlate] = useState<any>(null);
   
+  // State for Road Signs data fetching
+  const [signs, setSigns] = useState<RoadSign[]>([]);
+  const [loadingSigns, setLoadingSigns] = useState<boolean>(false);
+  const [signsError, setSignsError] = useState<string | null>(null);
+  
   // Refs for tracking components
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -99,6 +105,32 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
       setAnimationPhase(0);
     }
   }, [isVisible, animationStarted]);
+  
+  // Fetch road signs when component becomes visible
+  useEffect(() => {
+    if (isVisible && country?.id) {
+      const fetchSigns = async () => {
+        setLoadingSigns(true);
+        setSignsError(null);
+        try {
+          const fetchedSigns = await fetchRoadSignsByCountry(country.id);
+          setSigns(fetchedSigns);
+          // If country.signs exists, we'll still use it in the UI,
+          // but we'll override it with our fetched data when rendering
+        } catch (error) {
+          console.error('Error fetching road signs:', error);
+          setSignsError('Failed to load road signs.');
+        } finally {
+          setLoadingSigns(false);
+        }
+      };
+      fetchSigns();
+    } else {
+      setSigns([]);
+      setLoadingSigns(false);
+      setSignsError(null);
+    }
+  }, [country?.id, isVisible]);
   
   // Memoize the closeAllModals function to use in the effect dependency array
   const closeAllModalsCallback = useCallback(() => {
@@ -382,15 +414,23 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
               >
                 <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Signs</h3>
                 <div className="flex flex-col">
-                  {country.signs && country.signs.length > 0 ? (
+                  {loadingSigns ? (
+                    <div className="flex justify-center items-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                    </div>
+                  ) : signsError ? (
+                    <div className="text-center text-red-500 py-2">
+                      Error loading signs data. Please try again.
+                    </div>
+                  ) : (signs && signs.length > 0) || (country.signs && country.signs.length > 0) ? (
                     <div className="w-full">
                       <div 
                         className="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mb-2 cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => setSelectedSign(country.signs[0])}
+                        onClick={() => setSelectedSign(signs[0] || country.signs[0])}
                       >
-                        {country.signs[0]?.imageUrl ? (
+                        {(signs[0] || country.signs[0])?.imageUrl ? (
                           <img 
-                            src={getImageUrl(country.signs[0].imageUrl)} 
+                            src={getImageUrl((signs[0] || country.signs[0]).imageUrl)} 
                             alt={`Road sign in ${country.name}`} 
                             className="max-w-full max-h-full object-contain"
                           />
@@ -399,21 +439,21 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                         )}
                       </div>
                       
-                      {country.signs[0]?.description && (
+                      {(signs[0] || country.signs[0])?.description && (
                         <div className="text-sm text-gray-700 mt-2 mb-1">
-                          {country.signs[0].description.length > 100
-                            ? country.signs[0].description.substring(0, 100) + '...'
-                            : country.signs[0].description
+                          {(signs[0] || country.signs[0]).description.length > 100
+                            ? (signs[0] || country.signs[0]).description.substring(0, 100) + '...'
+                            : (signs[0] || country.signs[0]).description
                           }
                         </div>
                       )}
                       
                       <div className="flex justify-between items-center mt-2">
                         <div className="text-xs text-gray-500">
-                          {country.signs.length} road sign{country.signs.length !== 1 ? 's' : ''} found
+                          {(signs.length || country.signs.length)} road sign{(signs.length || country.signs.length) !== 1 ? 's' : ''} found
                         </div>
                         <button 
-                          onClick={() => setSelectedSign(country.signs)}
+                          onClick={() => setSelectedSign(signs.length > 0 ? signs : country.signs)}
                           className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
                         >
                           <span>View All</span>
