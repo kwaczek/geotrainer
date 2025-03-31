@@ -780,84 +780,75 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
       {/* Modals - Placed outside the main content flow */}
       {/* Bollard Detail Modal */}
       {selectedBollard && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm" onClick={closeModal}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm" onClick={closeModal}>
           <div 
-            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-xl font-semibold text-gray-800">
-                {selectedBollard.description || 'Bollard Detail'}
-              </h3>
-              <button 
-                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                onClick={closeModal}
-                aria-label="Close modal"
-              >
-                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Modal Body */}
-            <div className="p-6">
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Image */}
-                <div className="w-full md:w-1/2">
-                  <div className="bg-gray-100 rounded-lg overflow-hidden">
-                    <img 
-                      src={getImageUrl(selectedBollard.imageUrl)} 
-                      alt={selectedBollard.description || 'Bollard'} 
-                      className="w-full h-auto object-contain max-h-[500px]" 
-                    />
-                  </div>
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">Bollard Details</h3>
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={closeModal}
+                  aria-label="Close modal"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <img 
+                  src={getImageUrl(selectedBollard.imageUrl)} 
+                  alt={`Bollard in ${country.name}`}
+                  className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = '/images/bollard-placeholder.png';
+                  }}
+                />
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                <p className="text-gray-600">{selectedBollard.description}</p>
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Country</h4>
+                <div className="flex items-center gap-2">
+                  <span className="bg-gray-50 p-2 rounded flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{country.name}</span>
+                  </span>
                 </div>
-                
-                {/* Details */}
-                <div className="w-full md:w-1/2 space-y-4">
-                  {/* Description */}
-                  {selectedBollard.description && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Description</h4>
-                      <p className="text-gray-800 mt-1">{selectedBollard.description}</p>
-                    </div>
-                  )}
-                  
-                  {/* Location */}
-                  {selectedBollard?.location && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Location</h4>
-                      <p className="text-gray-800 mt-1">{selectedBollard.location}</p>
-                    </div>
-                  )}
-                  
-                  {/* Notes */}
-                  {selectedBollard?.notes && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Notes</h4>
-                      <p className="text-gray-800 mt-1">{selectedBollard.notes}</p>
-                    </div>
-                  )}
-                  
-                  {/* Google Maps Link */}
-                  {selectedBollard.googleMapsUrl && (
-                    <div className="mt-4">
-                      <a 
-                        href={selectedBollard.googleMapsUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                        View on Google Maps
-                      </a>
-                    </div>
-                  )}
+              </div>
+              
+              {selectedBollard.googleMapsUrl && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Location</h4>
+                  <a 
+                    href={selectedBollard.googleMapsUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    View on Google Maps
+                  </a>
                 </div>
+              )}
+              
+              <div className="mt-6 text-center text-sm text-gray-500">
+                Press ESC key or click outside to close
               </div>
             </div>
           </div>
@@ -866,75 +857,56 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
       
       {/* License Plate Detail Modal */}
       {selectedPlate && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm" onClick={closeModal}>
-          <div 
-            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-xl font-semibold text-gray-800">
-                {selectedPlate.description || 'License Plate Detail'}
-              </h3>
-              <button 
-                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                onClick={closeModal}
-                aria-label="Close modal"
-              >
-                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Modal Body */}
-            <div className="p-6">
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Image */}
-                <div className="w-full md:w-1/2">
-                  <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-4">
-                    <img 
-                      src={getImageUrl(selectedPlate.imageUrl)} 
-                      alt={selectedPlate.description || 'License Plate'} 
-                      className="max-w-full max-h-[400px] object-contain" 
-                    />
-                  </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm" onClick={closeModal}>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">License Plate Details</h3>
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={closeModal}
+                  aria-label="Close modal"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <img 
+                  src={getImageUrl(selectedPlate.imageUrl)} 
+                  alt={`License plate in ${country.name}`}
+                  className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = '/images/placeholder.png';
+                  }}
+                />
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                <p className="text-gray-600">{selectedPlate.description || 'No description available'}</p>
+              </div>
+              
+              {selectedPlate.format && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Format</h4>
+                  <p className="text-gray-600">{selectedPlate.format}</p>
                 </div>
-                
-                {/* Details */}
-                <div className="w-full md:w-1/2 space-y-4">
-                  {/* Description */}
-                  {selectedPlate.description && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Description</h4>
-                      <p className="text-gray-800 mt-1">{selectedPlate.description}</p>
-                    </div>
-                  )}
-                  
-                  {/* Format */}
-                  {selectedPlate?.format && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Format</h4>
-                      <p className="text-gray-800 mt-1">{selectedPlate.format}</p>
-                    </div>
-                  )}
-                  
-                  {/* Years */}
-                  {selectedPlate?.years && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Years</h4>
-                      <p className="text-gray-800 mt-1">{selectedPlate.years}</p>
-                    </div>
-                  )}
-                  
-                  {/* Notes */}
-                  {selectedPlate?.notes && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Notes</h4>
-                      <p className="text-gray-800 mt-1">{selectedPlate.notes}</p>
-                    </div>
-                  )}
+              )}
+              
+              {selectedPlate.years && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Years</h4>
+                  <p className="text-gray-600">{selectedPlate.years}</p>
                 </div>
+              )}
+              
+              <div className="mt-6 text-center text-sm text-gray-500">
+                Press ESC key or click outside to close
               </div>
             </div>
           </div>
@@ -943,101 +915,76 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
       
       {/* Road Sign Detail Modal */}
       {selectedSign && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm" onClick={closeModal}>
-          <div 
-            className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-4 border-b">
-              <h3 className="text-xl font-semibold text-gray-800">
-                {selectedSign.description || 'Road Sign Detail'}
-              </h3>
-              <button 
-                className="p-1 rounded-full hover:bg-gray-100 transition-colors"
-                onClick={closeModal}
-                aria-label="Close modal"
-              >
-                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-            
-            {/* Modal Body */}
-            <div className="p-6">
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Image */}
-                <div className="w-full md:w-1/2">
-                  <div className="bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-4">
-                    <img 
-                      src={getImageUrl(selectedSign.imageUrl)} 
-                      alt={selectedSign.description || 'Road Sign'} 
-                      className="max-w-full max-h-[400px] object-contain" 
-                    />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm" onClick={closeModal}>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">Road Sign Details</h3>
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={closeModal}
+                  aria-label="Close modal"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <img 
+                  src={getImageUrl(selectedSign.imageUrl)} 
+                  alt={`Road sign in ${country.name}`}
+                  className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = '/images/placeholder.png';
+                  }}
+                />
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                <p className="text-gray-600">{selectedSign.description}</p>
+              </div>
+              
+              {selectedSign.types && selectedSign.types.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Types</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSign.types.map((type) => (
+                      <span 
+                        key={type} 
+                        className="inline-block bg-purple-100 text-purple-800 text-sm px-3 py-1 rounded-full font-medium capitalize"
+                      >
+                        {type}
+                      </span>
+                    ))}
                   </div>
                 </div>
-                
-                {/* Details */}
-                <div className="w-full md:w-1/2 space-y-4">
-                  {/* Description */}
-                  {selectedSign.description && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Description</h4>
-                      <p className="text-gray-800 mt-1">{selectedSign.description}</p>
-                    </div>
-                  )}
-                  
-                  {/* Types */}
-                  {selectedSign.types && selectedSign.types.length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Type</h4>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {selectedSign.types.map((type, index) => (
-                          <span 
-                            key={index}
-                            className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-sm capitalize"
-                          >
-                            {type}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Meaning */}
-                  {selectedSign?.meaning && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Meaning</h4>
-                      <p className="text-gray-800 mt-1">{selectedSign.meaning}</p>
-                    </div>
-                  )}
-                  
-                  {/* Notes */}
-                  {selectedSign?.notes && (
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Notes</h4>
-                      <p className="text-gray-800 mt-1">{selectedSign.notes}</p>
-                    </div>
-                  )}
-                  
-                  {/* Google Maps Link */}
-                  {selectedSign.googleMapsUrl && (
-                    <div className="mt-4">
-                      <a 
-                        href={selectedSign.googleMapsUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                        View on Google Maps
-                      </a>
-                    </div>
-                  )}
+              )}
+              
+              {selectedSign.googleMapsUrl && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Location</h4>
+                  <a 
+                    href={selectedSign.googleMapsUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    View on Google Maps
+                  </a>
                 </div>
+              )}
+              
+              <div className="mt-6 text-center text-sm text-gray-500">
+                Press ESC key or click outside to close
               </div>
             </div>
           </div>
