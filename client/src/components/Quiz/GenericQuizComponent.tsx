@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { QuizQuestion, QuizOption, QuizType } from '../../types/quiz';
 import CountryInfoCard from '../CountryInfoCard';
+import AnimatedCountryInfo from '../AnimatedCountryInfo';
 import { CountryInfo } from '../../services/countryService';
 import { getImageUrl } from '../../config/apiConfig';
 import WriteAnswerInput from './WriteAnswerInput';
@@ -22,6 +23,7 @@ interface GenericQuizComponentProps {
     blurIntensity?: number;
   };
   onSettingsChange?: (settings: { blurred?: boolean; blurIntensity?: number }) => void;
+  countryData?: any;
 }
 
 const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
@@ -35,7 +37,8 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
   isLastQuestion = false,
   writeMode = false,
   settings,
-  onSettingsChange
+  onSettingsChange,
+  countryData
 }) => {
   const [timeLeft, setTimeLeft] = useState<number>(timeLimit);
   const [answered, setAnswered] = useState<boolean>(false);
@@ -152,19 +155,74 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
             // Then fetch complete data from API
             try {
               const encodedName = encodeURIComponent(countryName);
-              const response = await axios.get(`/api/countries/name/${encodedName}`);
               
-              if (response.data && response.data.success) {
-                const { country } = response.data;
+              // Fetch country basic data
+              const countryResponse = await axios.get(`/api/countries/name/${encodedName}`);
+              
+              let fullCountryData = countryData;
+              if (countryResponse.data && countryResponse.data.success) {
+                const { country } = countryResponse.data;
                 
-                // Update with complete information
-                setCorrectCountry({
+                // Update with basic information
+                fullCountryData = {
                   ...country,
                   // Keep the quiz-specific data if not in API response
                   flagUrl: country.flagUrl || (quizType === 'flags' ? question.imageUrl : undefined),
                   capital: country.capital || (quizType === 'capitals' ? correctOption.text : undefined)
-                });
+                };
               }
+              
+              // Fetch bollards data if country has an ID
+              let bollards = [];
+              if (fullCountryData.id) {
+                try {
+                  const bollardsResponse = await axios.get(`/api/bollards/country/${fullCountryData.id}`);
+                  if (bollardsResponse.data && bollardsResponse.data.success) {
+                    bollards = bollardsResponse.data.bollards || [];
+                  }
+                } catch (err) {
+                  console.log('Could not fetch bollards data');
+                }
+              }
+              
+              // Fetch road signs data if country has an ID
+              let signs = [];
+              if (fullCountryData.id) {
+                try {
+                  const signsResponse = await axios.get(`/api/roadsigns/country/${fullCountryData.id}`);
+                  if (signsResponse.data && signsResponse.data.success) {
+                    signs = signsResponse.data.signs || [];
+                  }
+                } catch (err) {
+                  console.log('Could not fetch road signs data');
+                }
+              }
+              
+              // Fetch license plates data if country has an ID
+              let plates = [];
+              if (fullCountryData.id) {
+                try {
+                  const platesResponse = await axios.get(`/api/licenseplates/country/${fullCountryData.id}`);
+                  if (platesResponse.data && platesResponse.data.success) {
+                    plates = platesResponse.data.licensePlates || [];
+                    // If the response field is differently named, try alternative key
+                    if (!plates.length && platesResponse.data.plates) {
+                      plates = platesResponse.data.plates;
+                    }
+                    console.log('License plates data fetched:', plates);
+                  }
+                } catch (err) {
+                  console.log('Could not fetch license plates data', err);
+                }
+              }
+              
+              // Update with complete information including related items
+              setCorrectCountry({
+                ...fullCountryData,
+                bollards,
+                signs,
+                plates
+              });
             } catch (error) {
               console.log('Could not fetch additional country details, using basic info');
             }
@@ -387,207 +445,413 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
     }
   };
 
+  // We need to add a useSideLayout state variable to track the screen width
+  const [useSideLayout, setUseSideLayout] = useState<boolean>(false);
+
+  // Add effect to watch window width and determine layout
+  useEffect(() => {
+    const handleResize = () => {
+      // Use the same breakpoint as in AnimatedCountryInfo
+      setUseSideLayout(window.innerWidth >= 1200);
+    };
+    
+    handleResize(); // Initial check
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
     <div className="relative">
-      <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 relative">
-        {/* Show debug info in development */}
-        {process.env.NODE_ENV !== 'production' && (
-          <div className="text-xs text-gray-500 mb-4">
-            <div>Debug: writeMode={String(writeMode)}, lastAnswerCorrect={String(lastAnswerCorrect)}</div>
-            <div>selectedOption={selectedOption || 'none'}, questionId={question.id}</div>
-            <div>tracking: ref={String(isAnswerCorrectRef.current)}, stored={writeModeResult ? JSON.stringify(writeModeResult) : 'none'}</div>
-            <div>Question has metadata: {question.metadata ? 'Yes' : 'No'}</div>
-            {question.metadata?.allCorrectCountryNames && (
-              <div>Valid answers: {question.metadata.allCorrectCountryNames.join(', ')}</div>
-            )}
-            {question.metadata?.description && (
-              <div>Description: {question.metadata.description.substring(0, 50)}...</div>
-            )}
-            <div>showDescription state: {String(showDescription)}</div>
-          </div>
-        )}
-    
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold mb-3">{question.question}</h2>
-          
-          {quizType === 'licenseplates' && settings?.blurred && (
-            <div className="mb-3">
-              <label htmlFor="blur-intensity" className="block text-sm font-medium text-gray-700 mb-1">
-                Blur Intensity: {blurIntensity}px
-              </label>
-              <input
-                type="range"
-                id="blur-intensity"
-                min="1"
-                max="30"
-                value={blurIntensity}
-                onChange={(e) => handleBlurIntensityChange(Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-              />
-            </div>
-          )}
-          
-          {question.imageUrl && (
-            <div className="flex justify-center mb-3">
-              <img 
-                src={getImageUrl(question.imageUrl)} 
-                alt="Quiz question" 
-                className="max-h-64 object-contain rounded-md"
-                style={{
-                  filter: quizType === 'licenseplates' && settings?.blurred 
-                    ? `blur(${blurIntensity}px)` 
-                    : 'none'
-                }}
-              />
-            </div>
-          )}
-          
-          {/* Timer display - only show if timer is enabled */}
-          {timeLimit > 0 && (
-            <div className="mb-3 flex justify-center">
-              <div className={`px-3 py-1 rounded-full font-bold text-sm ${
-                timeLeft > 10 ? 'bg-green-100 text-green-800' : 
-                timeLeft > 5 ? 'bg-yellow-100 text-yellow-800' : 
-                'bg-red-100 text-red-800'
-              }`}>
-                Time: {timeLeft}s
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Write mode or multiple choice options */}
-        {writeMode ? (
-          <WriteAnswerInput 
-            onSubmit={handleWriteAnswer} 
-            correctAnswers={
-              // If metadata contains allCorrectCountryNames, use that for write mode
-              // This handles cases where multiple countries are valid answers (like bollards)
-              question.metadata?.allCorrectCountryNames || 
-              // Otherwise fall back to the options marked as correct
-              question.options.filter(opt => opt.isCorrect).map(opt => opt.text)
-            } 
-            disabled={answered}
-            onAfterSubmit={() => {
-              if (nextButtonRef.current) {
-                nextButtonRef.current.focus();
-              }
-            }}
-          />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-            {question.options.map((option) => (
-              <button
-                key={option.id}
-                onClick={() => handleOptionClick(option.id)}
-                disabled={answered}
-                className={`p-3 rounded-lg border border-gray-200 transition-colors duration-200 ${
-                  !answered
-                    ? 'hover:bg-gray-50'
-                    : option.isCorrect
-                    ? 'bg-green-100 border-green-300'
-                    : selectedOption === option.id
-                    ? 'bg-red-100 border-red-300'
-                    : 'opacity-50'
-                }`}
-              >
-                {option.text}
-              </button>
-            ))}
-          </div>
-        )}
-        
-        {/* Show feedback banner when answered */}
-        {answered && showFeedback && (
-          <div className={`mb-4 p-3 rounded-lg ${
-            isCurrentAnswerCorrect() 
-              ? 'bg-green-100 border border-green-300' 
-              : 'bg-red-100 border border-red-300'
-          }`}>
-            <div className="flex items-center">
-              <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
-                isCurrentAnswerCorrect() 
-                  ? 'bg-green-200' 
-                  : 'bg-red-200'
-              }`}>
-                {isCurrentAnswerCorrect() ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+      {answered && correctCountry && showCountryInfo && useSideLayout ? (
+        <div className="relative">
+          {/* Main quiz content - centered with margin for side panels */}
+          <div className="max-w-2xl mx-auto z-20 relative px-4">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 relative">
+              {/* Debug info in development */}
+              {process.env.NODE_ENV !== 'production' && (
+                <div className="text-xs text-gray-500 mb-4">
+                  <div>Debug: writeMode={String(writeMode)}, lastAnswerCorrect={String(lastAnswerCorrect)}</div>
+                  <div>selectedOption={selectedOption || 'none'}, questionId={question.id}</div>
+                  <div>tracking: ref={String(isAnswerCorrectRef.current)}, stored={writeModeResult ? JSON.stringify(writeModeResult) : 'none'}</div>
+                  <div>Question has metadata: {question.metadata ? 'Yes' : 'No'}</div>
+                  {question.metadata?.allCorrectCountryNames && (
+                    <div>Valid answers: {question.metadata.allCorrectCountryNames.join(', ')}</div>
+                  )}
+                  {question.metadata?.description && (
+                    <div>Description: {question.metadata.description.substring(0, 50)}...</div>
+                  )}
+                  <div>showDescription state: {String(showDescription)}</div>
+                </div>
+              )}
+
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold mb-3">{question.question}</h2>
+                
+                {quizType === 'licenseplates' && settings?.blurred && (
+                  <div className="mb-3">
+                    <label htmlFor="blur-intensity" className="block text-sm font-medium text-gray-700 mb-1">
+                      Blur Intensity: {blurIntensity}px
+                    </label>
+                    <input
+                      type="range"
+                      id="blur-intensity"
+                      min="1"
+                      max="30"
+                      value={blurIntensity}
+                      onChange={(e) => handleBlurIntensityChange(Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                )}
+                
+                {question.imageUrl && (
+                  <div className="flex justify-center mb-3">
+                    <img 
+                      src={getImageUrl(question.imageUrl)} 
+                      alt="Quiz question" 
+                      className="max-h-64 object-contain rounded-md"
+                      style={{
+                        filter: quizType === 'licenseplates' && settings?.blurred 
+                          ? `blur(${blurIntensity}px)` 
+                          : 'none'
+                      }}
+                    />
+                  </div>
+                )}
+                
+                {/* Timer display - only show if timer is enabled */}
+                {timeLimit > 0 && (
+                  <div className="mb-3 flex justify-center">
+                    <div className={`px-3 py-1 rounded-full font-bold text-sm ${
+                      timeLeft > 10 ? 'bg-green-100 text-green-800' : 
+                      timeLeft > 5 ? 'bg-yellow-100 text-yellow-800' : 
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      Time: {timeLeft}s
+                    </div>
+                  </div>
                 )}
               </div>
-              <div className="ml-3">
-                <p className={`text-base font-semibold ${
-                  isCurrentAnswerCorrect() 
-                    ? 'text-green-700' 
-                    : 'text-red-700'
-                }`}>
-                  {isCurrentAnswerCorrect() ? 'Correct!' : 'Incorrect'}
-                </p>
-              </div>
-            </div>
-            
-            {/* Show correct answer when incorrect */}
-            {!isCurrentAnswerCorrect() && (
-              <div className="mt-2 text-center">
-                <p className="text-gray-700 text-sm">
-                  The correct answer was: {
-                    question.options
-                      .filter(opt => opt.isCorrect)
-                      .map(opt => opt.text)
-                      .join(' or ')
-                  }
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Next Question/View Results button and Description container */}
-        {answered && (
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 pt-3 border-t border-gray-100">
-            <div className="mb-3 sm:mb-0 sm:mr-4">
-              <button
-                ref={nextButtonRef}
-                onClick={handleNextClick}
-                className={`font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200 ${
-                  isLastQuestion 
-                    ? 'bg-green-600 hover:bg-green-700 text-white' 
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
-                }`}
-              >
-                {isLastQuestion ? 'View Results' : 'Next Question'}
-              </button>
-            </div>
-            
-            {/* Description Popup - always in the same container */}
-            {showDescription && question.metadata?.description && (
-              <div className="flex-grow sm:max-w-md">
-                <DescriptionPopup
-                  isVisible={showDescription}
-                  description={question.metadata.description}
-                  googleMapsUrl={question.metadata?.googleMapsUrl}
-                  onClose={() => setShowDescription(false)}
+              
+              {/* Write mode or multiple choice options */}
+              {writeMode ? (
+                <WriteAnswerInput 
+                  onSubmit={handleWriteAnswer} 
+                  correctAnswers={
+                    question.metadata?.allCorrectCountryNames || 
+                    question.options.filter(opt => opt.isCorrect).map(opt => opt.text)
+                  } 
+                  disabled={answered}
+                  onAfterSubmit={() => {
+                    if (nextButtonRef.current) {
+                      nextButtonRef.current.focus();
+                    }
+                  }}
                 />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  {question.options.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => handleOptionClick(option.id)}
+                      disabled={answered}
+                      className={`p-3 rounded-lg border border-gray-200 transition-colors duration-200 ${
+                        !answered
+                          ? 'hover:bg-gray-50'
+                          : option.isCorrect
+                          ? 'bg-green-100 border-green-300'
+                          : selectedOption === option.id
+                          ? 'bg-red-100 border-red-300'
+                          : 'opacity-50'
+                      }`}
+                    >
+                      {option.text}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {/* Show feedback banner when answered */}
+              {answered && showFeedback && (
+                <div className={`mb-4 p-3 rounded-lg ${
+                  isCurrentAnswerCorrect() 
+                    ? 'bg-green-100 border border-green-300' 
+                    : 'bg-red-100 border border-red-300'
+                }`}>
+                  <div className="flex items-center">
+                    <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
+                      isCurrentAnswerCorrect() 
+                        ? 'bg-green-200' 
+                        : 'bg-red-200'
+                    }`}>
+                      {isCurrentAnswerCorrect() ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="ml-3">
+                      <p className={`text-base font-semibold ${
+                        isCurrentAnswerCorrect() 
+                          ? 'text-green-700' 
+                          : 'text-red-700'
+                      }`}>
+                        {isCurrentAnswerCorrect() ? 'Correct!' : 'Incorrect'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Show correct answer when incorrect */}
+                  {!isCurrentAnswerCorrect() && (
+                    <div className="mt-2 text-center">
+                      <p className="text-gray-700 text-sm">
+                        The correct answer was: {
+                          question.options
+                            .filter(opt => opt.isCorrect)
+                            .map(opt => opt.text)
+                            .join(' or ')
+                        }
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Next Question/View Results button and Description container */}
+              {answered && (
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 pt-3 border-t border-gray-100">
+                  <div className="mb-3 sm:mb-0 sm:mr-4">
+                    <button
+                      ref={nextButtonRef}
+                      onClick={handleNextClick}
+                      className={`font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200 ${
+                        isLastQuestion 
+                          ? 'bg-green-600 hover:bg-green-700 text-white' 
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      {isLastQuestion ? 'View Results' : 'Next Question'}
+                    </button>
+                  </div>
+                  
+                  {/* Description Popup - always in the same container */}
+                  {showDescription && question.metadata?.description && (
+                    <div className="flex-grow sm:max-w-md">
+                      <DescriptionPopup
+                        isVisible={showDescription}
+                        description={question.metadata.description}
+                        googleMapsUrl={question.metadata?.googleMapsUrl}
+                        onClose={() => setShowDescription(false)}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Animated country info for the sides - will be positioned absolutely */}
+          <AnimatedCountryInfo 
+            country={correctCountry} 
+            isVisible={true} 
+            isCorrectAnswer={isCurrentAnswerCorrect()} 
+            layout="sides"
+          />
+        </div>
+      ) : (
+        <>
+          {/* Regular view */}
+          <div className="max-w-2xl mx-auto px-4">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-4 relative">
+              {/* Debug info in development */}
+              {process.env.NODE_ENV !== 'production' && (
+                <div className="text-xs text-gray-500 mb-4">
+                  <div>Debug mode content</div>
+                </div>
+              )}
+
+              <div className="mb-4">
+                <h2 className="text-xl font-semibold mb-3">{question.question}</h2>
+                
+                {quizType === 'licenseplates' && settings?.blurred && (
+                  <div className="mb-3">
+                    <label htmlFor="blur-intensity" className="block text-sm font-medium text-gray-700 mb-1">
+                      Blur Intensity: {blurIntensity}px
+                    </label>
+                    <input
+                      type="range"
+                      id="blur-intensity"
+                      min="1"
+                      max="30"
+                      value={blurIntensity}
+                      onChange={(e) => handleBlurIntensityChange(Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                )}
+                
+                {question.imageUrl && (
+                  <div className="flex justify-center mb-3">
+                    <img 
+                      src={getImageUrl(question.imageUrl)} 
+                      alt="Quiz question" 
+                      className="max-h-64 object-contain rounded-md"
+                      style={{
+                        filter: quizType === 'licenseplates' && settings?.blurred 
+                          ? `blur(${blurIntensity}px)` 
+                          : 'none'
+                      }}
+                    />
+                  </div>
+                )}
+                
+                {timeLimit > 0 && (
+                  <div className="mb-3 flex justify-center">
+                    <div className={`px-3 py-1 rounded-full font-bold text-sm ${
+                      timeLeft > 10 ? 'bg-green-100 text-green-800' : 
+                      timeLeft > 5 ? 'bg-yellow-100 text-yellow-800' : 
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      Time: {timeLeft}s
+                    </div>
+                  </div>
+                )}
               </div>
+              
+              {writeMode ? (
+                <WriteAnswerInput 
+                  onSubmit={handleWriteAnswer} 
+                  correctAnswers={
+                    question.metadata?.allCorrectCountryNames || 
+                    question.options.filter(opt => opt.isCorrect).map(opt => opt.text)
+                  } 
+                  disabled={answered}
+                  onAfterSubmit={() => {
+                    if (nextButtonRef.current) {
+                      nextButtonRef.current.focus();
+                    }
+                  }}
+                />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  {question.options.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => handleOptionClick(option.id)}
+                      disabled={answered}
+                      className={`p-3 rounded-lg border border-gray-200 transition-colors duration-200 ${
+                        !answered
+                          ? 'hover:bg-gray-50'
+                          : option.isCorrect
+                          ? 'bg-green-100 border-green-300'
+                          : selectedOption === option.id
+                          ? 'bg-red-100 border-red-300'
+                          : 'opacity-50'
+                      }`}
+                    >
+                      {option.text}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {answered && showFeedback && (
+                <div className={`mb-4 p-3 rounded-lg ${
+                  isCurrentAnswerCorrect() 
+                    ? 'bg-green-100 border border-green-300' 
+                    : 'bg-red-100 border border-red-300'
+                }`}>
+                  <div className="flex items-center">
+                    <div className={`flex-shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${
+                      isCurrentAnswerCorrect() 
+                        ? 'bg-green-200' 
+                        : 'bg-red-200'
+                    }`}>
+                      {isCurrentAnswerCorrect() ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="ml-3">
+                      <p className={`text-base font-semibold ${
+                        isCurrentAnswerCorrect() 
+                          ? 'text-green-700' 
+                          : 'text-red-700'
+                      }`}>
+                        {isCurrentAnswerCorrect() ? 'Correct!' : 'Incorrect'}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {!isCurrentAnswerCorrect() && (
+                    <div className="mt-2 text-center">
+                      <p className="text-gray-700 text-sm">
+                        The correct answer was: {
+                          question.options
+                            .filter(opt => opt.isCorrect)
+                            .map(opt => opt.text)
+                            .join(' or ')
+                        }
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {answered && (
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 pt-3 border-t border-gray-100">
+                  <div className="mb-3 sm:mb-0 sm:mr-4">
+                    <button
+                      ref={nextButtonRef}
+                      onClick={handleNextClick}
+                      className={`font-bold py-2 px-6 rounded-lg shadow-md transition-all duration-200 ${
+                        isLastQuestion 
+                          ? 'bg-green-600 hover:bg-green-700 text-white' 
+                          : 'bg-blue-600 hover:bg-blue-700 text-white'
+                      }`}
+                    >
+                      {isLastQuestion ? 'View Results' : 'Next Question'}
+                    </button>
+                  </div>
+                  
+                  {showDescription && question.metadata?.description && (
+                    <div className="flex-grow sm:max-w-md">
+                      <DescriptionPopup
+                        isVisible={showDescription}
+                        description={question.metadata.description}
+                        googleMapsUrl={question.metadata?.googleMapsUrl}
+                        onClose={() => setShowDescription(false)}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Display standard country info below for narrow screens */}
+            {answered && correctCountry && showCountryInfo && (
+              <AnimatedCountryInfo 
+                country={correctCountry} 
+                isVisible={true} 
+                isCorrectAnswer={isCurrentAnswerCorrect()} 
+                layout="standard"
+              />
             )}
           </div>
-        )}
-        
-        {/* Display CountryInfoCard when answered */}
-        {answered && correctCountry && showCountryInfo && (
-          <div className="mt-4 pt-3 border-t border-gray-200">
-            <div className="mb-3">
-              <h3 className="text-base font-semibold text-gray-700">Country Information</h3>
-            </div>
-            <CountryInfoCard country={correctCountry} isVisible={true} />
-          </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 };

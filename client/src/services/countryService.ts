@@ -15,6 +15,9 @@ export interface CountryInfo {
   domain?: string[];
   currency?: { name: string; symbol: string; code: string }[];
   camera_generation?: Record<string, string>;
+  bollards?: Bollard[];
+  signs?: RoadSign[];
+  plates?: LicensePlate[];
 }
 
 export interface Bollard {
