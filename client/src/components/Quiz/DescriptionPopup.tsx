@@ -18,34 +18,34 @@ const DescriptionPopup: React.FC<DescriptionPopupProps> = ({
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, x: 100, scale: 0.9 }}
-          animate={{ opacity: 1, x: 0, scale: 1 }}
-          exit={{ opacity: 0, x: 100, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
           transition={{ type: "spring", damping: 25, stiffness: 400 }}
-          className="fixed top-1/4 right-4 z-50 max-w-xs"
+          className="w-full bg-blue-50 rounded-lg shadow-md p-4 border-2 border-blue-200 flex"
         >
-          <div className="bg-white rounded-lg shadow-xl p-4 relative border-2 border-blue-200">
-            {/* Globe Icon */}
-            <div className="absolute -left-3 top-4 transform -translate-y-1/2">
-              <div className="bg-blue-500 rounded-full p-2 shadow-lg border-2 border-white">
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
+          {/* Globe Icon */}
+          <div className="flex-shrink-0 mr-3">
+            <div className="bg-blue-500 rounded-full p-2 shadow-md border-2 border-white">
+              <svg
+                className="w-5 h-5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
             </div>
+          </div>
 
+          <div className="flex-grow">
             {/* Title */}
-            <div className="text-center mb-1 pl-5">
+            <div className="mb-1">
               <h3 className="text-sm font-bold text-blue-600">Did you know?</h3>
             </div>
 
@@ -86,16 +86,16 @@ const DescriptionPopup: React.FC<DescriptionPopupProps> = ({
                 </a>
               </div>
             )}
+          </div>
 
-            {/* Close Button */}
-            <div className="mt-3 text-right">
-              <button
-                onClick={onClose}
-                className="px-2 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Got it
-              </button>
-            </div>
+          {/* Close Button */}
+          <div className="flex-shrink-0 ml-2">
+            <button
+              onClick={onClose}
+              className="p-1.5 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Got it
+            </button>
           </div>
         </motion.div>
       )}
@@ -103,4 +103,4 @@ const DescriptionPopup: React.FC<DescriptionPopupProps> = ({
   );
 };
 
-export default DescriptionPopup; 
+export default DescriptionPopup;

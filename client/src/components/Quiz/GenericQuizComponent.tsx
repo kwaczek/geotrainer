@@ -383,7 +383,7 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
 
   return (
     <div className="relative">
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6 relative">
         {/* Show debug info in development */}
         {process.env.NODE_ENV !== 'production' && (
           <div className="text-xs text-gray-500 mb-4">
@@ -550,7 +550,7 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
         
         {/* Next Question or View Results button */}
         {answered && (
-          <div className="flex justify-center my-6 border-t border-b border-gray-100 py-6">
+          <div className="flex justify-center my-6 border-t border-b border-gray-100 py-6 relative">
             <button
               ref={nextButtonRef}
               onClick={handleNextClick}
@@ -565,6 +565,18 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
           </div>
         )}
         
+        {/* Description Popup for smaller screens (positioned below) */}
+        {answered && showDescription && (
+          <div className="lg:hidden mt-6 mb-6 border-t border-b border-gray-100 py-6">
+            <DescriptionPopup
+              isVisible={showDescription}
+              description={question.metadata?.description || ''}
+              googleMapsUrl={question.metadata?.googleMapsUrl}
+              onClose={() => setShowDescription(false)}
+            />
+          </div>
+        )}
+        
         {/* Display CountryInfoCard when answered */}
         {answered && correctCountry && showCountryInfo && (
           <div className="mt-8 pt-4 border-t border-gray-200">
@@ -576,13 +588,17 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
         )}
       </div>
       
-      {/* Description Popup */}
-      <DescriptionPopup
-        isVisible={showDescription}
-        description={question.metadata?.description || ''}
-        googleMapsUrl={question.metadata?.googleMapsUrl}
-        onClose={() => setShowDescription(false)}
-      />
+      {/* Description Popup for larger screens (positioned next to the entire quiz element) */}
+      {answered && showDescription && (
+        <div className="hidden lg:block absolute top-1/4 left-full pl-8 xl:pl-12" style={{ minWidth: "320px", maxWidth: "400px" }}>
+          <DescriptionPopup
+            isVisible={showDescription}
+            description={question.metadata?.description || ''}
+            googleMapsUrl={question.metadata?.googleMapsUrl}
+            onClose={() => setShowDescription(false)}
+          />
+        </div>
+      )}
     </div>
   );
 };
