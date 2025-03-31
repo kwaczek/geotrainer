@@ -640,29 +640,22 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <button
           onClick={() => navigate('/')}
-          className="text-blue-600 hover:text-blue-800"
+          className="text-blue-600 hover:text-blue-800 flex items-center"
         >
-          ← Back to Home
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Home</span>
         </button>
         
-        <div className="text-lg font-semibold">
-          Score: {score}/{questionCount}
+        <div className="bg-blue-100 px-3 py-1 rounded-full text-sm font-medium text-blue-800 flex items-center">
+          <span>Question {currentQuestionNumber}/{customSettings.questionCount}</span>
+          <span className="mx-1.5 text-blue-500">•</span>
+          <span>Score: {score}</span>
         </div>
-      </div>
-      
-      {quizId && (
-        <div className="mb-4 text-sm text-gray-500 text-center">
-          Quiz ID: {quizId}
-        </div>
-      )}
-      
-      <div className="mb-4 text-center">
-        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-          Question {currentQuestionNumber} of {customSettings.questionCount}
-        </span>
       </div>
       
       {currentQuestion && (
