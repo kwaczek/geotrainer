@@ -276,6 +276,10 @@ const HomePage: React.FC = () => {
                   <span className="text-yellow-600 mr-1">•</span>
                   <span>Road Signs Quiz types</span>
                 </li>
+                <li className="flex items-start">
+                  <span className="text-green-600 mr-1">•</span>
+                  <span>'Did you know' section during quiz</span>
+                </li>
               </ul>
             </div>
             
