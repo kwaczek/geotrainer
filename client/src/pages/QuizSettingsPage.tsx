@@ -48,9 +48,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     
     if (settingsLoaded) return;
     
+    // Add 'languages' to the list of supported quiz types
     if (quizType === 'flags' || quizType === 'capitals' || 
         quizType === 'bollards' || quizType === 'licenseplates' ||
-        quizType === 'roadsigns') {
+        quizType === 'roadsigns' || quizType === 'languages') { 
       console.log(`Loading settings from localStorage for ${quizType}...`);
       
       try {
@@ -96,9 +97,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
       return;
     }
     
+    // Add 'languages' to the list of supported quiz types
     if (quizType && (quizType === 'flags' || quizType === 'capitals' || 
                      quizType === 'bollards' || quizType === 'licenseplates' ||
-                     quizType === 'roadsigns')) {
+                     quizType === 'roadsigns' || quizType === 'languages')) { 
       console.log('Saving settings to localStorage...');
       
       const currentSettings: StoredQuizSettings = {
@@ -155,6 +157,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           endpoint = '/api/licenseplates/count';
         } else if (quizType === 'roadsigns') {
           endpoint = '/api/roadsigns/count';
+        } else if (quizType === 'languages') { // Add endpoint for languages
+          endpoint = '/api/languages/count';
         }
         
         if (endpoint) {
@@ -271,7 +275,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
            quizConfig.type === 'flags' ? '🏳️' : 
            quizConfig.type === 'bollards' ? '🚧' : 
            quizConfig.type === 'licenseplates' ? '🚗' : 
-           quizConfig.type === 'roadsigns' ? '🚦' : '❓'}
+           quizConfig.type === 'roadsigns' ? '🚦' : 
+           quizConfig.type === 'languages' ? '🗣️' : '❓'}
         </div>
         <h1 className="text-3xl font-bold mb-1">{quizConfig.title}</h1>
         <p className="text-gray-600">{quizConfig.description}</p>

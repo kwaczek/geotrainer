@@ -9,7 +9,8 @@ import {
   getRandomCapitalQuestion,
   getRandomBollardQuestion,
   getRandomLicensePlateQuestion,
-  getRandomRoadSignQuestion
+  getRandomRoadSignQuestion,
+  getRandomLanguageQuestion
 } from './generators';
 
 /**
@@ -64,10 +65,10 @@ export const getNextQuestion = async (req: Request, res: Response) => {
     console.log(`Excluding previous entity IDs (${previousEntityIds.length}):`, previousEntityIds);
     
     // Validate quiz type
-    if (!quizType || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES, QuizType.ROADSIGNS].includes(quizType.toLowerCase() as QuizType)) {
+    if (!quizType || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES, QuizType.ROADSIGNS, QuizType.LANGUAGES].includes(quizType.toLowerCase() as QuizType)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid quiz type. Must be either "flags", "capitals", "bollards", "licenseplates", or "roadsigns"'
+        message: 'Invalid quiz type. Must be flags, capitals, bollards, licenseplates, roadsigns, or languages'
       });
     }
     
@@ -146,6 +147,9 @@ export const getNextQuestion = async (req: Request, res: Response) => {
           break;
         case QuizType.ROADSIGNS:
           question = await getRandomRoadSignQuestion(session.filters, previousEntityIds);
+          break;
+        case QuizType.LANGUAGES:
+          question = await getRandomLanguageQuestion(session.filters, previousEntityIds);
           break;
         default:
           return res.status(400).json({

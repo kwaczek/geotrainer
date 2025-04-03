@@ -69,5 +69,19 @@ export const QUIZ_CONFIGS: Record<QuizType, QuizConfig> = {
       imageField: 'imageUrl',
       correctAnswerField: 'countryName'
     }
+  },
+  languages: {
+    type: 'languages',
+    title: 'Languages Quiz',
+    description: 'Identify the country associated with a given language/script.',
+    hasImages: true,
+    questionTemplate: "Which country is primarily associated with this language/script?",
+    timeLimit: 30,
+    questionsPerQuiz: 10,
+    dataSource: {
+      endpoint: '/api/quiz-questions/languages',
+      imageField: 'imageUrl',
+      correctAnswerField: 'countryName'
+    }
   }
 }; 

@@ -386,46 +386,29 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     } else if (quizType === 'bollards' || quizType === 'licenseplates' || quizType === 'roadsigns') {
       // For bollards, license plates, and road signs, we can get the ID from metadata
       if (currentQuestion.metadata) {
-        // Initialize with empty string (will be replaced if valid ID found)
         let entityId = '';
-        
         if (quizType === 'bollards' && currentQuestion.metadata.bollardId) {
           entityId = String(currentQuestion.metadata.bollardId);
         } else if (quizType === 'licenseplates' && currentQuestion.metadata.licensePlateId) {
           entityId = String(currentQuestion.metadata.licensePlateId);
         } else if (quizType === 'roadsigns' && currentQuestion.metadata.roadSignId) {
           entityId = String(currentQuestion.metadata.roadSignId);
-        } else if (quizType === 'roadsigns') {
-          // Fallback for road signs, use the question ID
-          entityId = currentQuestionId;
+        } else if (quizType === 'roadsigns') { // Fallback for road signs uses question ID
+          entityId = currentQuestion.id;
         }
         
-        // For license plates, check if we need to add the question ID itself
-        // This is because some older questions might not have the licensePlateId in metadata
-        if (quizType === 'licenseplates' && !entityId && currentQuestionId) {
-          entityId = currentQuestionId;
-          console.log('Using question ID as license plate entity ID');
-        }
-        
-        if (entityId) {
-          if (!previousEntityIds.includes(entityId)) {
-            setPreviousEntityIds(prev => [...prev, entityId]);
-            console.log(`Adding entity ID from metadata to exclusion list for ${quizType}: ${entityId}`);
-          }
-        } else {
-          // Fallback to using the question ID if no valid entity ID found
-          if (currentQuestionId && !previousEntityIds.includes(currentQuestionId)) {
-            setPreviousEntityIds(prev => [...prev, currentQuestionId]);
-            console.log(`Fallback: Adding question ID to exclusion list for ${quizType}: ${currentQuestionId}`);
-          }
-        }
-      } else {
-        // Fallback to using the question ID if no metadata is available
-        if (currentQuestionId && !previousEntityIds.includes(currentQuestionId)) {
-          setPreviousEntityIds(prev => [...prev, currentQuestionId]);
-          console.log(`No metadata: Adding question ID to exclusion list for ${quizType}: ${currentQuestionId}`);
+        if (entityId && !previousEntityIds.includes(entityId)) {
+          setPreviousEntityIds(prev => [...prev, entityId]);
+          console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId}`);
         }
       }
+    } else if (quizType === 'languages') { // Separate check for languages
+        // For languages, the entity ID is the question ID itself
+        const entityId = currentQuestion.id;
+        if (entityId && !previousEntityIds.includes(entityId)) {
+          setPreviousEntityIds(prev => [...prev, entityId]);
+          console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId}`);
+        }
     }
     
     // Handle case where selected option might not be found (e.g., in write mode)

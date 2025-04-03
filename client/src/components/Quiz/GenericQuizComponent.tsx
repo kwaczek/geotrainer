@@ -252,36 +252,26 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
   const handleOptionClick = (optionId: string) => {
     if (answered) return;
     
-    const selectedOption = question.options.find(opt => opt.id === optionId);
-    if (!selectedOption) return;
+    const selected = question.options.find(opt => opt.id === optionId);
+    if (!selected) return;
     
-    setAnswered(true);
-    setSelectedOption(optionId);
-    
-    // Update both state and ref
-    const isCorrect = selectedOption.isCorrect;
-    setLastAnswerCorrect(isCorrect);
+    const isCorrect = selected.isCorrect;
     isAnswerCorrectRef.current = isCorrect;
+    setSelectedOption(optionId);
+    setAnswered(true);
+    setLastAnswerCorrect(isCorrect);
+    onAnswer(isCorrect, optionId);
     
-    // Debug logging for description popup
-    console.log('Answer submitted, has metadata:', !!question.metadata);
-    console.log('Description available:', question.metadata?.description);
-    
-    // Show description immediately if available
-    if (question.metadata?.description) {
-      console.log('Showing description popup');
-      setShowDescription(true);
-    } else {
-      console.log('No description available for this question');
+    // Show description popup if metadata exists
+    if (question.metadata?.languageName || question.metadata?.correctCountryName) {
+        setShowDescription(true);
     }
-    
+
     // Clear timer if it's running
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    
-    onAnswer(isCorrect, optionId);
   };
 
   const getOptionClass = (option: QuizOption) => {
@@ -313,88 +303,30 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
 
   // Handle write mode input submission
   const handleWriteAnswer = (isCorrect: boolean, inputText: string) => {
-    // Update both state and ref immediately before any other operations
+    if (answered) return;
+
+    console.log('Handling write answer:', isCorrect, inputText);
     isAnswerCorrectRef.current = isCorrect;
-    
-    // Store the result with the question ID to ensure it persists
-    setWriteModeResult({
-      questionId: question.id,
-      isCorrect: isCorrect,
-      userInput: inputText // Store what the user actually typed
-    });
-    
-    // Then update UI states
     setAnswered(true);
     setLastAnswerCorrect(isCorrect);
+    setWriteModeResult({ questionId: question.id, isCorrect, userInput: inputText });
     
-    // Show description if available, just like in multiple choice mode
-    if (question.metadata?.description) {
-      console.log('Showing description popup in write mode');
-      setShowDescription(true);
-    }
-    
-    // Find the correct option to get its ID and text (country name)
     const correctOption = question.options.find(opt => opt.isCorrect);
-    
-    if (!correctOption) {
-      console.error('Could not find correct option');
-      return;
+    if (correctOption) {
+      onAnswer(isCorrect, correctOption.id); 
     }
     
-    // Modify how we handle the option ID
-    let optionId;
-    if (isCorrect) {
-      // For correct answers, use the correct option's ID
-      optionId = correctOption.id;
-    } else {
-      // For incorrect answers, we want to store what the user actually typed
-      // But the API expects an option ID, so we'll pass the correct option ID
-      // along with a custom field to indicate what the user actually typed
-      // This avoids the random selection of incorrect options
-      optionId = correctOption.id + "|CUSTOM:" + inputText;
+    // Show description popup if metadata exists
+    if (question.metadata?.languageName || question.metadata?.correctCountryName) {
+        setShowDescription(true);
     }
-    
-    // Call the original onAnswer function with the result
-    onAnswer(isCorrect, optionId);
-    
-    // Show country info by fetching complete details
-    const fetchCountryDetails = async (countryName: string) => {
-      try {
-        // Start with basic info
-        const initialData = {
-          name: countryName,
-          flagUrl: quizType === 'flags' ? question.imageUrl : undefined
-        };
-        
-        // Show initial data immediately
-        setCorrectCountry(initialData);
-        setShowCountryInfo(true);
-        
-        // Then fetch complete details
-        try {
-          const encodedName = encodeURIComponent(countryName);
-          const response = await axios.get(`/api/countries/name/${encodedName}`);
-          
-          if (response.data && response.data.success) {
-            const { country } = response.data;
-            
-            // Update with complete information
-            setCorrectCountry({
-              ...country,
-              flagUrl: country.flagUrl || (quizType === 'flags' ? question.imageUrl : undefined)
-            });
-          }
-        } catch (error) {
-          console.log('Could not fetch additional country details, using basic info');
-        }
-      } catch (error) {
-        console.error('Error fetching country details:', error);
-      }
-    };
-    
-    // Fetch complete country details
-    fetchCountryDetails(correctOption.text);
-    
+
+    // Stop the timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
     // Focus the next button after submission
     setTimeout(() => {
       if (nextButtonRef.current) {
@@ -641,17 +573,13 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
                     </button>
                   </div>
                   
-                  {/* Description Popup - always in the same container */}
-                  {showDescription && question.metadata?.description && (
-                    <div className="flex-grow sm:max-w-md">
-                      <DescriptionPopup
-                        isVisible={showDescription}
-                        description={question.metadata.description}
-                        googleMapsUrl={question.metadata?.googleMapsUrl}
-                        onClose={() => setShowDescription(false)}
-                      />
-                    </div>
-                  )}
+                  {/* Description Popup - Conditionally rendered */}          
+                  <DescriptionPopup 
+                    isVisible={showDescription} // Use state to control visibility
+                    // Get description from metadata if available, otherwise fallback (or hide)
+                    description={question.metadata?.languageName || question.metadata?.description || 'No additional info available.'} 
+                    onClose={() => setShowDescription(false)}
+                  />
                 </div>
               )}
             </div>
@@ -826,16 +754,13 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
                     </button>
                   </div>
                   
-                  {showDescription && question.metadata?.description && (
-                    <div className="flex-grow sm:max-w-md">
-                      <DescriptionPopup
-                        isVisible={showDescription}
-                        description={question.metadata.description}
-                        googleMapsUrl={question.metadata?.googleMapsUrl}
-                        onClose={() => setShowDescription(false)}
-                      />
-                    </div>
-                  )}
+                  {/* Description Popup - Conditionally rendered */}          
+                  <DescriptionPopup 
+                    isVisible={showDescription} // Use state to control visibility
+                    // Get description from metadata if available, otherwise fallback (or hide)
+                    description={question.metadata?.languageName || question.metadata?.description || 'No additional info available.'} 
+                    onClose={() => setShowDescription(false)}
+                  />
                 </div>
               )}
             </div>

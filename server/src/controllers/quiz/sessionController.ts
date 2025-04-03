@@ -16,10 +16,10 @@ export const initQuizSession = async (req: Request, res: Response) => {
     const { type, userName, filters } = req.body;
     
     // Validate quiz type
-    if (!type || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES, QuizType.ROADSIGNS].includes(type.toLowerCase() as QuizType)) {
+    if (!type || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES, QuizType.ROADSIGNS, QuizType.LANGUAGES].includes(type.toLowerCase() as QuizType)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid quiz type. Must be either "flags", "capitals", "bollards", "licenseplates", or "roadsigns"'
+        message: 'Invalid quiz type. Must be flags, capitals, bollards, licenseplates, roadsigns, or languages'
       });
     }
     
