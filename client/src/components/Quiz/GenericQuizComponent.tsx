@@ -262,8 +262,8 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
     setLastAnswerCorrect(isCorrect);
     onAnswer(isCorrect, optionId);
     
-    // Show description popup if metadata exists
-    if (question.metadata?.languageName || question.metadata?.correctCountryName) {
+    // Show description popup if metadata description exists
+    if (question.metadata?.description) {
         setShowDescription(true);
     }
 
@@ -316,8 +316,8 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
       onAnswer(isCorrect, correctOption.id); 
     }
     
-    // Show description popup if metadata exists
-    if (question.metadata?.languageName || question.metadata?.correctCountryName) {
+    // Show description popup if metadata description exists
+    if (question.metadata?.description) {
         setShowDescription(true);
     }
 
@@ -576,8 +576,8 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
                   {/* Description Popup - Conditionally rendered */}          
                   <DescriptionPopup 
                     isVisible={showDescription} // Use state to control visibility
-                    // Get description from metadata if available, otherwise fallback (or hide)
-                    description={question.metadata?.languageName || question.metadata?.description || 'No additional info available.'} 
+                    // Use description from metadata if available
+                    description={question.metadata?.description || 'No additional info available.'} 
                     onClose={() => setShowDescription(false)}
                   />
                 </div>
@@ -757,8 +757,8 @@ const GenericQuizComponent: React.FC<GenericQuizComponentProps> = ({
                   {/* Description Popup - Conditionally rendered */}          
                   <DescriptionPopup 
                     isVisible={showDescription} // Use state to control visibility
-                    // Get description from metadata if available, otherwise fallback (or hide)
-                    description={question.metadata?.languageName || question.metadata?.description || 'No additional info available.'} 
+                    // Use description from metadata if available
+                    description={question.metadata?.description || 'No additional info available.'} 
                     onClose={() => setShowDescription(false)}
                   />
                 </div>
