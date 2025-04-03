@@ -92,40 +92,48 @@ export const getRandomLanguageQuestion = async (
   // Cast the result of aggregate to our specific type
   const results = await Language.aggregate<AggregatedLanguage>(aggregationPipeline).exec();
 
-  if (!results || results.length === 0) {
-    throw new Error('No matching language found for the given filters.');
+  // Add check for results[0] and its _id before proceeding
+  if (!results || results.length === 0 || !results[0]._id) {
+    throw new Error('No matching language found or result missing _id.');
   }
 
-  const randomLanguage = results[0]; // Now correctly typed as AggregatedLanguage
-  const correctCountry = randomLanguage.countryDetails[0]; // Now correctly typed as ICountry (with _id)
-
-  if (!correctCountry || !correctCountry._id) {
-    throw new Error(`Language ${randomLanguage._id.toString()} has invalid or missing associated country details.`);
+  const randomLanguage = results[0] as AggregatedLanguage; 
+  
+  if (!randomLanguage.countryDetails || randomLanguage.countryDetails.length === 0) {
+    throw new Error(`Language ${randomLanguage._id?.toString()} has no associated country details after filtering.`);
   }
 
-  // Get 3 incorrect options (Country names)
-  // correctCountry._id is now known to be ObjectId
+  const correctCountry = randomLanguage.countryDetails[0] as ICountry;
+
+  // Strengthen the check using instanceof ObjectId
+  if (!correctCountry || !(correctCountry._id instanceof Types.ObjectId)) {
+    throw new Error(`Language ${randomLanguage._id?.toString()} has invalid or missing associated country ObjectId.`);
+  }
+
   const incorrectOptions = await getRandomOptions(Country, correctCountry._id, 3, filters);
 
-  // Create the options array
   const options: QuizOption[] = [
     { id: correctCountry._id.toString(), text: correctCountry.name, isCorrect: true },
-    // Cast opt to ICountry to assure TS about _id
-    ...incorrectOptions.map((opt) => ({
-      id: (opt as ICountry)._id.toString(), 
-      text: (opt as ICountry).name, 
-      isCorrect: false 
-    }))
-  ].sort(() => Math.random() - 0.5); // Shuffle options
+    ...(incorrectOptions as ICountry[]).map((opt) => {
+      // Strengthen check inside map using instanceof ObjectId
+      const optionId = (opt && opt._id instanceof Types.ObjectId) ? opt._id.toString() : uuidv4();
+      const optionText = opt?.name ?? 'Unknown Country';
+      return {
+        id: optionId,
+        text: optionText, 
+        isCorrect: false
+      };
+    })
+  ].sort(() => Math.random() - 0.5); 
 
-  // Format the question
+  // randomLanguage._id is now strongly checked via results[0]._id check
   const question: QuizQuestion = {
     id: randomLanguage._id.toString(), 
     question: `Which country is primarily associated with this language/script?`, 
     imageUrl: randomLanguage.imageUrl,
     options: options,
     metadata: {
-      correctCountryId: correctCountry._id.toString(),
+      correctCountryId: correctCountry._id.toString(), // Checked above
       correctCountryName: correctCountry.name,
       languageName: randomLanguage.description,
       allCorrectCountryNames: randomLanguage.countryDetails.map(country => country.name)
