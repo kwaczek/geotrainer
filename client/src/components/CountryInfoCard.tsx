@@ -5,9 +5,11 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import {
   fetchBollardsByCountry, Bollard as BaseBollard,
   fetchLicensePlatesByCountry, LicensePlate as BaseLicensePlate,
-  fetchRoadSignsByCountry, RoadSign as BaseRoadSign
+  fetchRoadSignsByCountry, RoadSign as BaseRoadSign,
+  fetchLanguagesByCountry, Language as BaseLanguage
 } from '../services/countryService';
 import { getImageUrl } from '../config/apiConfig';
+import axios from 'axios';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -27,6 +29,15 @@ interface LicensePlate extends BaseLicensePlate {
 interface RoadSign extends BaseRoadSign {
   meaning?: string;
   notes?: string;
+}
+
+interface Language extends BaseLanguage {
+  notes?: string;
+}
+
+interface CountryDetails {
+  _id: string;
+  name: string;
 }
 
 interface CountryInfoCardProps {
@@ -69,10 +80,19 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
   const [signsError, setSignsError] = useState<string | null>(null);
   const [isSignsExpanded, setIsSignsExpanded] = useState<boolean>(true);
   
+  // Language State
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [loadingLanguages, setLoadingLanguages] = useState<boolean>(false);
+  const [languagesError, setLanguagesError] = useState<string | null>(null);
+  const [isLanguagesExpanded, setIsLanguagesExpanded] = useState<boolean>(true);
+  
   // State for selected items for modals
   const [selectedBollard, setSelectedBollard] = useState<Bollard | null>(null);
   const [selectedPlate, setSelectedPlate] = useState<LicensePlate | null>(null);
   const [selectedSign, setSelectedSign] = useState<RoadSign | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
+  const [languageCountries, setLanguageCountries] = useState<CountryDetails[]>([]);
+  const [loadingLanguageCountries, setLoadingLanguageCountries] = useState<boolean>(false);
   
   // Effect to fetch Bollards
   useEffect(() => {
@@ -146,16 +166,45 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
     }
   }, [country.id, isVisible]);
 
+  // Effect to fetch Languages
+  useEffect(() => {
+    if (isVisible && country.id) {
+      const fetchLanguages = async () => {
+        setLoadingLanguages(true);
+        setLanguagesError(null);
+        try {
+          const fetchedLanguages = await fetchLanguagesByCountry(country.id!);
+          setLanguages(fetchedLanguages);
+          setIsLanguagesExpanded(fetchedLanguages.length > 0);
+        } catch (error) {
+          console.error('Error fetching languages:', error);
+          setLanguagesError('Failed to load languages.');
+          setIsLanguagesExpanded(false);
+        } finally {
+          setLoadingLanguages(false);
+        }
+      };
+      fetchLanguages();
+    } else {
+      setLanguages([]); setLoadingLanguages(false); setLanguagesError(null); setIsLanguagesExpanded(false);
+    }
+  }, [country.id, isVisible]);
+
   // Handlers to open modals
   const handleBollardClick = (bollard: Bollard) => setSelectedBollard(bollard);
   const handlePlateClick = (plate: LicensePlate) => setSelectedPlate(plate);
   const handleSignClick = (sign: RoadSign) => setSelectedSign(sign);
+  const handleLanguageClick = (language: Language) => {
+    setSelectedLanguage(language);
+    setLanguageCountries([]);
+  };
 
   // Handlers to close modals
   const closeModal = () => {
     setSelectedBollard(null);
     setSelectedPlate(null);
     setSelectedSign(null);
+    setSelectedLanguage(null);
   };
 
   // Effect to handle Escape key closing modals
@@ -170,6 +219,31 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
       window.removeEventListener('keydown', handleEsc);
     };
   }, []); // Empty dependency array means this runs once on mount
+
+  // Effect to fetch countries for selected language
+  useEffect(() => {
+    const fetchLanguageCountries = async () => {
+      if (selectedLanguage && selectedLanguage.countries.length > 0) {
+        setLoadingLanguageCountries(true);
+        try {
+          const countryPromises = selectedLanguage.countries.map(countryId => 
+            axios.get(`/api/countries/${countryId}`)
+          );
+          const responses = await Promise.all(countryPromises);
+          const countries = responses
+            .filter(response => response.data && response.data.success)
+            .map(response => response.data.country as CountryDetails);
+          setLanguageCountries(countries);
+        } catch (error) {
+          console.error('Error fetching language countries:', error);
+        } finally {
+          setLoadingLanguageCountries(false);
+        }
+      }
+    };
+
+    fetchLanguageCountries();
+  }, [selectedLanguage]);
 
   // Early return if not visible
   if (!isVisible) return null;
@@ -772,6 +846,68 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
                    </div>
                  )}
               </div>
+
+              {/* Related Languages Card */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+                 {/* Collapsible Header */}
+                 <button 
+                   onClick={() => setIsLanguagesExpanded(!isLanguagesExpanded)}
+                   className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50 transition-colors rounded-t-lg"
+                   disabled={loadingLanguages || languages.length === 0}
+                   aria-expanded={isLanguagesExpanded}
+                 >
+                   <h3 className="text-lg font-semibold text-gray-800">
+                     Related Languages 
+                     {!loadingLanguages && `(${languages.length})`}
+                   </h3>
+                   {!loadingLanguages && languages.length > 0 && (
+                      <svg className={`w-5 h-5 text-gray-500 transition-transform ${isLanguagesExpanded ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                   )}
+                   {loadingLanguages && (
+                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
+                   )}
+                 </button>
+                 
+                 {/* Collapsible Content */} 
+                 {isLanguagesExpanded && (
+                   <div className="p-4 border-t border-gray-100">
+                     {loadingLanguages ? (
+                       <div className="text-center py-4 text-gray-600">Loading...</div>
+                     ) : languagesError ? (
+                       <div className="text-red-600 text-center py-4">{languagesError}</div>
+                     ) : languages.length > 0 ? (
+                       <div className="space-y-2">
+                         {languages.map(language => (
+                           <button 
+                             key={language._id} 
+                             onClick={() => handleLanguageClick(language)}
+                             className="w-full flex items-center p-2 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                             aria-label={`View details for language ${language.description || language._id}`}
+                           >
+                             {/* Image */} 
+                             <div className="flex-shrink-0 w-32 h-20 bg-gray-100 rounded-sm overflow-hidden mr-4 flex items-center justify-center">
+                               <img 
+                                 src={getImageUrl(language.imageUrl)} 
+                                 alt={language.description || `Language ${language._id}`}
+                                 className="max-w-full max-h-full object-contain" 
+                               />      
+                             </div>
+                             {/* Details */} 
+                             <div className="flex-grow text-left min-w-0">
+                                <p className="text-sm font-medium text-gray-800 truncate" title={language.description}>{language.description || 'Language/Script'}</p>
+                                {/* Optionally add more details here if needed */}
+                             </div>
+                           </button>
+                         ))}
+                       </div>
+                     ) : (
+                       <div className="text-gray-500 text-center py-4">No related languages found.</div>
+                     )}
+                   </div>
+                 )}
+              </div>
             </div>
           )}
         </div>
@@ -982,6 +1118,69 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
                   </a>
                 </div>
               )}
+              
+              <div className="mt-6 text-center text-sm text-gray-500">
+                Press ESC key or click outside to close
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Language Detail Modal */} 
+      {selectedLanguage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm" onClick={closeModal}>
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">Language/Script Details</h3>
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={closeModal}
+                  aria-label="Close modal"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <img 
+                  src={getImageUrl(selectedLanguage.imageUrl)} 
+                  alt={`Language script/image for ${selectedLanguage.description}`}
+                  className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
+                />
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                <p className="text-gray-600">{selectedLanguage.description || 'No description available.'}</p>
+              </div>
+              
+              {/* Countries section */} 
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Countries where this language/script is primarily used</h4>
+                {loadingLanguageCountries ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin h-4 w-4 border-b-2 border-blue-500 mr-2"></div>
+                    <span className="text-gray-500">Loading countries...</span>
+                  </div>
+                ) : languageCountries.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {languageCountries.map(country => (
+                      <div key={country._id} className="bg-gray-50 p-2 rounded flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>{country.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No country information available.</p>
+                )}
+              </div>
               
               <div className="mt-6 text-center text-sm text-gray-500">
                 Press ESC key or click outside to close

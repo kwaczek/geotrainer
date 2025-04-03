@@ -16,6 +16,7 @@ interface QuizCounts {
   bollards: number;
   licenseplates: number;
   roadsigns: number;
+  languages: number;
 }
 
 const HomePage: React.FC = () => {
@@ -33,7 +34,8 @@ const HomePage: React.FC = () => {
     countries: 0,
     bollards: 0,
     licenseplates: 0,
-    roadsigns: 0
+    roadsigns: 0,
+    languages: 0
   });
   
   // Quiz categories
@@ -43,6 +45,7 @@ const HomePage: React.FC = () => {
     { id: 'bollards', name: 'Bollards', description: 'Identify countries by their road bollards', icon: '🚧', supportsFilters: true },
     { id: 'licenseplates', name: 'License Plates', description: 'Recognize license plates from around the world', icon: '🚗', supportsFilters: true },
     { id: 'roadsigns', name: 'Road Signs', description: 'Learn to identify road signs by country', icon: '🚸', supportsFilters: true },
+    { id: 'languages', name: 'Languages', description: 'Identify the language spoken in a country', icon: '🗣️', supportsFilters: true },
   ];
   
   // Fetch continents and quiz counts on component mount
@@ -64,21 +67,30 @@ const HomePage: React.FC = () => {
     
     const fetchQuizCounts = async () => {
       try {
-        const [countriesRes, bollardsRes, licenseplatesRes, roadsignsRes] = await Promise.all([
+        const [countriesRes, bollardsRes, licenseplatesRes, roadsignsRes, languagesRes] = await Promise.all([
           axios.get('/api/countries/count'),
           axios.get('/api/bollards/count'),
           axios.get('/api/licenseplates/count'),
-          axios.get('/api/roadsigns/count')
+          axios.get('/api/roadsigns/count'),
+          axios.get('/api/languages/count')
         ]);
         
         setQuizCounts({
           countries: countriesRes.data.success ? countriesRes.data.count : 0,
           bollards: bollardsRes.data.success ? bollardsRes.data.count : 0,
           licenseplates: licenseplatesRes.data.success ? licenseplatesRes.data.count : 0,
-          roadsigns: roadsignsRes.data.success ? roadsignsRes.data.count : 0
+          roadsigns: roadsignsRes.data.success ? roadsignsRes.data.count : 0,
+          languages: languagesRes.data.success ? languagesRes.data.count : 0
         });
       } catch (error) {
         console.error('Error fetching quiz counts:', error);
+        setQuizCounts(prevCounts => ({
+          countries: prevCounts.countries || 0,
+          bollards: prevCounts.bollards || 0,
+          licenseplates: prevCounts.licenseplates || 0,
+          roadsigns: prevCounts.roadsigns || 0,
+          languages: 0
+        }));
       }
     };
     
@@ -109,6 +121,8 @@ const HomePage: React.FC = () => {
       return quizCounts.licenseplates;
     } else if (categoryId === 'roadsigns') {
       return quizCounts.roadsigns;
+    } else if (categoryId === 'languages') {
+      return quizCounts.languages;
     }
     return 0;
   };
@@ -166,6 +180,12 @@ const HomePage: React.FC = () => {
                 buttonBg = 'bg-purple-500';
                 buttonHover = 'hover:bg-purple-600';
                 break;
+              case 'languages':
+                bgGradient = 'from-orange-50 to-orange-100';
+                iconBg = 'bg-orange-100';
+                buttonBg = 'bg-orange-500';
+                buttonHover = 'hover:bg-orange-600';
+                break;
               default:
                 bgGradient = 'from-gray-50 to-gray-100';
                 iconBg = 'bg-gray-100';
@@ -196,7 +216,9 @@ const HomePage: React.FC = () => {
                               ? 'bollards' 
                               : category.id === 'licenseplates' 
                                 ? 'license plates' 
-                                : 'road signs'}
+                                : category.id === 'roadsigns'
+                                  ? 'road signs'
+                                  : 'languages'}
                         </span>
                       )}
                     </div>
@@ -289,6 +311,10 @@ const HomePage: React.FC = () => {
                 <li className="flex items-start">
                   <span className="text-yellow-600 mr-1">•</span>
                   <span>Road Signs Quiz (uploading more data)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-yellow-600 mr-1">•</span>
+                  <span>Languages Quiz (uploading more data)</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-yellow-600 mr-1">•</span>

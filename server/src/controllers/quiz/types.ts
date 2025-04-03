@@ -43,15 +43,20 @@ export interface PopulatedQuestionAttempt {
   imageUrl?: string;
 }
 
+// Interface for quiz options
+export interface QuizOption {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+  imageUrl?: string; // Optional image for options (e.g., flags)
+}
+
 // Generic question result interface
 export interface QuizQuestion {
   id: string;
   question: string;
   imageUrl?: string;
-  options: Array<{
-    id: string;
-    text: string;
-    isCorrect: boolean;
-  }>;
+  description?: string; // Add optional description field for language quizzes
+  options: QuizOption[]; // Use QuizOption interface
   metadata?: any;
 } 

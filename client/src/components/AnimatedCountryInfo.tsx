@@ -5,7 +5,11 @@ import { getImageUrl } from '../config/apiConfig';
 import BollardGallery from './BollardGallery';
 import RoadSignGallery from './RoadSignGallery';
 import LicensePlateGallery from './LicensePlateGallery';
-import { fetchRoadSignsByCountry, RoadSign } from '../services/countryService';
+import LanguageGallery from './LanguageGallery';
+import { 
+  fetchRoadSignsByCountry, RoadSign, 
+  fetchLanguagesByCountry, Language
+} from '../services/countryService';
 
 // Define some custom styles for scrollbars
 const scrollbarStyles = `
@@ -54,11 +58,17 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
   const [selectedBollard, setSelectedBollard] = useState<any>(null);
   const [selectedSign, setSelectedSign] = useState<any>(null);
   const [selectedPlate, setSelectedPlate] = useState<any>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState<any>(null);
   
   // State for Road Signs data fetching
   const [signs, setSigns] = useState<RoadSign[]>([]);
   const [loadingSigns, setLoadingSigns] = useState<boolean>(false);
   const [signsError, setSignsError] = useState<string | null>(null);
+  
+  // State for Languages data fetching
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [loadingLanguages, setLoadingLanguages] = useState<boolean>(false);
+  const [languagesError, setLanguagesError] = useState<string | null>(null);
   
   // Refs for tracking components
   const containerRef = useRef<HTMLDivElement>(null);
@@ -132,23 +142,48 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
     }
   }, [country?.id, isVisible]);
   
+  // Fetch languages when component becomes visible
+  useEffect(() => {
+    if (isVisible && country?.id) {
+      const fetchLangs = async () => {
+        setLoadingLanguages(true);
+        setLanguagesError(null);
+        try {
+          const fetchedLanguages = await fetchLanguagesByCountry(country.id);
+          setLanguages(fetchedLanguages);
+        } catch (error) {
+          console.error('Error fetching languages:', error);
+          setLanguagesError('Failed to load languages.');
+        } finally {
+          setLoadingLanguages(false);
+        }
+      };
+      fetchLangs();
+    } else {
+      setLanguages([]);
+      setLoadingLanguages(false);
+      setLanguagesError(null);
+    }
+  }, [country?.id, isVisible]);
+  
   // Memoize the closeAllModals function to use in the effect dependency array
   const closeAllModalsCallback = useCallback(() => {
     setSelectedBollard(null);
     setSelectedSign(null);
     setSelectedPlate(null);
+    setSelectedLanguage(null);
   }, []);
   
   // Add event listener for Escape key to close modals
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && (selectedBollard || selectedSign || selectedPlate)) {
+      if (event.key === 'Escape' && (selectedBollard || selectedSign || selectedPlate || selectedLanguage)) {
         closeAllModalsCallback();
       }
     };
     
     // Only add the event listener when a modal is open
-    if (selectedBollard || selectedSign || selectedPlate) {
+    if (selectedBollard || selectedSign || selectedPlate || selectedLanguage) {
       document.addEventListener('keydown', handleEscKey);
     }
     
@@ -156,7 +191,7 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
     return () => {
       document.removeEventListener('keydown', handleEscKey);
     };
-  }, [selectedBollard, selectedSign, selectedPlate, closeAllModalsCallback]);
+  }, [selectedBollard, selectedSign, selectedPlate, selectedLanguage, closeAllModalsCallback]);
   
   // If not visible or no country data, don't render
   if (!isVisible || !country) return null;
@@ -312,8 +347,8 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
             <div className="w-1/4 pt-16 pr-6 pointer-events-auto space-y-4 overflow-auto max-h-screen pb-20" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0, 0, 0, 0.2) transparent' }}>
               {/* Map */}
               <div 
-                className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${
-                  animationPhase >= 4 ? 'transform translate-x-0' : 'transform translate-x-full opacity-0'
+                className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${ 
+                  animationPhase >= 4 ? 'transform translate-x-0' : 'transform translate-x-full opacity-0' 
                 }`}
               >
                 <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Map</h3>
@@ -322,11 +357,11 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                 </div>
               </div>
               
-              {/* Camera Generation - New section */}
+              {/* Camera Generation */}
               {country.camera_generation && Object.keys(country.camera_generation).length > 0 && (
                 <div 
-                  className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${
-                    animationPhase >= 4 ? 'transform translate-x-0 delay-200' : 'transform translate-x-full opacity-0'
+                  className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${ 
+                    animationPhase >= 4 ? 'transform translate-x-0 delay-200' : 'transform translate-x-full opacity-0' 
                   }`}
                 >
                   <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Street View Coverage</h3>
@@ -347,15 +382,15 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                 </div>
               )}
               
-              {/* Bollards */}
-              <div 
-                className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${
-                  animationPhase >= 5 ? 'transform translate-x-0' : 'transform translate-x-full opacity-0'
-                }`}
-              >
-                <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Bollards</h3>
-                <div className="flex flex-col">
-                  {country.bollards && country.bollards.length > 0 ? (
+              {/* Bollards - Conditionally render */}
+              {country.bollards && country.bollards.length > 0 && (
+                <div 
+                  className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${ 
+                    animationPhase >= 5 ? 'transform translate-x-0' : 'transform translate-x-full opacity-0' 
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Bollards</h3>
+                  <div className="flex flex-col">
                     <div className="w-full">
                       <div 
                         className="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mb-2 cursor-pointer hover:shadow-md transition-shadow"
@@ -371,7 +406,6 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                           <div className="text-sm text-gray-500">Image not available</div>
                         )}
                       </div>
-                      
                       {country.bollards[0]?.description && (
                         <div className="text-sm text-gray-700 mt-2 mb-1">
                           {country.bollards[0].description.length > 100 
@@ -380,7 +414,6 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                           }
                         </div>
                       )}
-                      
                       <div className="flex justify-between items-center mt-2">
                         <div className="text-xs text-gray-500">
                           {country.bollards.length} bollard{country.bollards.length !== 1 ? 's' : ''} found
@@ -396,37 +429,23 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-center text-gray-500 py-2">
-                      {isCorrectAnswer 
-                        ? 'No bollard data available for this country' 
-                        : 'Answer correctly to see more information!'}
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
               
-              {/* Signs */}
-              <div 
-                className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${
-                  animationPhase >= 6 ? 'transform translate-x-0' : 'transform translate-x-full opacity-0'
-                }`}
-              >
-                <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Signs</h3>
-                <div className="flex flex-col">
-                  {loadingSigns ? (
-                    <div className="flex justify-center items-center py-4">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
-                    </div>
-                  ) : signsError ? (
-                    <div className="text-center text-red-500 py-2">
-                      Error loading signs data. Please try again.
-                    </div>
-                  ) : (signs && signs.length > 0) || (country.signs && country.signs.length > 0) ? (
-                    <div className="w-full">
+              {/* Signs - Conditionally render */}
+              {((signs && signs.length > 0) || (country.signs && country.signs.length > 0)) && !loadingSigns && (
+                <div 
+                  className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${ 
+                    animationPhase >= 6 ? 'transform translate-x-0' : 'transform translate-x-full opacity-0' 
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Signs</h3>
+                  <div className="flex flex-col">
+                     <div className="w-full">
                       <div 
                         className="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mb-2 cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => setSelectedSign(signs[0] || country.signs[0])}
+                        onClick={() => setSelectedSign(signs.length > 0 ? signs[0] : country.signs[0])} 
                       >
                         {(signs[0] || country.signs[0])?.imageUrl ? (
                           <img 
@@ -438,7 +457,6 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                           <div className="text-sm text-gray-500">Image not available</div>
                         )}
                       </div>
-                      
                       {(signs[0] || country.signs[0])?.description && (
                         <div className="text-sm text-gray-700 mt-2 mb-1">
                           {(signs[0] || country.signs[0]).description.length > 100
@@ -447,7 +465,6 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                           }
                         </div>
                       )}
-                      
                       <div className="flex justify-between items-center mt-2">
                         <div className="text-xs text-gray-500">
                           {(signs.length || country.signs.length)} road sign{(signs.length || country.signs.length) !== 1 ? 's' : ''} found
@@ -463,25 +480,19 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-center text-gray-500 py-2">
-                      {isCorrectAnswer 
-                        ? 'No road sign data available for this country' 
-                        : 'Answer correctly to see more information!'}
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
               
-              {/* License Plates */}
-              <div 
-                className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${
-                  animationPhase >= 6 ? 'transform translate-x-0 delay-200' : 'transform translate-x-full opacity-0'
-                }`}
-              >
-                <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">License Plates</h3>
-                <div className="flex flex-col">
-                  {country.plates && country.plates.length > 0 ? (
+              {/* License Plates - Conditionally render */}
+              {country.plates && country.plates.length > 0 && (
+                <div 
+                  className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${ 
+                    animationPhase >= 6 ? 'transform translate-x-0 delay-200' : 'transform translate-x-full opacity-0' 
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">License Plates</h3>
+                  <div className="flex flex-col">
                     <div className="w-full">
                       <div 
                         className="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mb-2 cursor-pointer hover:shadow-md transition-shadow"
@@ -497,7 +508,6 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                           <div className="text-sm text-gray-500">Image not available</div>
                         )}
                       </div>
-                      
                       {country.plates[0]?.description && (
                         <div className="text-sm text-gray-700 mt-2 mb-1">
                           {country.plates[0].description.length > 100
@@ -506,7 +516,6 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                           }
                         </div>
                       )}
-                      
                       <div className="flex justify-between items-center mt-2">
                         <div className="text-xs text-gray-500">
                           {country.plates.length} license plate{country.plates.length !== 1 ? 's' : ''} found
@@ -522,15 +531,61 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-center text-gray-500 py-2">
-                      {isCorrectAnswer 
-                        ? 'No license plate data available for this country' 
-                        : 'Answer correctly to see more information!'}
-                    </div>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
+              
+              {/* Languages Card - Conditionally render */}
+              {languages && languages.length > 0 && !loadingLanguages && (
+                <div 
+                  className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${ 
+                    animationPhase >= 6 ? 'transform translate-x-0 delay-400' : 'transform translate-x-full opacity-0'
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Languages / Scripts</h3>
+                  <div className="flex flex-col">
+                    <div className="w-full">
+                      <div 
+                        className="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mb-2 cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => setSelectedLanguage(languages[0])}
+                      >
+                        {languages[0]?.imageUrl ? (
+                          <img 
+                            src={getImageUrl(languages[0].imageUrl)} 
+                            alt={`Language/script in ${country.name}`} 
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        ) : (
+                          <div className="text-sm text-gray-500">Image not available</div>
+                        )}
+                      </div>
+                      {languages[0]?.description && (
+                        <div className="text-sm text-gray-700 mt-2 mb-1">
+                          {languages[0].description.length > 100
+                            ? languages[0].description.substring(0, 100) + '...'
+                            : languages[0].description
+                          }
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center mt-2">
+                        <div className="text-xs text-gray-500">
+                          {languages.length} language{languages.length !== 1 ? 's' : ''} found
+                        </div>
+                        <button 
+                          onClick={() => setSelectedLanguage(languages)}
+                          className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                        >
+                          <span>View All</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
@@ -720,6 +775,56 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                           <p className="text-gray-600">{selectedPlate.years}</p>
                         </div>
                       )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Language Gallery Modal - New */} 
+        {selectedLanguage && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={closeAllModalsCallback}>
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800">Languages/Scripts in {country.name}</h3>
+                  <button 
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={closeAllModalsCallback}
+                    aria-label="Close modal"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="overflow-auto">
+                  {Array.isArray(selectedLanguage) ? (
+                    <LanguageGallery languages={selectedLanguage} isLoading={false} />
+                  ) : (
+                    <div className="max-w-2xl mx-auto">
+                      <div className="mb-4">
+                        <img 
+                          src={getImageUrl(selectedLanguage.imageUrl)} 
+                          alt={`Language/script in ${country.name}`}
+                          className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
+                        />
+                      </div>
+                      
+                      <div className="mb-4">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                        <p className="text-gray-600">{selectedLanguage.description || 'No description available'}</p>
+                      </div>
+                      
+                      {/* Note: We might need to fetch country details here if not already loaded */} 
+                      {/* Placeholder for country list if needed for single view */}
+                      {/* <div className="mb-4">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Countries</h4>
+                        <p className="text-gray-500"> Country details here... </p>
+                      </div> */}
                     </div>
                   )}
                 </div>

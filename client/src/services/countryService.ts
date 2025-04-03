@@ -18,6 +18,7 @@ export interface CountryInfo {
   bollards?: Bollard[];
   signs?: RoadSign[];
   plates?: LicensePlate[];
+  languages?: Language[];
 }
 
 export interface Bollard {
@@ -48,6 +49,15 @@ export interface RoadSign {
   createdAt: string;
   updatedAt: string;
   types: string[];
+}
+
+export interface Language {
+  _id: string;
+  imageUrl: string;
+  description: string;
+  countries: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const fetchCountryDetails = async (countryName: string, initialFlagUrl?: string): Promise<CountryInfo> => {
@@ -118,6 +128,20 @@ export const fetchRoadSignsByCountry = async (countryId: string): Promise<RoadSi
     return [];
   } catch (error) {
     console.error('Error fetching road signs for country:', error);
+    return [];
+  }
+};
+
+export const fetchLanguagesByCountry = async (countryId: string): Promise<Language[]> => {
+  try {
+    const response = await axios.get(`/api/languages/country/${countryId}`);
+    
+    if (response.data && response.data.success) {
+      return response.data.languages;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching languages for country:', error);
     return [];
   }
 };
