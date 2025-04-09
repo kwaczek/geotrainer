@@ -138,3 +138,65 @@ export const deleteGoogleCar = async (req: Request, res: Response): Promise<void
 
 // Note: getBollardsByCountry and getBollardCount are omitted as they weren't explicitly requested for Google Cars yet.
 // They could be added later by adapting the logic similarly. 
+
+// Get count of google cars with optional filters
+export const getGoogleCarCount = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { continent, in_geoguessr } = req.query;
+        
+        // Build a more sophisticated query based on filters
+        let countryQuery: any = {};
+        
+        // If continent filter is applied, find countries in that continent
+        if (continent && continent !== 'all') {
+            countryQuery.continent = continent;
+        }
+        
+        // If GeoGuessr filter is applied, find countries in GeoGuessr
+        if (in_geoguessr === 'true') {
+            countryQuery.in_geoguessr = true;
+        }
+        
+        // Find countries matching all applied filters
+        let countryIds: mongoose.Types.ObjectId[] = [];
+        
+        // Only query the database for countries if we have filters
+        if (Object.keys(countryQuery).length > 0) {
+            const filteredCountries = await Country.find(countryQuery).select('_id');
+            countryIds = filteredCountries.map(country => country._id as mongoose.Types.ObjectId);
+            
+            // If no countries match the filters, return 0 count
+            if (countryIds.length === 0) {
+                res.status(200).json({
+                    success: true,
+                    count: 0
+                });
+                return;
+            }
+            
+            // Find google cars where at least one of the associated countries matches the filter
+            const count = await GoogleCar.countDocuments({
+                countries: { $in: countryIds }
+            });
+            
+            res.status(200).json({
+                success: true,
+                count
+            });
+        } else {
+            // No filters applied, count all google cars
+            const count = await GoogleCar.countDocuments({});
+            
+            res.status(200).json({
+                success: true,
+                count
+            });
+        }
+    } catch (error) {
+        console.error('Error counting google cars:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error counting google cars' 
+        });
+    }
+}; 
