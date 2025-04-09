@@ -35,8 +35,8 @@ const GoogleCarAdmin: React.FC = () => {
 
     const fetchCountries = async () => {
         try {
-            // Reusing the bollard countries endpoint, change if there's a specific one for google cars
-            const response = await axios.get('/api/bollards/countries'); 
+            // Changed endpoint to use the google-cars specific countries route
+            const response = await axios.get('/api/google-cars/countries'); 
             setCountries(response.data);
         } catch (error) {
             console.error('Error fetching countries:', error);

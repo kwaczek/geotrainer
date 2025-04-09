@@ -26,6 +26,7 @@ import BollardsPage from './pages/BollardsPage';
 import PlatesPage from './pages/PlatesPage';
 import RoadSignsPage from './pages/RoadSignsPage';
 import LanguagesPage from './pages/LanguagesPage';
+import GoogleCarsPage from './pages/GoogleCarsPage';
 import ContributePage from './pages/ContributePage';
 
 // Placeholder components for now
@@ -103,6 +104,7 @@ const App: React.FC = () => {
               <Route path="/plates" element={<PlatesPage />} />
               <Route path="/roadsigns" element={<RoadSignsPage />} />
               <Route path="/languages" element={<LanguagesPage />} />
+              <Route path="/google-cars" element={<GoogleCarsPage />} />
               
               {/* Quiz Routes */}
               <Route path="/quiz/:id" element={<QuizRouter />} />

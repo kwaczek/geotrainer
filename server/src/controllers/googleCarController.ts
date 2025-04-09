@@ -2,16 +2,28 @@ import { Request, Response } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import GoogleCar from '../models/GoogleCar'; // Changed import
 import Country from '../models/Country'; // Keep Country import for populating
 import mongoose from 'mongoose';
 import { getGeoGuessrCountries as fetchGeoGuessrCountries } from './bollardController'; // Import the shared function
 
+// Ensure the upload directory exists
+const uploadDir = path.resolve(__dirname, '../../uploads/google-cars'); // Resolve absolute path
+if (!existsSync(uploadDir)) {
+    try {
+        mkdirSync(uploadDir, { recursive: true }); // Create directory if it doesn't exist
+        console.log(`Created directory: ${uploadDir}`);
+    } catch (error) {
+        console.error(`Error creating directory ${uploadDir}:`, error);
+        // Optionally handle the error, e.g., by preventing server start or logging severity
+    }
+}
+
 // Configure multer for file upload - Adjusted destination
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/google-cars/'); // Changed destination folder
+        cb(null, uploadDir); // Use the resolved absolute path
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
