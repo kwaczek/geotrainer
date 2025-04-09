@@ -178,5 +178,3 @@ To submit the site to Google Search Console:
 3. Verify ownership (using one of the provided methods)
 4. Submit your sitemap.xml file
 5. Request indexing of important URLs
-
-Be sure to also submit your site to other search engines like Bing Webmaster Tools.
