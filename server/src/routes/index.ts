@@ -2,6 +2,7 @@ import express from 'express';
 import userRoutes from './userRoutes';
 import quizResultRoutes from './quizResultRoutes';
 import countryRoutes from './countryRoutes';
+import unifiedQuizRoutes from './unifiedQuiz';
 import bollardRoutes from './bollardRoutes';
 import licensePlateRoutes from './licensePlateRoutes';
 import roadSignRoutes from './roadSignRoutes';
@@ -19,5 +20,8 @@ router.use('/licenseplates', licensePlateRoutes);
 router.use('/roadsigns', roadSignRoutes);
 router.use('/languages', languageRoutes);
 router.use('/google-cars', googleCarRoutes);
+
+// Register unified quiz routes
+router.use('/', unifiedQuizRoutes);
 
 export default router;
