@@ -48,10 +48,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     
     if (settingsLoaded) return;
     
-    // Add 'languages' to the list of supported quiz types
+    // Add 'languages' and 'cars' to the list of supported quiz types
     if (quizType === 'flags' || quizType === 'capitals' || 
         quizType === 'bollards' || quizType === 'licenseplates' ||
-        quizType === 'roadsigns' || quizType === 'languages') { 
+        quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars') { 
       console.log(`Loading settings from localStorage for ${quizType}...`);
       
       try {
@@ -97,10 +97,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
       return;
     }
     
-    // Add 'languages' to the list of supported quiz types
+    // Add 'languages' and 'cars' to the list of supported quiz types
     if (quizType && (quizType === 'flags' || quizType === 'capitals' || 
                      quizType === 'bollards' || quizType === 'licenseplates' ||
-                     quizType === 'roadsigns' || quizType === 'languages')) { 
+                     quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars')) { 
       console.log('Saving settings to localStorage...');
       
       const currentSettings: StoredQuizSettings = {
@@ -159,6 +159,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           endpoint = '/api/roadsigns/count';
         } else if (quizType === 'languages') { // Add endpoint for languages
           endpoint = '/api/languages/count';
+        } else if (quizType === 'cars') { // Add endpoint for google cars
+          endpoint = '/api/google-cars/count';
         }
         
         if (endpoint) {
@@ -276,7 +278,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
            quizConfig.type === 'bollards' ? '🚧' : 
            quizConfig.type === 'licenseplates' ? '🚗' : 
            quizConfig.type === 'roadsigns' ? '🚦' : 
-           quizConfig.type === 'languages' ? '🗣️' : '❓'}
+           quizConfig.type === 'languages' ? '🗣️' : 
+           quizConfig.type === 'cars' ? '🚙' : '❓'}
         </div>
         <h1 className="text-3xl font-bold mb-1">{quizConfig.title}</h1>
         <p className="text-gray-600">{quizConfig.description}</p>
