@@ -12,6 +12,7 @@ import LicensePlateAdmin from './pages/LicensePlateAdmin';
 import CountryAdmin from './pages/CountryAdmin';
 import RoadSignAdmin from './pages/RoadSignAdmin';
 import LanguageAdmin from './pages/LanguageAdmin';
+import GoogleCarAdmin from './pages/GoogleCarAdmin';
 import Header from './components/Header';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -117,6 +118,7 @@ const App: React.FC = () => {
                 <Route path="/admin/countries" element={<CountryAdmin />} />
                 <Route path="/admin/roadsigns" element={<RoadSignAdmin />} />
                 <Route path="/admin/languages" element={<LanguageAdmin />} />
+                <Route path="/admin/google-cars" element={<GoogleCarAdmin />} />
               </Route>
               
               <Route path="*" element={<NotFoundPage />} />
