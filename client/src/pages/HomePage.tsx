@@ -329,8 +329,8 @@ const HomePage: React.FC = () => {
                   <span>Road Signs Quiz (uploading more data)</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-600 mr-1">•</span>
-                  <span>Performance optimizations for faster loading</span>
+                  <span className="text-blue-600 mr-1">•</span>
+                  <span>Google Cars Quiz (uploading more data)</span>
                 </li>
               </ul>
             </div>
@@ -344,7 +344,7 @@ const HomePage: React.FC = () => {
               <ul className="space-y-1 text-xs">
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-1">•</span>
-                  <span>Cars Quiz for vehicle identification</span>
+                  <span>Poles quiz</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-1">•</span>
