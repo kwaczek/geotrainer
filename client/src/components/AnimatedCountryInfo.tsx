@@ -8,7 +8,8 @@ import LicensePlateGallery from './LicensePlateGallery';
 import LanguageGallery from './LanguageGallery';
 import { 
   fetchRoadSignsByCountry, RoadSign, 
-  fetchLanguagesByCountry, Language
+  fetchLanguagesByCountry, Language,
+  fetchGoogleCarsByCountry, GoogleCar
 } from '../services/countryService';
 
 // Define some custom styles for scrollbars
@@ -59,6 +60,7 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
   const [selectedSign, setSelectedSign] = useState<any>(null);
   const [selectedPlate, setSelectedPlate] = useState<any>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<any>(null);
+  const [selectedGoogleCar, setSelectedGoogleCar] = useState<any>(null);
   
   // State for Road Signs data fetching
   const [signs, setSigns] = useState<RoadSign[]>([]);
@@ -69,6 +71,11 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
   const [languages, setLanguages] = useState<Language[]>([]);
   const [loadingLanguages, setLoadingLanguages] = useState<boolean>(false);
   const [languagesError, setLanguagesError] = useState<string | null>(null);
+  
+  // State for Google Cars data fetching
+  const [googleCars, setGoogleCars] = useState<GoogleCar[]>([]);
+  const [loadingGoogleCars, setLoadingGoogleCars] = useState<boolean>(false);
+  const [googleCarsError, setGoogleCarsError] = useState<string | null>(null);
   
   // Refs for tracking components
   const containerRef = useRef<HTMLDivElement>(null);
@@ -166,24 +173,49 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
     }
   }, [country?.id, isVisible]);
   
+  // Fetch Google Cars when component becomes visible
+  useEffect(() => {
+    if (isVisible && country?.id) {
+      const fetchGoogleCars = async () => {
+        setLoadingGoogleCars(true);
+        setGoogleCarsError(null);
+        try {
+          const fetchedGoogleCars = await fetchGoogleCarsByCountry(country.id);
+          setGoogleCars(fetchedGoogleCars);
+        } catch (error) {
+          console.error('Error fetching Google cars:', error);
+          setGoogleCarsError('Failed to load Google cars.');
+        } finally {
+          setLoadingGoogleCars(false);
+        }
+      };
+      fetchGoogleCars();
+    } else {
+      setGoogleCars([]);
+      setLoadingGoogleCars(false);
+      setGoogleCarsError(null);
+    }
+  }, [country?.id, isVisible]);
+  
   // Memoize the closeAllModals function to use in the effect dependency array
   const closeAllModalsCallback = useCallback(() => {
     setSelectedBollard(null);
     setSelectedSign(null);
     setSelectedPlate(null);
     setSelectedLanguage(null);
+    setSelectedGoogleCar(null);
   }, []);
   
   // Add event listener for Escape key to close modals
   useEffect(() => {
     const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && (selectedBollard || selectedSign || selectedPlate || selectedLanguage)) {
+      if (event.key === 'Escape' && (selectedBollard || selectedSign || selectedPlate || selectedLanguage || selectedGoogleCar)) {
         closeAllModalsCallback();
       }
     };
     
     // Only add the event listener when a modal is open
-    if (selectedBollard || selectedSign || selectedPlate || selectedLanguage) {
+    if (selectedBollard || selectedSign || selectedPlate || selectedLanguage || selectedGoogleCar) {
       document.addEventListener('keydown', handleEscKey);
     }
     
@@ -191,7 +223,7 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
     return () => {
       document.removeEventListener('keydown', handleEscKey);
     };
-  }, [selectedBollard, selectedSign, selectedPlate, selectedLanguage, closeAllModalsCallback]);
+  }, [selectedBollard, selectedSign, selectedPlate, selectedLanguage, selectedGoogleCar, closeAllModalsCallback]);
   
   // If not visible or no country data, don't render
   if (!isVisible || !country) return null;
@@ -586,6 +618,57 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                 </div>
               )}
 
+              {/* Google Cars - Conditionally render */}
+              {googleCars && googleCars.length > 0 && !loadingGoogleCars && (
+                <div 
+                  className={`bg-white rounded-lg shadow-md p-4 transition-all duration-500 ease-out ${ 
+                    animationPhase >= 6 ? 'transform translate-x-0 delay-600' : 'transform translate-x-full opacity-0' 
+                  }`}
+                >
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Google Cars</h3>
+                  <div className="flex flex-col">
+                    <div className="w-full">
+                      <div 
+                        className="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden mb-2 cursor-pointer hover:shadow-md transition-shadow"
+                        onClick={() => setSelectedGoogleCar(googleCars[0])}
+                      >
+                        {googleCars[0]?.imageUrl ? (
+                          <img 
+                            src={getImageUrl(googleCars[0].imageUrl)} 
+                            alt={`Google Car in ${country.name}`} 
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        ) : (
+                          <div className="text-sm text-gray-500">Image not available</div>
+                        )}
+                      </div>
+                      {googleCars[0]?.description && (
+                        <div className="text-sm text-gray-700 mt-2 mb-1">
+                          {googleCars[0].description.length > 100
+                            ? googleCars[0].description.substring(0, 100) + '...'
+                            : googleCars[0].description
+                          }
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center mt-2">
+                        <div className="text-xs text-gray-500">
+                          {googleCars.length} Google car{googleCars.length !== 1 ? 's' : ''} found
+                        </div>
+                        <button 
+                          onClick={() => setSelectedGoogleCar(googleCars)}
+                          className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                        >
+                          <span>View All</span>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </div>
@@ -832,6 +915,124 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
             </div>
           </div>
         )}
+        
+        {/* Google Car Gallery Modal */}
+        {selectedGoogleCar && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={closeAllModalsCallback}>
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800">Google Cars in {country.name}</h3>
+                  <button 
+                    className="text-gray-500 hover:text-gray-700"
+                    onClick={closeAllModalsCallback}
+                    aria-label="Close modal"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                
+                <div className="overflow-auto">
+                  {Array.isArray(selectedGoogleCar) ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {selectedGoogleCar.map((car) => (
+                        <div 
+                          key={car._id} 
+                          className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                        >
+                          <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={getImageUrl(car.imageUrl)} 
+                              alt={car.description || `Google Car in ${country.name}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.onerror = null;
+                                target.src = '/images/placeholder.png';
+                              }}
+                            />
+                          </div>
+                          <div className="p-3">
+                            <h4 className="font-medium text-gray-800 mb-1 truncate" title={car.description}>
+                              {car.description || 'Google Car'}
+                            </h4>
+                            {car.generation && (
+                              <p className="text-xs text-gray-500 mb-1">
+                                Generation: {car.generation}
+                              </p>
+                            )}
+                            {car.googleMapsUrl && (
+                              <a 
+                                href={car.googleMapsUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-600 hover:text-blue-800 flex items-center mt-2"
+                              >
+                                <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                                View on Google Maps
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="max-w-2xl mx-auto">
+                      <div className="mb-4">
+                        <img 
+                          src={getImageUrl(selectedGoogleCar.imageUrl)} 
+                          alt={`Google Car in ${country.name}`}
+                          className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
+                        />
+                      </div>
+                      
+                      <div className="mb-4">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                        <p className="text-gray-600">{selectedGoogleCar.description || 'No description available'}</p>
+                      </div>
+                      
+                      {selectedGoogleCar.generation && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-2">Generation</h4>
+                          <p className="text-gray-600">{selectedGoogleCar.generation}</p>
+                        </div>
+                      )}
+                      
+                      {selectedGoogleCar.year && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-2">Year</h4>
+                          <p className="text-gray-600">{selectedGoogleCar.year}</p>
+                        </div>
+                      )}
+                      
+                      {selectedGoogleCar.googleMapsUrl && (
+                        <div className="mb-4">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-2">Location</h4>
+                          <a 
+                            href={selectedGoogleCar.googleMapsUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 flex items-center"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            View on Google Maps
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   }
@@ -959,6 +1160,20 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
           <div className="text-center text-gray-500">
             {isCorrectAnswer 
               ? 'Click View Full Details below to see more information about road signs in this country.' 
+              : 'Answer correctly to see more information!'}
+          </div>
+        </div>
+        
+        {/* Google Cars */}
+        <div 
+          className={`bg-white rounded-lg shadow-md p-4 ${
+            animationPhase >= 6 ? 'animate-slideInRight' : 'transform translate-x-full'
+          }`}
+        >
+          <h3 className="text-lg font-semibold text-gray-800 mb-3 border-b pb-2">Google Cars</h3>
+          <div className="text-center text-gray-500">
+            {isCorrectAnswer 
+              ? 'Click View Full Details below to see more information about Google cars in this country.' 
               : 'Answer correctly to see more information!'}
           </div>
         </div>
