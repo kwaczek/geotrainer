@@ -448,6 +448,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
                 { id: 'bus', label: '🚌 Bus', description: 'Bus stops and bus-related signage.' },
                 { id: 'post', label: '🏛️ Sign Post', description: 'Sign posts and mounting structures.' },
                 { id: 'town', label: '🏘️ Town', description: 'Town entrance and exit signs.' },
+                { id: 'road marker', label: '🗺️ Road Marker', description: 'Markers indicating roads or routes.' },
                 { id: 'other', label: '📍 Other', description: 'Other miscellaneous road signs.' },
                 // Add more types here if needed
               ].map((signType) => (
