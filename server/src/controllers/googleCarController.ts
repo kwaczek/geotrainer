@@ -139,6 +139,38 @@ export const deleteGoogleCar = async (req: Request, res: Response): Promise<void
 // Note: getBollardsByCountry and getBollardCount are omitted as they weren't explicitly requested for Google Cars yet.
 // They could be added later by adapting the logic similarly. 
 
+// Get Google Cars by country ID
+export const getGoogleCarsByCountry = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { countryId } = req.params;
+        
+        // Validate if the id is a valid MongoDB ObjectId
+        if (!mongoose.Types.ObjectId.isValid(countryId)) {
+            res.status(400).json({ 
+                success: false,
+                message: 'Invalid country ID format' 
+            });
+            return;
+        }
+        
+        // Find Google Cars that include this country
+        const googleCars = await GoogleCar.find({ 
+            countries: { $in: [countryId] } 
+        }).sort('-createdAt');
+        
+        res.status(200).json({
+            success: true,
+            googleCars
+        });
+    } catch (error) {
+        console.error('Error fetching Google Cars by country:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Failed to fetch Google Cars for this country' 
+        });
+    }
+};
+
 // Get count of google cars with optional filters
 export const getGoogleCarCount = async (req: Request, res: Response): Promise<void> => {
     try {

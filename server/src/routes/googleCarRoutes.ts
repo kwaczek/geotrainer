@@ -1,6 +1,6 @@
 import express from 'express';
 // Import the necessary controller functions for Google Cars
-import { uploadGoogleCar, createGoogleCar, getAllGoogleCars, deleteGoogleCar, getGeoGuessrCountries, getGoogleCarCount } from '../controllers/googleCarController';
+import { uploadGoogleCar, createGoogleCar, getAllGoogleCars, deleteGoogleCar, getGeoGuessrCountries, getGoogleCarCount, getGoogleCarsByCountry } from '../controllers/googleCarController';
 import { requireApiKey } from '../middleware/apiKeyMiddleware';
 
 const router = express.Router();
@@ -16,7 +16,7 @@ router.get('/countries', getGeoGuessrCountries);
 // Public route to get the count of google cars (supports filtering)
 router.get('/count', getGoogleCarCount);
 
-// Note: Public routes like /country/:countryId are not included yet,
-// as they were not part of the initial request for Google Cars.
+// Route to get Google Cars by country
+router.get('/country/:countryId', getGoogleCarsByCountry);
 
 export default router; 

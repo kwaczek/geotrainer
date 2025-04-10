@@ -19,6 +19,7 @@ export interface CountryInfo {
   signs?: RoadSign[];
   plates?: LicensePlate[];
   languages?: Language[];
+  googleCars?: GoogleCar[];
 }
 
 export interface Bollard {
@@ -55,6 +56,18 @@ export interface Language {
   _id: string;
   imageUrl: string;
   description: string;
+  countries: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GoogleCar {
+  _id: string;
+  imageUrl: string;
+  description: string;
+  googleMapsUrl?: string;
+  generation?: string;
+  year?: string;
   countries: string[];
   createdAt: string;
   updatedAt: string;
@@ -142,6 +155,20 @@ export const fetchLanguagesByCountry = async (countryId: string): Promise<Langua
     return [];
   } catch (error) {
     console.error('Error fetching languages for country:', error);
+    return [];
+  }
+};
+
+export const fetchGoogleCarsByCountry = async (countryId: string): Promise<GoogleCar[]> => {
+  try {
+    const response = await axios.get(`/api/google-cars/country/${countryId}`);
+    
+    if (response.data && response.data.success) {
+      return response.data.googleCars;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching Google cars for country:', error);
     return [];
   }
 };
