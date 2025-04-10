@@ -17,6 +17,7 @@ interface QuizCounts {
   licenseplates: number;
   roadsigns: number;
   languages: number;
+  cars: number;
 }
 
 const HomePage: React.FC = () => {
@@ -35,7 +36,8 @@ const HomePage: React.FC = () => {
     bollards: 0,
     licenseplates: 0,
     roadsigns: 0,
-    languages: 0
+    languages: 0,
+    cars: 0
   });
   
   // Quiz categories
@@ -43,9 +45,10 @@ const HomePage: React.FC = () => {
     { id: 'capitals', name: 'Capitals', description: 'Match capitals to their countries', icon: '🏙️', supportsFilters: true },
     { id: 'flags', name: 'Flags', description: 'Test your knowledge of country flags', icon: '🏳️', supportsFilters: true },
     { id: 'bollards', name: 'Bollards', description: 'Identify countries by their road bollards', icon: '🚧', supportsFilters: true },
-    { id: 'licenseplates', name: 'License Plates', description: 'Recognize license plates from around the world', icon: '🚗', supportsFilters: true },
+    { id: 'licenseplates', name: 'License Plates', description: 'Recognize license plates from around the world', icon: '🪪', supportsFilters: true },
     { id: 'roadsigns', name: 'Road Signs', description: 'Learn to identify road signs by country', icon: '🚸', supportsFilters: true },
     { id: 'languages', name: 'Languages', description: 'Identify the language spoken in a country', icon: '🗣️', supportsFilters: true },
+    { id: 'cars', name: 'Google Cars', description: 'Identify countries by the Google Street View car', icon: '🚙', supportsFilters: true },
   ];
   
   // Fetch continents and quiz counts on component mount
@@ -67,12 +70,13 @@ const HomePage: React.FC = () => {
     
     const fetchQuizCounts = async () => {
       try {
-        const [countriesRes, bollardsRes, licenseplatesRes, roadsignsRes, languagesRes] = await Promise.all([
+        const [countriesRes, bollardsRes, licenseplatesRes, roadsignsRes, languagesRes, carsRes] = await Promise.all([
           axios.get('/api/countries/count'),
           axios.get('/api/bollards/count'),
           axios.get('/api/licenseplates/count'),
           axios.get('/api/roadsigns/count'),
-          axios.get('/api/languages/count')
+          axios.get('/api/languages/count'),
+          axios.get('/api/google-cars/count')
         ]);
         
         setQuizCounts({
@@ -80,7 +84,8 @@ const HomePage: React.FC = () => {
           bollards: bollardsRes.data.success ? bollardsRes.data.count : 0,
           licenseplates: licenseplatesRes.data.success ? licenseplatesRes.data.count : 0,
           roadsigns: roadsignsRes.data.success ? roadsignsRes.data.count : 0,
-          languages: languagesRes.data.success ? languagesRes.data.count : 0
+          languages: languagesRes.data.success ? languagesRes.data.count : 0,
+          cars: carsRes.data.success ? carsRes.data.count : 0
         });
       } catch (error) {
         console.error('Error fetching quiz counts:', error);
@@ -89,7 +94,8 @@ const HomePage: React.FC = () => {
           bollards: prevCounts.bollards || 0,
           licenseplates: prevCounts.licenseplates || 0,
           roadsigns: prevCounts.roadsigns || 0,
-          languages: 0
+          languages: prevCounts.languages || 0,
+          cars: 0
         }));
       }
     };
@@ -123,6 +129,8 @@ const HomePage: React.FC = () => {
       return quizCounts.roadsigns;
     } else if (categoryId === 'languages') {
       return quizCounts.languages;
+    } else if (categoryId === 'cars') {
+      return quizCounts.cars;
     }
     return 0;
   };
@@ -186,6 +194,12 @@ const HomePage: React.FC = () => {
                 buttonBg = 'bg-orange-500';
                 buttonHover = 'hover:bg-orange-600';
                 break;
+              case 'cars':
+                bgGradient = 'from-cyan-50 to-cyan-100';
+                iconBg = 'bg-cyan-100';
+                buttonBg = 'bg-cyan-500';
+                buttonHover = 'hover:bg-cyan-600';
+                break;
               default:
                 bgGradient = 'from-gray-50 to-gray-100';
                 iconBg = 'bg-gray-100';
@@ -218,7 +232,9 @@ const HomePage: React.FC = () => {
                                 ? 'license plates' 
                                 : category.id === 'roadsigns'
                                   ? 'road signs'
-                                  : 'languages'}
+                                  : category.id === 'languages'
+                                    ? 'languages'
+                                    : 'cars'}
                         </span>
                       )}
                     </div>

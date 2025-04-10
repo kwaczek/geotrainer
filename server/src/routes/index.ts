@@ -7,6 +7,7 @@ import bollardRoutes from './bollardRoutes';
 import licensePlateRoutes from './licensePlateRoutes';
 import roadSignRoutes from './roadSignRoutes';
 import languageRoutes from './languageRoutes';
+import googleCarRoutes from './googleCarRoutes';
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.use('/bollards', bollardRoutes);
 router.use('/licenseplates', licensePlateRoutes);
 router.use('/roadsigns', roadSignRoutes);
 router.use('/languages', languageRoutes);
+router.use('/google-cars', googleCarRoutes);
 
 // Register unified quiz routes
 router.use('/', unifiedQuizRoutes);

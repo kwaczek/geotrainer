@@ -12,6 +12,7 @@ import LicensePlateAdmin from './pages/LicensePlateAdmin';
 import CountryAdmin from './pages/CountryAdmin';
 import RoadSignAdmin from './pages/RoadSignAdmin';
 import LanguageAdmin from './pages/LanguageAdmin';
+import GoogleCarAdmin from './pages/GoogleCarAdmin';
 import Header from './components/Header';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -25,6 +26,7 @@ import BollardsPage from './pages/BollardsPage';
 import PlatesPage from './pages/PlatesPage';
 import RoadSignsPage from './pages/RoadSignsPage';
 import LanguagesPage from './pages/LanguagesPage';
+import GoogleCarsPage from './pages/GoogleCarsPage';
 import ContributePage from './pages/ContributePage';
 
 // Placeholder components for now
@@ -40,7 +42,7 @@ const QuizRouter: React.FC = () => {
   const location = useLocation();
   
   // Validate that the quiz type is supported
-  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages'].includes(id);
+  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars'].includes(id);
   
   // For roadsigns, immediately navigate to a session URL to ensure consistency
   useEffect(() => {
@@ -73,7 +75,7 @@ const QuizSessionRouter: React.FC = () => {
   const { type, sessionId } = useParams<{ type: string; sessionId: string }>();
   
   // Validate that the quiz type is supported
-  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages'].includes(type);
+  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars'].includes(type);
   
   if (isValidQuizType && sessionId) {
     return <GenericQuizPage quizType={type as QuizType} sessionId={sessionId} />;
@@ -102,6 +104,7 @@ const App: React.FC = () => {
               <Route path="/plates" element={<PlatesPage />} />
               <Route path="/roadsigns" element={<RoadSignsPage />} />
               <Route path="/languages" element={<LanguagesPage />} />
+              <Route path="/google-cars" element={<GoogleCarsPage />} />
               
               {/* Quiz Routes */}
               <Route path="/quiz/:id" element={<QuizRouter />} />
@@ -117,6 +120,7 @@ const App: React.FC = () => {
                 <Route path="/admin/countries" element={<CountryAdmin />} />
                 <Route path="/admin/roadsigns" element={<RoadSignAdmin />} />
                 <Route path="/admin/languages" element={<LanguageAdmin />} />
+                <Route path="/admin/google-cars" element={<GoogleCarAdmin />} />
               </Route>
               
               <Route path="*" element={<NotFoundPage />} />

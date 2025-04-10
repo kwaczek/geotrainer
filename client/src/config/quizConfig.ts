@@ -83,5 +83,19 @@ export const QUIZ_CONFIGS: Record<QuizType, QuizConfig> = {
       imageField: 'imageUrl',
       correctAnswerField: 'countryName'
     }
+  },
+  cars: {
+    type: 'cars',
+    title: 'Google Cars Quiz',
+    description: 'Identify countries by the Google Street View car.',
+    hasImages: true,
+    questionTemplate: "In which country can you find this Google Street View car?",
+    timeLimit: 30,
+    questionsPerQuiz: 10,
+    dataSource: {
+      endpoint: '/api/quiz-questions/cars',
+      imageField: 'imageUrl',
+      correctAnswerField: 'countryName'
+    }
   }
 }; 
