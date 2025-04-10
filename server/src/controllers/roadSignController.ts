@@ -183,6 +183,59 @@ export const deleteRoadSign = async (req: Request, res: Response): Promise<void>
     }
 };
 
+export const updateRoadSign = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            res.status(400).json({ message: 'Invalid road sign ID' });
+            return;
+        }
+
+        const roadSign = await RoadSign.findById(id);
+        
+        if (!roadSign) {
+            res.status(404).json({ message: 'Road sign not found' });
+            return;
+        }
+
+        const { description, countries, googleMapsUrl, types } = req.body;
+
+        // Parse the JSON strings sent from the client
+        const countriesArray = countries ? JSON.parse(countries) : roadSign.countries;
+        const typesArray = types ? JSON.parse(types) : roadSign.types;
+        
+        // Update the road sign
+        const updatedRoadSign = await RoadSign.findByIdAndUpdate(
+            id,
+            {
+                description: description || roadSign.description,
+                googleMapsUrl: googleMapsUrl || roadSign.googleMapsUrl,
+                countries: countriesArray,
+                types: typesArray
+            },
+            { new: true }
+        ).populate({
+            path: 'countries',
+            select: '_id name code flagUrl',
+            model: 'Country'
+        });
+
+        res.status(200).json({ 
+            success: true, 
+            message: 'Road sign updated successfully',
+            roadSign: updatedRoadSign
+        });
+    } catch (error) {
+        console.error('Error updating road sign:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating road sign', 
+            error: (error as Error).message 
+        });
+    }
+};
+
 export const getRoadSignCount = async (req: Request, res: Response): Promise<void> => {
     try {
         const { continent, in_geoguessr, types } = req.query;

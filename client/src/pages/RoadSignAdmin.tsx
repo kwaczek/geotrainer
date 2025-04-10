@@ -30,6 +30,8 @@ const RoadSignAdmin: React.FC = () => {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   
   // Form state
   const [image, setImage] = useState<File | null>(null);
@@ -73,6 +75,41 @@ const RoadSignAdmin: React.FC = () => {
     }
   };
   
+  // Load a road sign into the form for editing
+  const loadSignForEdit = (sign: RoadSign) => {
+    setEditMode(true);
+    setEditId(sign._id);
+    setDescription(sign.description || '');
+    setGoogleMapsUrl(sign.googleMapsUrl || '');
+    
+    // Set selected countries
+    const countryIds = sign.countries.map(country => country._id);
+    setSelectedCountries(countryIds);
+    
+    // Set selected types
+    setSelectedTypes(sign.types || []);
+    
+    // Scroll to top of the form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  // Reset form
+  const resetForm = () => {
+    setEditMode(false);
+    setEditId(null);
+    setImage(null);
+    setDescription('');
+    setGoogleMapsUrl('');
+    setSelectedCountries([]);
+    setSelectedTypes([]);
+    
+    // Clear file input
+    const fileInput = document.getElementById('file-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+  
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -96,65 +133,90 @@ const RoadSignAdmin: React.FC = () => {
     setError('');
     setSuccess('');
     
+    // Get API key from localStorage
+    const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
+    
+    if (!apiKey) {
+      setError('API key not found. Please log in again.');
+      setLoading(false);
+      return;
+    }
+    
     try {
-      // Validate form
-      if (!image) {
-        throw new Error('Please select an image');
-      }
-      
-      if (selectedCountries.length === 0) {
-        throw new Error('Please select at least one country');
-      }
-      
-      // Create form data
-      const formData = new FormData();
-      formData.append('image', image);
-      formData.append('description', description);
-      formData.append('googleMapsUrl', googleMapsUrl);
-      formData.append('countries', JSON.stringify(selectedCountries));
-      
-      // Directly use the selectedTypes state
-      formData.append('types', JSON.stringify(selectedTypes));
-      
-      // Get API key from localStorage
-      const apiKey = localStorage.getItem('apiKey') || process.env.REACT_APP_ADMIN_API_KEY;
-      
-      if (!apiKey) {
-        throw new Error('API key not found. Please log in again.');
-      }
-      
-      // Submit the form
-      const response = await axios.post('/api/roadsigns/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'X-API-Key': apiKey
-        }
-      });
-      
-      if (response.data.success) {
-        setSuccess('Road sign uploaded successfully!');
-        
-        // Reset form
-        setImage(null);
-        setDescription('');
-        setGoogleMapsUrl('');
-        setSelectedCountries([]);
-        setSelectedTypes([]);
-        
-        // Clear file input
-        const fileInput = document.getElementById('file-input') as HTMLInputElement;
-        if (fileInput) {
-          fileInput.value = '';
+      if (editMode) {
+        // Update existing road sign
+        if (!editId) {
+          throw new Error('No road sign ID found for editing');
         }
         
-        // Refresh road signs list
-        fetchRoadSigns();
+        if (selectedCountries.length === 0) {
+          throw new Error('Please select at least one country');
+        }
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('description', description);
+        formData.append('googleMapsUrl', googleMapsUrl);
+        formData.append('countries', JSON.stringify(selectedCountries));
+        formData.append('types', JSON.stringify(selectedTypes));
+        
+        // If there's a new image, add it
+        if (image) {
+          formData.append('image', image);
+        }
+        
+        // Submit the update
+        const response = await axios.put(`/api/roadsigns/${editId}`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-API-Key': apiKey
+          }
+        });
+        
+        if (response.data.success) {
+          setSuccess('Road sign updated successfully!');
+          resetForm();
+          fetchRoadSigns();
+        } else {
+          throw new Error(response.data.message || 'Failed to update road sign');
+        }
       } else {
-        throw new Error(response.data.message || 'Failed to upload road sign');
+        // Create new road sign
+        if (!image) {
+          throw new Error('Please select an image');
+        }
+        
+        if (selectedCountries.length === 0) {
+          throw new Error('Please select at least one country');
+        }
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('image', image);
+        formData.append('description', description);
+        formData.append('googleMapsUrl', googleMapsUrl);
+        formData.append('countries', JSON.stringify(selectedCountries));
+        formData.append('types', JSON.stringify(selectedTypes));
+        
+        // Submit the form
+        const response = await axios.post('/api/roadsigns/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'X-API-Key': apiKey
+          }
+        });
+        
+        if (response.data.success) {
+          setSuccess('Road sign uploaded successfully!');
+          resetForm();
+          fetchRoadSigns();
+        } else {
+          throw new Error(response.data.message || 'Failed to upload road sign');
+        }
       }
     } catch (error: any) {
-      console.error('Error uploading road sign:', error);
-      setError(error.message || 'Failed to upload road sign. Please try again.');
+      console.error('Error submitting road sign:', error);
+      setError(error.message || 'Failed to process road sign. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -213,19 +275,38 @@ const RoadSignAdmin: React.FC = () => {
       
       {/* Upload form */}
       <form onSubmit={handleSubmit} className="mb-8 p-4 border rounded-lg bg-white shadow">
-        <div className="mb-4">
-          <label className="block mb-2">
-            Image:
-            <input
-              id="file-input"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="mt-1 block w-full"
-              required
-            />
-          </label>
-        </div>
+        <h2 className="text-xl font-semibold mb-4">{editMode ? 'Edit Road Sign' : 'Add New Road Sign'}</h2>
+        
+        {!editMode && (
+          <div className="mb-4">
+            <label className="block mb-2">
+              Image:
+              <input
+                id="file-input"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="mt-1 block w-full"
+                required={!editMode}
+              />
+            </label>
+          </div>
+        )}
+        
+        {editMode && (
+          <div className="mb-4">
+            <label className="block mb-2">
+              Update Image (optional):
+              <input
+                id="file-input"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="mt-1 block w-full"
+              />
+            </label>
+          </div>
+        )}
         
         <div className="mb-4">
           <label className="block mb-2">
@@ -424,6 +505,21 @@ const RoadSignAdmin: React.FC = () => {
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
+                  checked={selectedTypes.includes('road marker')}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedTypes([...selectedTypes, 'road marker']);
+                    } else {
+                      setSelectedTypes(selectedTypes.filter(t => t !== 'road marker'));
+                    }
+                  }}
+                  className="form-checkbox"
+                />
+                <span>Road Marker</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
                   checked={selectedTypes.includes('other')}
                   onChange={(e) => {
                     if (e.target.checked) {
@@ -457,13 +553,25 @@ const RoadSignAdmin: React.FC = () => {
           </div>
         </div>
         
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
-        >
-          {loading ? 'Uploading...' : 'Upload Road Sign'}
-        </button>
+        <div className="flex space-x-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+          >
+            {loading ? 'Processing...' : editMode ? 'Update Road Sign' : 'Upload Road Sign'}
+          </button>
+          
+          {editMode && (
+            <button
+              type="button"
+              onClick={resetForm}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            >
+              Cancel Edit
+            </button>
+          )}
+        </div>
       </form>
       
       {/* Road signs list */}
@@ -514,7 +622,13 @@ const RoadSignAdmin: React.FC = () => {
                 Added: {new Date(sign.createdAt).toLocaleDateString()}
               </div>
               
-              <div className="absolute top-2 right-2">
+              <div className="absolute top-2 right-2 flex space-x-2">
+                <button
+                  onClick={() => loadSignForEdit(sign)}
+                  className="bg-yellow-500 text-white px-2 py-1 rounded text-sm hover:bg-yellow-600"
+                >
+                  Edit
+                </button>
                 <button
                   onClick={() => handleDelete(sign._id)}
                   disabled={deleting === sign._id}
