@@ -18,6 +18,7 @@ interface QuizCounts {
   roadsigns: number;
   languages: number;
   cars: number;
+  poles: number;
 }
 
 const HomePage: React.FC = () => {
@@ -37,7 +38,8 @@ const HomePage: React.FC = () => {
     licenseplates: 0,
     roadsigns: 0,
     languages: 0,
-    cars: 0
+    cars: 0,
+    poles: 0
   });
   
   // Quiz categories
@@ -49,6 +51,7 @@ const HomePage: React.FC = () => {
     { id: 'roadsigns', name: 'Road Signs', description: 'Learn to identify road signs by country', icon: '🚸', supportsFilters: true },
     { id: 'languages', name: 'Languages', description: 'Identify the language spoken in a country', icon: '🗣️', supportsFilters: true },
     { id: 'cars', name: 'Google Cars', description: 'Identify countries by the Google Street View car', icon: '🚙', supportsFilters: true },
+    { id: 'poles', name: 'Poles', description: 'Identify utility poles by country', icon: '⚡️', supportsFilters: true },
   ];
   
   // Fetch continents and quiz counts on component mount
@@ -70,13 +73,14 @@ const HomePage: React.FC = () => {
     
     const fetchQuizCounts = async () => {
       try {
-        const [countriesRes, bollardsRes, licenseplatesRes, roadsignsRes, languagesRes, carsRes] = await Promise.all([
+        const [countriesRes, bollardsRes, licenseplatesRes, roadsignsRes, languagesRes, carsRes, polesRes] = await Promise.all([
           axios.get('/api/countries/count'),
           axios.get('/api/bollards/count'),
           axios.get('/api/licenseplates/count'),
           axios.get('/api/roadsigns/count'),
           axios.get('/api/languages/count'),
-          axios.get('/api/google-cars/count')
+          axios.get('/api/google-cars/count'),
+          axios.get('/api/poles/count')
         ]);
         
         setQuizCounts({
@@ -85,7 +89,8 @@ const HomePage: React.FC = () => {
           licenseplates: licenseplatesRes.data.success ? licenseplatesRes.data.count : 0,
           roadsigns: roadsignsRes.data.success ? roadsignsRes.data.count : 0,
           languages: languagesRes.data.success ? languagesRes.data.count : 0,
-          cars: carsRes.data.success ? carsRes.data.count : 0
+          cars: carsRes.data.success ? carsRes.data.count : 0,
+          poles: polesRes.data.success ? polesRes.data.count : 0
         });
       } catch (error) {
         console.error('Error fetching quiz counts:', error);
@@ -95,7 +100,8 @@ const HomePage: React.FC = () => {
           licenseplates: prevCounts.licenseplates || 0,
           roadsigns: prevCounts.roadsigns || 0,
           languages: prevCounts.languages || 0,
-          cars: 0
+          cars: prevCounts.cars || 0,
+          poles: prevCounts.poles || 0
         }));
       }
     };
@@ -131,6 +137,8 @@ const HomePage: React.FC = () => {
       return quizCounts.languages;
     } else if (categoryId === 'cars') {
       return quizCounts.cars;
+    } else if (categoryId === 'poles') {
+      return quizCounts.poles;
     }
     return 0;
   };
@@ -200,6 +208,12 @@ const HomePage: React.FC = () => {
                 buttonBg = 'bg-cyan-500';
                 buttonHover = 'hover:bg-cyan-600';
                 break;
+              case 'poles':
+                bgGradient = 'from-teal-50 to-teal-100';
+                iconBg = 'bg-teal-100';
+                buttonBg = 'bg-teal-500';
+                buttonHover = 'hover:bg-teal-600';
+                break;
               default:
                 bgGradient = 'from-gray-50 to-gray-100';
                 iconBg = 'bg-gray-100';
@@ -234,7 +248,9 @@ const HomePage: React.FC = () => {
                                   ? 'road signs'
                                   : category.id === 'languages'
                                     ? 'languages'
-                                    : 'cars'}
+                                    : category.id === 'cars'
+                                      ? 'cars'
+                                      : 'poles'}
                         </span>
                       )}
                     </div>
@@ -331,6 +347,10 @@ const HomePage: React.FC = () => {
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-1">•</span>
                   <span>Google Cars Quiz (uploading more data)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-yellow-600 mr-1">•</span>
+                  <span>Poles quiz (uploading data)</span>
                 </li>
               </ul>
             </div>

@@ -13,6 +13,7 @@ import CountryAdmin from './pages/CountryAdmin';
 import RoadSignAdmin from './pages/RoadSignAdmin';
 import LanguageAdmin from './pages/LanguageAdmin';
 import GoogleCarAdmin from './pages/GoogleCarAdmin';
+import PoleAdmin from './pages/PoleAdmin';
 import Header from './components/Header';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -28,6 +29,7 @@ import RoadSignsPage from './pages/RoadSignsPage';
 import LanguagesPage from './pages/LanguagesPage';
 import GoogleCarsPage from './pages/GoogleCarsPage';
 import ContributePage from './pages/ContributePage';
+import PolesPage from './pages/PolesPage';
 
 // Placeholder components for now
 const Footer = () => <div className="bg-blue-500 p-2 text-white text-xs text-center">© {new Date().getFullYear()} GeoPrep</div>;
@@ -104,6 +106,7 @@ const App: React.FC = () => {
               <Route path="/plates" element={<PlatesPage />} />
               <Route path="/roadsigns" element={<RoadSignsPage />} />
               <Route path="/languages" element={<LanguagesPage />} />
+              <Route path="/poles" element={<PolesPage />} />
               <Route path="/google-cars" element={<GoogleCarsPage />} />
               
               {/* Quiz Routes */}
@@ -121,6 +124,7 @@ const App: React.FC = () => {
                 <Route path="/admin/roadsigns" element={<RoadSignAdmin />} />
                 <Route path="/admin/languages" element={<LanguageAdmin />} />
                 <Route path="/admin/google-cars" element={<GoogleCarAdmin />} />
+                <Route path="/admin/poles" element={<PoleAdmin />} />
               </Route>
               
               <Route path="*" element={<NotFoundPage />} />
