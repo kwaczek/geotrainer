@@ -1117,7 +1117,7 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
           </div>
         )}
 
-        {/* Pole Gallery Modal */}
+        {/* Pole Gallery Modal - update this part with the clickable cards */}
         {selectedPole && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4" onClick={closeAllModalsCallback}>
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
@@ -1141,7 +1141,8 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                       {selectedPole.map((pole) => (
                         <div 
                           key={pole._id} 
-                          className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+                          className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                          onClick={() => setSelectedPole(pole)}
                         >
                           <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
                             <img 
@@ -1165,6 +1166,7 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="text-xs text-blue-600 hover:text-blue-800 flex items-center mt-2"
+                                onClick={(e) => e.stopPropagation()} // Prevent the parent onClick from firing
                               >
                                 <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
