@@ -144,14 +144,16 @@ export const deletePole = async (req: Request, res: Response): Promise<void> => 
     }
 };
 
-// Optional: Add functions like getPolesByCountry or getPoleCount if needed, similar to bollards
 // Example: Get poles by country
 export const getPolesByCountry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { countryId } = req.params;
         
+        console.log(`Fetching poles for country ID: ${countryId}`);
+        
         if (!mongoose.Types.ObjectId.isValid(countryId)) {
-            res.status(400).json({ message: 'Invalid country ID format' });
+            console.log(`Invalid country ID format: ${countryId}`);
+            res.status(400).json({ success: false, message: 'Invalid country ID format' });
             return;
         }
         
@@ -159,10 +161,16 @@ export const getPolesByCountry = async (req: Request, res: Response): Promise<vo
             .populate('countries', 'name code')
             .sort('-createdAt');
             
-        res.json(poles);
+        console.log(`Found ${poles.length} poles for country ID: ${countryId}`);
+        
+        // Use a standardized response format to match other endpoints
+        res.json({ 
+            success: true, 
+            poles
+        });
     } catch (error) {
         console.error('Error fetching poles by country:', error);
-        res.status(500).json({ message: 'Error fetching poles for this country' });
+        res.status(500).json({ success: false, message: 'Error fetching poles for this country' });
     }
 };
 

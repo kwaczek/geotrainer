@@ -41,7 +41,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-blue-500 text-white p-3 shadow-md relative z-10">
+    <header className="bg-blue-500 text-white p-3 shadow-md relative z-30">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <Link to="/" className="text-xl font-bold hover:text-blue-100 transition-colors">
