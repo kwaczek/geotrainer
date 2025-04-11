@@ -383,8 +383,8 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         setPreviousEntityIds(prev => [...prev, entityId]);
       }
       console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId} (${correctOption.text})`);
-    } else if (quizType === 'bollards' || quizType === 'licenseplates' || quizType === 'roadsigns' || quizType === 'cars') {
-      // For bollards, license plates, road signs, and cars, we can get the ID from metadata
+    } else if (quizType === 'bollards' || quizType === 'licenseplates' || quizType === 'roadsigns' || quizType === 'cars' || quizType === 'poles') {
+      // For bollards, license plates, road signs, cars, and poles, we can get the ID from metadata
       if (currentQuestion.metadata) {
         let entityId = '';
         if (quizType === 'bollards' && currentQuestion.metadata.bollardId) {
@@ -395,6 +395,8 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           entityId = String(currentQuestion.metadata.roadSignId);
         } else if (quizType === 'cars' && currentQuestion.metadata.entityId) {
           entityId = String(currentQuestion.metadata.entityId);
+        } else if (quizType === 'poles' && currentQuestion.metadata.poleId) {
+          entityId = String(currentQuestion.metadata.poleId);
         } else if (quizType === 'roadsigns') { // Fallback for road signs uses question ID
           entityId = currentQuestion.id;
         }

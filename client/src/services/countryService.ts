@@ -20,6 +20,7 @@ export interface CountryInfo {
   plates?: LicensePlate[];
   languages?: Language[];
   googleCars?: GoogleCar[];
+  poles?: Pole[];
 }
 
 export interface Bollard {
@@ -68,6 +69,16 @@ export interface GoogleCar {
   googleMapsUrl?: string;
   generation?: string;
   year?: string;
+  countries: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Pole {
+  _id: string;
+  imageUrl: string;
+  description: string;
+  googleMapsUrl: string;
   countries: string[];
   createdAt: string;
   updatedAt: string;
@@ -169,6 +180,20 @@ export const fetchGoogleCarsByCountry = async (countryId: string): Promise<Googl
     return [];
   } catch (error) {
     console.error('Error fetching Google cars for country:', error);
+    return [];
+  }
+};
+
+export const fetchPolesByCountry = async (countryId: string): Promise<Pole[]> => {
+  try {
+    const response = await axios.get(`/api/poles/country/${countryId}`);
+    
+    if (response.data && response.data.success) {
+      return response.data.poles;
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching poles for country:', error);
     return [];
   }
 };

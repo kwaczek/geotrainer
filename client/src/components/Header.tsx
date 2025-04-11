@@ -41,7 +41,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="bg-blue-500 text-white p-3 shadow-md relative z-10">
+    <header className="bg-blue-500 text-white p-3 shadow-md relative z-30">
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <Link to="/" className="text-xl font-bold hover:text-blue-100 transition-colors">
@@ -64,6 +64,9 @@ const Header: React.FC = () => {
                 </Link>
                 <Link to="/bollards" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
                   Bollards
+                </Link>
+                <Link to="/poles" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
+                  Poles
                 </Link>
                 <Link to="/google-cars" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
                   Google Cars
@@ -121,6 +124,9 @@ const Header: React.FC = () => {
                   </Link>
                   <Link to="/admin/bollards" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
                     Bollard Admin
+                  </Link>
+                  <Link to="/admin/poles" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
+                    Pole Admin
                   </Link>
                   <Link to="/admin/licenseplates" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
                     License Plate Admin

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import CountryMap from './CountryMap';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -7,10 +8,10 @@ import {
   fetchLicensePlatesByCountry, LicensePlate as BaseLicensePlate,
   fetchRoadSignsByCountry, RoadSign as BaseRoadSign,
   fetchLanguagesByCountry, Language as BaseLanguage,
-  fetchGoogleCarsByCountry, GoogleCar as BaseGoogleCar
+  fetchGoogleCarsByCountry, GoogleCar as BaseGoogleCar,
+  fetchPolesByCountry, Pole as BasePole
 } from '../services/countryService';
 import { getImageUrl } from '../config/apiConfig';
-import axios from 'axios';
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -39,6 +40,11 @@ interface Language extends BaseLanguage {
 interface GoogleCar extends BaseGoogleCar {
   generation?: string;
   year?: string;
+  notes?: string;
+}
+
+interface Pole extends BasePole {
+  location?: string;
   notes?: string;
 }
 
@@ -99,12 +105,19 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
   const [googleCarsError, setGoogleCarsError] = useState<string | null>(null);
   const [isGoogleCarsExpanded, setIsGoogleCarsExpanded] = useState<boolean>(true);
   
+  // Poles State
+  const [poles, setPoles] = useState<Pole[]>([]);
+  const [loadingPoles, setLoadingPoles] = useState<boolean>(false);
+  const [polesError, setPolesError] = useState<string | null>(null);
+  const [isPolesExpanded, setIsPolesExpanded] = useState<boolean>(true);
+  
   // State for selected items for modals
   const [selectedBollard, setSelectedBollard] = useState<Bollard | null>(null);
   const [selectedPlate, setSelectedPlate] = useState<LicensePlate | null>(null);
   const [selectedSign, setSelectedSign] = useState<RoadSign | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
   const [selectedGoogleCar, setSelectedGoogleCar] = useState<GoogleCar | null>(null);
+  const [selectedPole, setSelectedPole] = useState<Pole | null>(null);
   const [languageCountries, setLanguageCountries] = useState<CountryDetails[]>([]);
   const [loadingLanguageCountries, setLoadingLanguageCountries] = useState<boolean>(false);
   
@@ -228,6 +241,36 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
     }
   }, [country.id, isVisible]);
 
+  // Effect to fetch Poles
+  useEffect(() => {
+    if (isVisible && country.id) {
+      const fetchPoles = async () => {
+        setLoadingPoles(true);
+        setPolesError(null);
+        try {
+          console.log(`Fetching poles for country ${country.name} with ID: ${country.id}`);
+          // Make direct API call to log the full response
+          const apiResponse = await axios.get(`/api/poles/country/${country.id}`);
+          console.log('Poles API raw response:', apiResponse);
+          
+          const fetchedPoles = await fetchPolesByCountry(country.id!);
+          console.log('Processed poles:', fetchedPoles);
+          setPoles(fetchedPoles);
+          setIsPolesExpanded(fetchedPoles.length > 0);
+        } catch (error) {
+          console.error('Error fetching poles:', error);
+          setPolesError('Failed to load poles.');
+          setIsPolesExpanded(false);
+        } finally {
+          setLoadingPoles(false);
+        }
+      };
+      fetchPoles();
+    } else {
+      setPoles([]); setLoadingPoles(false); setPolesError(null); setIsPolesExpanded(false);
+    }
+  }, [country.id, isVisible, country.name]);
+
   // Handlers to open modals
   const handleBollardClick = (bollard: Bollard) => setSelectedBollard(bollard);
   const handlePlateClick = (plate: LicensePlate) => setSelectedPlate(plate);
@@ -237,6 +280,7 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
     setLanguageCountries([]);
   };
   const handleGoogleCarClick = (googleCar: GoogleCar) => setSelectedGoogleCar(googleCar);
+  const handlePoleClick = (pole: Pole) => setSelectedPole(pole);
 
   // Handlers to close modals
   const closeModal = () => {
@@ -245,6 +289,7 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
     setSelectedSign(null);
     setSelectedLanguage(null);
     setSelectedGoogleCar(null);
+    setSelectedPole(null);
   };
 
   // Effect to handle Escape key closing modals
@@ -1033,6 +1078,86 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
                    </div>
                  )}
               </div>
+
+              {/* Related Poles Card */}
+              <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+                 {/* Collapsible Header */}
+                 <button 
+                   onClick={() => setIsPolesExpanded(!isPolesExpanded)}
+                   className="w-full flex justify-between items-center p-4 text-left hover:bg-gray-50 transition-colors rounded-t-lg"
+                   disabled={loadingPoles || poles.length === 0}
+                   aria-expanded={isPolesExpanded}
+                 >
+                   <h3 className="text-lg font-semibold text-gray-800">
+                     Related Utility Poles 
+                     {!loadingPoles && `(${poles.length})`}
+                   </h3>
+                   {/* Chevron Icon indicating state */}
+                   {!loadingPoles && poles.length > 0 && (
+                      <svg 
+                        className={`w-5 h-5 text-gray-500 transition-transform ${isPolesExpanded ? 'transform rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24" 
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                   )}
+                   {loadingPoles && (
+                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
+                   )}
+                 </button>
+                 
+                 {/* Collapsible Content */}
+                 {isPolesExpanded && (
+                   <div className="p-4 border-t border-gray-100">
+                     {loadingPoles ? (
+                       <div className="text-center py-4 text-gray-600">Loading...</div>
+                     ) : polesError ? (
+                       <div className="text-red-600 text-center py-4">{polesError}</div>
+                     ) : poles.length > 0 ? (
+                       <div className="space-y-2">
+                         {poles.map(pole => (
+                           <button 
+                             key={pole._id} 
+                             onClick={() => handlePoleClick(pole)}
+                             className="w-full flex items-center p-2 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                             aria-label={`View details for pole ${pole.description || pole._id}`}
+                           >
+                             {/* Image - Increased Size */}
+                             <div className="flex-shrink-0 w-32 h-20 bg-gray-100 rounded-sm overflow-hidden mr-4">
+                               <img 
+                                 src={getImageUrl(pole.imageUrl)} 
+                                 alt={pole.description || `Utility Pole ${pole._id}`} 
+                                 className="w-full h-full object-cover" 
+                               />      
+                             </div>
+                             {/* Details */}
+                             <div className="flex-grow text-left min-w-0">
+                                <p className="text-sm font-medium text-gray-800 truncate" title={pole.description}>{pole.description || 'Utility Pole'}</p>
+                                {pole.googleMapsUrl && (
+                                  <a 
+                                    href={pole.googleMapsUrl} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()} // Prevent modal open when clicking link
+                                    className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 mt-0.5"
+                                  >
+                                    <svg className="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                    Google Maps
+                                  </a>
+                               )}
+                             </div>
+                           </button>
+                         ))}
+                       </div>
+                     ) : (
+                       <div className="text-gray-500 text-center py-4">No related utility poles found for this country.</div>
+                     )}
+                   </div>
+                 )}
+              </div>
             </div>
           )}
         </div>
@@ -1385,6 +1510,83 @@ const CountryInfoCard: React.FC<CountryInfoCardProps> = ({ country, isVisible, i
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">Location</h4>
                   <a 
                     href={selectedGoogleCar.googleMapsUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 flex items-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    View on Google Maps
+                  </a>
+                </div>
+              )}
+              
+              <div className="mt-6 text-center text-sm text-gray-500">
+                Press ESC key or click outside to close
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pole Detail Modal */}
+      {selectedPole && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4 backdrop-blur-sm" onClick={closeModal}>
+          <div 
+            className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">Utility Pole Details</h3>
+                <button 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={closeModal}
+                  aria-label="Close modal"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <img 
+                  src={getImageUrl(selectedPole.imageUrl)} 
+                  alt={`Utility pole in ${country.name}`}
+                  className="w-full h-auto max-h-[50vh] object-contain rounded-lg"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null;
+                    target.src = '/images/pole-placeholder.png';
+                  }}
+                />
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Description</h4>
+                <p className="text-gray-600">{selectedPole.description}</p>
+              </div>
+              
+              <div className="mb-4">
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">Country</h4>
+                <div className="flex items-center gap-2">
+                  <span className="bg-gray-50 p-2 rounded flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{country.name}</span>
+                  </span>
+                </div>
+              </div>
+              
+              {selectedPole.googleMapsUrl && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2">Location</h4>
+                  <a 
+                    href={selectedPole.googleMapsUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 flex items-center"

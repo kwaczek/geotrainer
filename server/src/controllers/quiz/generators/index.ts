@@ -5,6 +5,7 @@ import { getRandomLicensePlateQuestion } from './licensePlateQuestions';
 import { getRandomRoadSignQuestion } from './roadSignQuestions';
 import { getRandomLanguageQuestion } from './languageQuestions';
 import { getRandomGoogleCarQuestion } from './googleCarQuestions';
+import { getRandomPoleQuestion } from './poleQuestions';
 
 export {
   getRandomFlagQuestion,
@@ -13,5 +14,6 @@ export {
   getRandomLicensePlateQuestion,
   getRandomRoadSignQuestion,
   getRandomLanguageQuestion,
-  getRandomGoogleCarQuestion
+  getRandomGoogleCarQuestion,
+  getRandomPoleQuestion
 }; 

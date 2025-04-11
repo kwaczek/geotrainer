@@ -48,10 +48,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
     
     if (settingsLoaded) return;
     
-    // Add 'languages' and 'cars' to the list of supported quiz types
+    // Add 'languages', 'cars', and 'poles' to the list of supported quiz types
     if (quizType === 'flags' || quizType === 'capitals' || 
         quizType === 'bollards' || quizType === 'licenseplates' ||
-        quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars') { 
+        quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles') { 
       console.log(`Loading settings from localStorage for ${quizType}...`);
       
       try {
@@ -97,10 +97,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
       return;
     }
     
-    // Add 'languages' and 'cars' to the list of supported quiz types
+    // Add 'languages', 'cars', and 'poles' to the list of supported quiz types
     if (quizType && (quizType === 'flags' || quizType === 'capitals' || 
                      quizType === 'bollards' || quizType === 'licenseplates' ||
-                     quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars')) { 
+                     quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles')) { 
       console.log('Saving settings to localStorage...');
       
       const currentSettings: StoredQuizSettings = {
@@ -161,6 +161,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           endpoint = '/api/languages/count';
         } else if (quizType === 'cars') { // Add endpoint for google cars
           endpoint = '/api/google-cars/count';
+        } else if (quizType === 'poles') { // Add endpoint for poles
+          endpoint = '/api/poles/count';
         }
         
         if (endpoint) {
@@ -182,7 +184,28 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           
           const response = await axios.get(endpoint, { params });
           
-          if (response.data && response.data.success) {
+          if (quizType === 'poles') {
+            // Special handling for poles endpoint which has a different format
+            if (response.data && response.data.count !== undefined) {
+              const count = response.data.count;
+              const newMaxCount = count;
+              setMaxQuestionCount(newMaxCount);
+              
+              // Check if we need to adjust the question count
+              if (newMaxCount === 0) {
+                // If no questions available, set to 1 (it will be disabled)
+                setQuestionCount(1);
+              } else if (questionCount > newMaxCount) {
+                // Only adjust if current value exceeds max
+                console.log(`Reducing question count from ${questionCount} to ${newMaxCount} due to filter constraints`);
+                setQuestionCount(newMaxCount);
+              }
+
+              // Log available questions after settings load
+              console.log(`Available questions: ${newMaxCount}, current question count: ${questionCount}`);
+            }
+          } else if (response.data && response.data.success) {
+            // Standard handling for other endpoints
             // Be explicit about handling a count of 0
             const count = response.data.count;
             const newMaxCount = count !== undefined ? count : 50;
@@ -279,7 +302,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
            quizConfig.type === 'licenseplates' ? '🚗' : 
            quizConfig.type === 'roadsigns' ? '🚦' : 
            quizConfig.type === 'languages' ? '🗣️' : 
-           quizConfig.type === 'cars' ? '🚙' : '❓'}
+           quizConfig.type === 'cars' ? '🚙' : 
+           quizConfig.type === 'poles' ? '⚡️' : '❓'}
         </div>
         <h1 className="text-3xl font-bold mb-1">{quizConfig.title}</h1>
         <p className="text-gray-600">{quizConfig.description}</p>
