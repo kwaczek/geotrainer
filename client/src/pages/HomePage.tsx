@@ -90,7 +90,7 @@ const HomePage: React.FC = () => {
           roadsigns: roadsignsRes.data.success ? roadsignsRes.data.count : 0,
           languages: languagesRes.data.success ? languagesRes.data.count : 0,
           cars: carsRes.data.success ? carsRes.data.count : 0,
-          poles: polesRes.data.success ? polesRes.data.count : 0
+          poles: polesRes.data.count || 0
         });
       } catch (error) {
         console.error('Error fetching quiz counts:', error);

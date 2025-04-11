@@ -94,6 +94,17 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     blurred: false,
     blurIntensity: 15,
     types: []
+  },
+  poles: {
+    timerEnabled: true,
+    timerDuration: 30,
+    questionCount: 10,
+    writeMode: false,
+    continent: 'all',
+    in_geoguessr: false,
+    blurred: false,
+    blurIntensity: 15,
+    types: []
   }
 };
 
@@ -117,7 +128,8 @@ export function getAllSettings(): Record<QuizType, QuizSettings> {
         licenseplates: { ...DEFAULT_SETTINGS.licenseplates, ...parsedSettings.licenseplates },
         roadsigns: { ...DEFAULT_SETTINGS.roadsigns, ...(parsedSettings.roadsigns || {}) },
         languages: { ...DEFAULT_SETTINGS.languages, ...(parsedSettings.languages || {}) },
-        cars: { ...DEFAULT_SETTINGS.cars, ...(parsedSettings.cars || {}) }
+        cars: { ...DEFAULT_SETTINGS.cars, ...(parsedSettings.cars || {}) },
+        poles: { ...DEFAULT_SETTINGS.poles, ...(parsedSettings.poles || {}) }
       };
       
       console.log('Merged with defaults:', mergedSettings);

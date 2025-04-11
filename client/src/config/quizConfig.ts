@@ -97,5 +97,19 @@ export const QUIZ_CONFIGS: Record<QuizType, QuizConfig> = {
       imageField: 'imageUrl',
       correctAnswerField: 'countryName'
     }
+  },
+  poles: {
+    type: 'poles',
+    title: 'Poles Quiz',
+    description: 'Test your knowledge of utility poles from around the world.',
+    hasImages: true,
+    questionTemplate: "In which country can you find this utility pole?",
+    timeLimit: 30,
+    questionsPerQuiz: 10,
+    dataSource: {
+      endpoint: '/api/quiz-questions/poles',
+      imageField: 'imageUrl',
+      correctAnswerField: 'countryName'
+    }
   }
 }; 
