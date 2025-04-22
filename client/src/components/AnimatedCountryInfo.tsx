@@ -372,7 +372,7 @@ const AnimatedCountryInfo: React.FC<AnimatedCountryInfoProps> = ({
                     <div className="text-sm text-gray-500">Internet Domains</div>
                     <div className="font-medium text-gray-800">
                       {country.domain && country.domain.length > 0 
-                        ? country.domain.map((d: string) => `.${d}`).join(', ') 
+                        ? country.domain.map((d: string) => `${d}`).join(', ') 
                         : 'N/A'}
                     </div>
                   </div>
