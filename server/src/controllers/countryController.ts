@@ -177,7 +177,11 @@ export const getCountryCount = async (req: Request, res: Response): Promise<void
 // Create a new country
 export const createCountry = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, capital, continent, code, in_geoguessr } = req.body;
+    // Destructure ALL relevant fields from the body
+    const { 
+      name, capital, continent, code, in_geoguessr,
+      domain, currency, population, area, phone_prefix, driving_side, camera_generation 
+    } = req.body;
 
     // Validate required fields
     if (!name || !capital || !continent) {
@@ -198,28 +202,44 @@ export const createCountry = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Create new country
-    const country = await Country.create({
+    // Create new country, passing all destructured fields
+    const countryData: any = {
       name,
       capital,
       continent,
-      code: code || '',
+      code: code || undefined, // Use undefined if empty/null
       in_geoguessr: in_geoguessr || false
-    });
+    };
+    // Add optional fields only if they have a value
+    if (domain && domain.length > 0) countryData.domain = domain;
+    if (currency && currency.length > 0) countryData.currency = currency;
+    if (population !== undefined && population !== null && population !== '') countryData.population = Number(population);
+    if (area !== undefined && area !== null && area !== '') countryData.area = Number(area);
+    if (phone_prefix) countryData.phone_prefix = phone_prefix;
+    if (driving_side) countryData.driving_side = driving_side;
+    // Ensure camera_generation is an object before saving
+    if (camera_generation && typeof camera_generation === 'object' && Object.keys(camera_generation).length > 0) {
+        countryData.camera_generation = camera_generation;
+    }
+    
+    const country = await Country.create(countryData);
 
+    // Return the full new country object in the response
     res.status(201).json({
       success: true,
       message: 'Country created successfully',
-      country: {
-        id: country._id,
-        name: country.name,
-        capital: country.capital,
-        continent: country.continent,
-        code: country.code,
-        in_geoguessr: country.in_geoguessr
-      }
+      country // Send the complete created document
     });
-  } catch (error) {
+  } catch (error: any) { // Catch specifically for validation error check
+    // Handle potential validation errors from Mongoose during creation
+    if (error.name === 'ValidationError') {
+        res.status(400).json({ 
+            success: false, 
+            message: 'Validation failed', 
+            errors: error.errors 
+        });
+        return; // Stop execution after sending validation error response
+    }
     console.error('Error creating country:', error);
     res.status(500).json({
       success: false,
