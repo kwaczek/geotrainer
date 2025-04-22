@@ -212,3 +212,55 @@ export const getBollardCount = async (req: Request, res: Response): Promise<void
         });
     }
 };
+
+export const updateBollard = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+        
+        // Find the bollard first to make sure it exists
+        const bollard = await Bollard.findById(id);
+        if (!bollard) {
+            res.status(404).json({ success: false, message: 'Bollard not found' });
+            return;
+        }
+
+        const { description, countries, googleMapsUrl } = req.body;
+        
+        // Update fields
+        const updateData: any = {};
+        
+        if (description) updateData.description = description;
+        if (googleMapsUrl) updateData.googleMapsUrl = googleMapsUrl;
+        if (countries) updateData.countries = JSON.parse(countries);
+        
+        // If there's a new image file
+        if (req.file) {
+            // Delete the old image file
+            const oldImagePath = path.join(__dirname, '../../', bollard.imageUrl);
+            if (existsSync(oldImagePath)) {
+                await fs.unlink(oldImagePath);
+            }
+            
+            // Set the new image URL
+            updateData.imageUrl = `/uploads/bollards/${req.file.filename}`;
+        }
+        
+        // Update the bollard
+        const updatedBollard = await Bollard.findByIdAndUpdate(
+            id, 
+            updateData, 
+            { new: true }
+        ).populate('countries', 'name code');
+        
+        res.status(200).json({ 
+            success: true, 
+            bollard: updatedBollard 
+        });
+    } catch (error) {
+        console.error('Error updating bollard:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating bollard' 
+        });
+    }
+};
