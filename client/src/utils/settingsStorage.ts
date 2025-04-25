@@ -105,6 +105,17 @@ const DEFAULT_SETTINGS: Record<QuizType, QuizSettings> = {
     blurred: false,
     blurIntensity: 15,
     types: []
+  },
+  domains: {
+    timerEnabled: true,
+    timerDuration: 30,
+    questionCount: 10,
+    writeMode: false,
+    continent: 'all',
+    in_geoguessr: false,
+    blurred: false,
+    blurIntensity: 15,
+    types: []
   }
 };
 
@@ -115,11 +126,11 @@ export function getAllSettings(): Record<QuizType, QuizSettings> {
   try {
     console.log('Retrieving all settings from localStorage');
     const storedSettings = localStorage.getItem(STORAGE_KEY);
-    
+
     if (storedSettings) {
       console.log('Found stored settings:', storedSettings);
       const parsedSettings = JSON.parse(storedSettings);
-      
+
       // Ensure all quiz types have settings by merging with defaults
       const mergedSettings = {
         flags: { ...DEFAULT_SETTINGS.flags, ...parsedSettings.flags },
@@ -129,9 +140,10 @@ export function getAllSettings(): Record<QuizType, QuizSettings> {
         roadsigns: { ...DEFAULT_SETTINGS.roadsigns, ...(parsedSettings.roadsigns || {}) },
         languages: { ...DEFAULT_SETTINGS.languages, ...(parsedSettings.languages || {}) },
         cars: { ...DEFAULT_SETTINGS.cars, ...(parsedSettings.cars || {}) },
-        poles: { ...DEFAULT_SETTINGS.poles, ...(parsedSettings.poles || {}) }
+        poles: { ...DEFAULT_SETTINGS.poles, ...(parsedSettings.poles || {}) },
+        domains: { ...DEFAULT_SETTINGS.domains, ...(parsedSettings.domains || {}) }
       };
-      
+
       console.log('Merged with defaults:', mergedSettings);
       return mergedSettings;
     } else {
@@ -140,7 +152,7 @@ export function getAllSettings(): Record<QuizType, QuizSettings> {
   } catch (error) {
     console.error('Error reading quiz settings from localStorage:', error);
   }
-  
+
   // Return default settings if there's an error or no stored settings
   return { ...DEFAULT_SETTINGS };
 }
@@ -162,16 +174,16 @@ export function getSettings(quizType: QuizType): QuizSettings {
 export function saveSettings(quizType: QuizType, settings: QuizSettings): void {
   try {
     console.log(`Saving settings for ${quizType}:`, settings);
-    
+
     // Get current settings
     const allSettings = getAllSettings();
-    
+
     // Update settings for the specified quiz type
     allSettings[quizType] = {
       ...allSettings[quizType],
       ...settings
     };
-    
+
     // Save to localStorage
     const settingsJSON = JSON.stringify(allSettings);
     localStorage.setItem(STORAGE_KEY, settingsJSON);
@@ -188,13 +200,13 @@ export function resetSettings(quizType: QuizType): void {
   try {
     // Get current settings
     const allSettings = getAllSettings();
-    
+
     // Reset the specified quiz type to defaults
     allSettings[quizType] = { ...DEFAULT_SETTINGS[quizType] };
-    
+
     // Save to localStorage
     localStorage.setItem(STORAGE_KEY, JSON.stringify(allSettings));
   } catch (error) {
     console.error('Error resetting quiz settings in localStorage:', error);
   }
-} 
+}

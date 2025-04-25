@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import GenericQuizComponent from '../components/Quiz/GenericQuizComponent';
-import { 
-  QuizType, 
-  QuizQuestion, 
-  QuestionAttempt, 
-  QuizFilters 
+import {
+  QuizType,
+  QuizQuestion,
+  QuestionAttempt,
+  QuizFilters
 } from '../types/quiz';
 import { QUIZ_CONFIGS } from '../config/quizConfig';
 import * as quizService from '../services/quizService';
@@ -29,46 +29,46 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   const navigate = useNavigate();
   const location = useLocation();
   const { sessionId: urlSessionId } = useParams<{ sessionId: string }>();
-  
+
   // Get filters from location state if available
   const filters: QuizFilters = location.state?.filters || {};
-  
+
   // First try to get custom settings from location state
   // If not available, load from localStorage
   // If still not available, use defaults from quiz config
-  const customSettings: QuizSettings = location.state?.settings || 
+  const customSettings: QuizSettings = location.state?.settings ||
     getSettings(quizType) || {
       timerEnabled: true,
       timerDuration: QUIZ_CONFIGS[quizType].timeLimit,
       questionCount: QUIZ_CONFIGS[quizType].questionsPerQuiz
     };
-  
+
   // Debug log to check settings
   console.log('Custom settings used:', customSettings);
   console.log('Location state:', location.state);
-  
+
   // Use sessionId from props or URL params
   const existingSessionId = propSessionId || urlSessionId;
-  
+
   // Get quiz config
   const quizConfig = QUIZ_CONFIGS[quizType];
-  
+
   // Set the document title for the quiz page
   useDocumentTitle(`${quizConfig.title}`, true);
-  
+
   // Function to clean up stale quiz sessions (older than 24 hours)
   const cleanupStaleSessions = useCallback(() => {
     const MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
     const now = new Date().getTime();
     let cleanupCount = 0;
-    
+
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && key.startsWith('quiz_session_')) {
         try {
           const sessionData = JSON.parse(localStorage.getItem(key) || '{}');
           const lastUpdated = new Date(sessionData.lastUpdated).getTime();
-          
+
           if (now - lastUpdated > MAX_AGE_MS) {
             localStorage.removeItem(key);
             cleanupCount++;
@@ -80,12 +80,12 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         }
       }
     }
-    
+
     if (cleanupCount > 0) {
       console.log(`Cleaned up ${cleanupCount} stale quiz sessions`);
     }
   }, []);
-  
+
   // State
   const [currentQuestion, setCurrentQuestion] = useState<QuizQuestion | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,11 +105,11 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   const questionStartTime = useRef(Date.now());
   const dataFetchedRef = useRef(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
-  
+
   // Function to cleanup duplicate sessions for the current quiz
   const cleanupDuplicateSessions = useCallback(() => {
     if (!sessionId) return;
-    
+
     // Get all keys from localStorage that are quiz sessions
     const sessionKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -118,8 +118,8 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         sessionKeys.push(key);
       }
     }
-    
-    // Keep sessions matching our current sessionId, and recent sessions of the same quiz type 
+
+    // Keep sessions matching our current sessionId, and recent sessions of the same quiz type
     sessionKeys.forEach(key => {
       if (key !== `quiz_session_${sessionId}`) {
         try {
@@ -166,36 +166,36 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         try {
           const parsedState = JSON.parse(savedState);
           console.log('Loaded session state from localStorage:', parsedState);
-          
+
           // Only restore state if it's for the same quiz type
           if (parsedState.quizType === quizType) {
             setScore(parsedState.score || 0);
             setQuestionCount(parsedState.questionCount || 0);
             setAttempts(parsedState.attempts || []);
-            
+
             // Load previously seen question IDs
             if (parsedState.previousQuestionIds) {
               setPreviousQuestionIds(parsedState.previousQuestionIds);
             }
-            
+
             // Load previously seen entity IDs
             if (parsedState.previousEntityIds) {
               setPreviousEntityIds(parsedState.previousEntityIds);
             }
-            
+
             // Load custom settings if available
             if (parsedState.settings) {
               console.log('Loaded custom settings from localStorage:', parsedState.settings);
-              
+
               // Create enhanced filters with the custom question count
               const enhancedFilters = {
                 ...filters,
                 questionCount: parsedState.settings.questionCount
               };
-              
+
               // We can't directly update customSettings since it's from location state
               // But we can update the URL with the settings to ensure they're used
-              navigate(`/quiz/${quizType}/session/${sessionId}`, { 
+              navigate(`/quiz/${quizType}/session/${sessionId}`, {
                 replace: true,
                 state: {
                   filters: enhancedFilters,
@@ -203,7 +203,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
                 }
               });
             }
-            
+
             // If we've already answered questions, set the current question number correctly
             if (parsedState.questionCount > 0) {
               // If we've answered the last question, we should be on the next question
@@ -215,7 +215,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
             } else {
               setCurrentQuestionNumber(1);
             }
-            
+
             return true;
           }
         } catch (err) {
@@ -230,12 +230,12 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   const initializeQuiz = useCallback(async () => {
     // If we already have a sessionId from the URL, don't initialize a new quiz
     if (quizInitialized || existingSessionId) return;
-    
+
     try {
       setLoading(true);
-      
+
       console.log('Initializing quiz with custom settings:', customSettings);
-      
+
       // Create a new quiz session
       try {
         // Add custom settings to the filters
@@ -243,20 +243,20 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           ...filters,
           questionCount: customSettings.questionCount
         };
-        
+
         const response = await quizService.initializeQuiz(
           quizType,
           localStorage.getItem('userName') || 'Anonymous',
           enhancedFilters
         );
-        
+
         if (response && response.quizId) {
           setQuizId(response.quizId);
           setSessionId(response.quizId); // Use the same ID for both quiz and session
           setQuizInitialized(true);
-          
+
           // Update URL with the new session ID while preserving the settings
-          navigate(`/quiz/${quizType}/session/${response.quizId}`, { 
+          navigate(`/quiz/${quizType}/session/${response.quizId}`, {
             replace: true,
             state: {
               filters: enhancedFilters,
@@ -283,18 +283,18 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   const fetchQuestion = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       console.log(`Fetching question for ${quizType}, session: ${sessionId}, question number: ${currentQuestionNumber}`);
       console.log('Using custom settings:', customSettings);
       console.log('Previous question IDs:', previousQuestionIds);
       console.log('Previous entity IDs:', previousEntityIds);
-      
+
       // Add custom settings to the filters
       const enhancedFilters = {
         ...filters,
         questionCount: customSettings.questionCount
       };
-      
+
       // If we have a sessionId, try to get the next question
       const response = await quizService.getNextQuestion(
         quizType,
@@ -303,17 +303,17 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         previousQuestionIds,
         previousEntityIds
       );
-      
+
       setCurrentQuestion(response.question);
       setCurrentQuestionId(response.question.id);
-      
+
       // If we got a new sessionId, update it
       if (response.sessionId && (!sessionId || response.sessionId !== sessionId)) {
         setSessionId(response.sessionId);
-        
+
         // Update URL with the new session ID if needed, preserving settings
         if (!existingSessionId) {
-          navigate(`/quiz/${quizType}/session/${response.sessionId}`, { 
+          navigate(`/quiz/${quizType}/session/${response.sessionId}`, {
             replace: true,
             state: {
               filters: enhancedFilters,
@@ -322,7 +322,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           });
         }
       }
-      
+
       questionStartTime.current = Date.now();
     } catch (err) {
       console.error('Error fetching question:', err);
@@ -337,22 +337,22 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     if (!currentQuestion || !currentQuestionId || !sessionId) return;
 
     const timeSpentMs = Date.now() - questionStartTime.current;
-    
+
     // Update local state
     setSelectedOptionId(optionId);
     setLastAnswerCorrect(isCorrect);
-    
+
     if (isCorrect) {
       setScore(prev => prev + 1);
     }
-    
+
     setQuestionCount(prev => prev + 1);
-    
+
     // Add the current question ID to the list of seen questions
     if (currentQuestionId) {
       setPreviousQuestionIds(prev => [...prev, currentQuestionId]);
     }
-    
+
     // Extract the actual option ID without any custom input part
     let actualOptionId = optionId;
     let userCustomInput = '';
@@ -362,16 +362,16 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
       userCustomInput = customPart;
       console.log('Extracted custom user input:', userCustomInput);
     }
-    
+
     // Find the selected option and correct option
     const selectedOption = currentQuestion.options.find(opt => opt.id === actualOptionId);
     const correctOption = currentQuestion.options.find(opt => opt.isCorrect);
-    
+
     if (!correctOption) {
       console.error('Could not find correct option');
       return;
     }
-    
+
     // Add only the correct entity ID to the exclusion list
     // For flags/capitals, this is the country that was the subject of the question
     // For bollards/license plates, this is the actual bollard/plate ID
@@ -400,7 +400,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         } else if (quizType === 'roadsigns') { // Fallback for road signs uses question ID
           entityId = currentQuestion.id;
         }
-        
+
         if (entityId && !previousEntityIds.includes(entityId)) {
           setPreviousEntityIds(prev => [...prev, entityId]);
           console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId}`);
@@ -413,8 +413,24 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           setPreviousEntityIds(prev => [...prev, entityId]);
           console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId}`);
         }
+    } else if (quizType === 'domains') { // Handle domains quiz
+        // For domains, the entity ID is the country ID in the metadata
+        if (currentQuestion.metadata && currentQuestion.metadata.entityId) {
+          const entityId = String(currentQuestion.metadata.entityId);
+          if (entityId && !previousEntityIds.includes(entityId)) {
+            setPreviousEntityIds(prev => [...prev, entityId]);
+            console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId} (${correctOption.text})`);
+          }
+        } else if (currentQuestion.metadata && currentQuestion.metadata.countryId) {
+          // Fallback to countryId if entityId is not available
+          const entityId = String(currentQuestion.metadata.countryId);
+          if (entityId && !previousEntityIds.includes(entityId)) {
+            setPreviousEntityIds(prev => [...prev, entityId]);
+            console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId} (${correctOption.text})`);
+          }
+        }
     }
-    
+
     // Handle case where selected option might not be found (e.g., in write mode)
     let selectedCountryName = '';
     if (selectedOption) {
@@ -427,7 +443,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
       // Fallback for any other case
       selectedCountryName = 'Custom input (incorrect)';
     }
-    
+
     // Create an attempt object
     const attempt: QuestionAttempt = {
       questionId: currentQuestionId,
@@ -441,15 +457,15 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
       correctCountryName: correctOption.text,
       userCustomInput: userCustomInput // Add the user's custom input if applicable
     };
-    
+
     // Add the attempt to our list
     const updatedAttempts = [...attempts, attempt];
     setAttempts(updatedAttempts);
-    
+
     // Save the session state after updating state values
     // (The saveSessionState function will use the component state directly)
     saveSessionState();
-    
+
     try {
       // Submit the answer to the server
       await quizService.submitAnswer(
@@ -461,7 +477,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
         timeSpentMs,
         userCustomInput // Pass the custom input as an additional parameter
       );
-      
+
       // We no longer immediately end the quiz on the last question
       // Instead, we'll show a "View Results" button in the UI
       // The user will need to click it to see the results
@@ -502,11 +518,11 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
     if (!dataFetchedRef.current && (quizInitialized || existingSessionId)) {
       // Mark as fetched first to prevent multiple calls
       dataFetchedRef.current = true;
-      
+
       // First try to load session state
       const stateLoaded = loadSessionState();
       console.log(`Session state loaded: ${stateLoaded}, Current question number: ${currentQuestionNumber}`);
-      
+
       // Then fetch the question
       fetchQuestion();
     }
@@ -531,15 +547,15 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   const endQuiz = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Mark quiz as completed to prevent recreating the localStorage entry
       setQuizCompleted(true);
-      
+
       // Save the final state
       saveSessionState();
-      
+
       console.log('Ending quiz with attempts:', attempts);
-      
+
       // Complete the quiz on the server
       let result;
       try {
@@ -548,7 +564,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           sessionId || '',
           attempts
         );
-        
+
         // Clean up localStorage for this session
         if (sessionId) {
           localStorage.removeItem(`quiz_session_${sessionId}`);
@@ -564,7 +580,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           total: customSettings.questionCount
         };
       }
-      
+
       // Track quiz completion with Umami
       if (window.umami) {
         window.umami.track('Quiz Completed', {
@@ -574,7 +590,7 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           accuracy: Math.round((score / customSettings.questionCount) * 100)
         });
       }
-      
+
       // Navigate to results page with all attempts
       navigate(`/quiz-result/${result.quizId}`, {
         state: {
@@ -591,13 +607,13 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
       setLoading(false);
     }
   }, [
-    quizType, 
-    sessionId, 
-    attempts, 
-    saveSessionState, 
-    score, 
-    customSettings, 
-    navigate, 
+    quizType,
+    sessionId,
+    attempts,
+    saveSessionState,
+    score,
+    customSettings,
+    navigate,
     quizId,
     quizCompleted
   ]);
@@ -637,14 +653,14 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
           </svg>
           <span>Home</span>
         </button>
-        
+
         <div className="bg-blue-100 px-3 py-1 rounded-full text-sm font-medium text-blue-800 flex items-center">
           <span>Question {currentQuestionNumber}/{customSettings.questionCount}</span>
           <span className="mx-1.5 text-blue-500">•</span>
           <span>Score: {score}</span>
         </div>
       </div>
-      
+
       {currentQuestion && (
         <GenericQuizComponent
           question={currentQuestion}
@@ -678,4 +694,4 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
   );
 };
 
-export default GenericQuizPage; 
+export default GenericQuizPage;

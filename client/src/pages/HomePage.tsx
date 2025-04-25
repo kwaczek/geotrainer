@@ -19,12 +19,13 @@ interface QuizCounts {
   languages: number;
   cars: number;
   poles: number;
+  domains: number;
 }
 
 const HomePage: React.FC = () => {
   // Set the document title for the home page
   useDocumentTitle('Home', true);
-  
+
   const navigate = useNavigate();
   const [selectedContinent, setSelectedContinent] = useState<string>('all');
   const [onlyGeoGuessr, setOnlyGeoGuessr] = useState<boolean>(false);
@@ -39,9 +40,10 @@ const HomePage: React.FC = () => {
     roadsigns: 0,
     languages: 0,
     cars: 0,
-    poles: 0
+    poles: 0,
+    domains: 0
   });
-  
+
   // Quiz categories
   const categories: QuizCategory[] = [
     { id: 'capitals', name: 'Capitals', description: 'Match capitals to their countries', icon: '🏙️', supportsFilters: true },
@@ -52,8 +54,9 @@ const HomePage: React.FC = () => {
     { id: 'languages', name: 'Languages', description: 'Identify the language spoken in a country', icon: '🗣️', supportsFilters: true },
     { id: 'cars', name: 'Google Cars', description: 'Identify countries by the Google Street View car', icon: '🚙', supportsFilters: true },
     { id: 'poles', name: 'Poles', description: 'Identify utility poles by country', icon: '⚡️', supportsFilters: true },
+    { id: 'domains', name: 'Domains', description: 'Match domain names (TLDs) to their countries', icon: '🌐', supportsFilters: true },
   ];
-  
+
   // Fetch continents and quiz counts on component mount
   useEffect(() => {
     const fetchContinents = async () => {
@@ -70,7 +73,7 @@ const HomePage: React.FC = () => {
         setLoading(false);
       }
     };
-    
+
     const fetchQuizCounts = async () => {
       try {
         const [countriesRes, bollardsRes, licenseplatesRes, roadsignsRes, languagesRes, carsRes, polesRes] = await Promise.all([
@@ -82,7 +85,7 @@ const HomePage: React.FC = () => {
           axios.get('/api/google-cars/count'),
           axios.get('/api/poles/count')
         ]);
-        
+
         setQuizCounts({
           countries: countriesRes.data.success ? countriesRes.data.count : 0,
           bollards: bollardsRes.data.success ? bollardsRes.data.count : 0,
@@ -90,7 +93,8 @@ const HomePage: React.FC = () => {
           roadsigns: roadsignsRes.data.success ? roadsignsRes.data.count : 0,
           languages: languagesRes.data.success ? languagesRes.data.count : 0,
           cars: carsRes.data.success ? carsRes.data.count : 0,
-          poles: polesRes.data.count || 0
+          poles: polesRes.data.count || 0,
+          domains: countriesRes.data.success ? countriesRes.data.count : 0 // Use countries count for domains
         });
       } catch (error) {
         console.error('Error fetching quiz counts:', error);
@@ -101,19 +105,20 @@ const HomePage: React.FC = () => {
           roadsigns: prevCounts.roadsigns || 0,
           languages: prevCounts.languages || 0,
           cars: prevCounts.cars || 0,
-          poles: prevCounts.poles || 0
+          poles: prevCounts.poles || 0,
+          domains: prevCounts.domains || 0
         }));
       }
     };
-    
+
     fetchContinents();
     fetchQuizCounts();
   }, []);
-  
+
   const handleStartQuiz = (categoryId: string) => {
     // Navigate to the quiz settings page for quizzes that support filters
     const category = categories.find(c => c.id === categoryId);
-    
+
     if (category?.supportsFilters) {
       console.log(`Starting ${categoryId} quiz - navigating to settings`);
       navigate(`/quiz/${categoryId}/settings`);
@@ -125,7 +130,7 @@ const HomePage: React.FC = () => {
 
   // Helper function to get the count for a category
   const getCategoryCount = (categoryId: string): number => {
-    if (categoryId === 'flags' || categoryId === 'capitals') {
+    if (categoryId === 'flags' || categoryId === 'capitals' || categoryId === 'domains') {
       return quizCounts.countries;
     } else if (categoryId === 'bollards') {
       return quizCounts.bollards;
@@ -151,8 +156,8 @@ const HomePage: React.FC = () => {
         <div className="bg-gradient-to-r from-teal-400 via-cyan-500 to-blue-600 text-white p-4 rounded-lg shadow-md mb-6 text-center">
           <p className="text-lg font-semibold">Want to help add content to the quizzes?</p>
           <p className="text-sm mt-1">It's easy! Learn how you can contribute.</p>
-          <Link 
-            to="/contribute" 
+          <Link
+            to="/contribute"
             className="mt-2 inline-block bg-white text-blue-600 font-semibold py-1 px-4 rounded-full shadow hover:bg-gray-100 transition-colors duration-200 text-sm"
           >
             Learn More
@@ -164,7 +169,7 @@ const HomePage: React.FC = () => {
           {categories.map((category) => {
             // Define category-specific colors
             let bgGradient, iconBg, buttonBg, buttonHover;
-            
+
             switch(category.id) {
               case 'capitals':
                 bgGradient = 'from-blue-50 to-blue-100';
@@ -214,23 +219,29 @@ const HomePage: React.FC = () => {
                 buttonBg = 'bg-teal-500';
                 buttonHover = 'hover:bg-teal-600';
                 break;
+              case 'domains':
+                bgGradient = 'from-indigo-50 to-indigo-100';
+                iconBg = 'bg-indigo-100';
+                buttonBg = 'bg-indigo-500';
+                buttonHover = 'hover:bg-indigo-600';
+                break;
               default:
                 bgGradient = 'from-gray-50 to-gray-100';
                 iconBg = 'bg-gray-100';
                 buttonBg = 'bg-blue-500';
                 buttonHover = 'hover:bg-blue-600';
             }
-            
+
             return (
-              <div 
-                key={category.id} 
+              <div
+                key={category.id}
                 className={`flex flex-col bg-gradient-to-br ${bgGradient} p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 transform hover:-translate-y-1`}
               >
                 <div className="flex flex-col items-center">
                   <div className={`text-4xl mb-3 ${iconBg} p-4 rounded-full shadow-sm`}>{category.icon}</div>
                   <h3 className="text-lg font-semibold mb-1 text-center">{category.name}</h3>
                   <p className="text-gray-600 text-xs text-center mb-3">{category.description}</p>
-                  
+
                   {/* Display count badge for quizzes with available counts */}
                   {category.supportsFilters && (
                     <div className="bg-white bg-opacity-70 text-gray-700 text-xs font-medium px-3 py-1 rounded-full mb-3 shadow-sm border border-gray-200">
@@ -238,12 +249,12 @@ const HomePage: React.FC = () => {
                         <span>Loading...</span>
                       ) : (
                         <span>
-                          {getCategoryCount(category.id)} {category.id === 'capitals' || category.id === 'flags' 
-                            ? 'countries' 
-                            : category.id === 'bollards' 
-                              ? 'bollards' 
-                              : category.id === 'licenseplates' 
-                                ? 'license plates' 
+                          {getCategoryCount(category.id)} {category.id === 'capitals' || category.id === 'flags' || category.id === 'domains'
+                            ? 'countries'
+                            : category.id === 'bollards'
+                              ? 'bollards'
+                              : category.id === 'licenseplates'
+                                ? 'license plates'
                                 : category.id === 'roadsigns'
                                   ? 'road signs'
                                   : category.id === 'languages'
@@ -256,7 +267,7 @@ const HomePage: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Start button */}
                 <button
                   onClick={() => handleStartQuiz(category.id)}
@@ -277,7 +288,7 @@ const HomePage: React.FC = () => {
         {/* Release Notes Section */}
         <div className="bg-gradient-to-br from-slate-100 to-slate-200 backdrop-blur-sm rounded-xl shadow-sm p-5 mb-6 border border-slate-200 max-w-5xl mx-auto">
           <h2 className="text-lg font-semibold mb-4 text-center text-gray-700">Release Notes</h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Completed Features */}
             <div className="border-t-4 border-green-500 rounded-xl p-3 bg-green-50 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
@@ -332,7 +343,7 @@ const HomePage: React.FC = () => {
                 </li>
               </ul>
             </div>
-            
+
             {/* In Progress Features */}
             <div className="border-t-4 border-yellow-500 rounded-xl p-3 bg-yellow-50 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
               <h3 className="text-base font-semibold mb-2 flex items-center">
@@ -352,9 +363,13 @@ const HomePage: React.FC = () => {
                   <span className="text-yellow-600 mr-1">•</span>
                   <span>Poles quiz (uploading data)</span>
                 </li>
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-1">•</span>
+                  <span>Domain quiz</span>
+                </li>
               </ul>
             </div>
-            
+
             {/* Planned Features */}
             <div className="border-t-4 border-blue-500 rounded-xl p-3 bg-blue-50 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
               <h3 className="text-base font-semibold mb-2 flex items-center">
@@ -365,10 +380,6 @@ const HomePage: React.FC = () => {
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-1">•</span>
                   <span>Poles quiz</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-1">•</span>
-                  <span>Domain quiz</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-1">•</span>
@@ -397,7 +408,7 @@ const HomePage: React.FC = () => {
               </ul>
             </div>
           </div>
-          
+
           <div className="mt-4 text-center text-xs text-gray-500">
             <p>Last updated: {new Date().toLocaleDateString()}</p>
             <p className="mt-1">

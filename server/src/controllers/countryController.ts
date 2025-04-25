@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
 export const getAllCountries = async (req: Request, res: Response): Promise<void> => {
   try {
     // Fetch all fields for all countries
-    const countries = await Country.find({}); 
+    const countries = await Country.find({});
 
     // Send the full country documents
     res.status(200).json({
@@ -43,25 +43,25 @@ export const getContinents = async (req: Request, res: Response): Promise<void> 
 export const getCountryById = async (req: Request, res: Response): Promise<void> => {
   try {
     const countryId = req.params.id;
-    
+
     // Validate if the id is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(countryId)) {
       res.status(400).json({ message: 'Invalid country ID format' });
       return;
     }
-    
+
     const country = await Country.findById(countryId);
-    
+
     if (!country) {
       res.status(404).json({ message: 'Country not found' });
       return;
     }
-    
+
     // Construct flag URL based on country code
-    const flagUrl = country.code ? 
-      `https://flagcdn.com/w320/${country.code.toLowerCase()}.png` : 
+    const flagUrl = country.code ?
+      `https://flagcdn.com/w320/${country.code.toLowerCase()}.png` :
       undefined;
-    
+
     // Return country details with all available fields
     res.status(200).json({
       success: true,
@@ -95,24 +95,24 @@ export const getCountryById = async (req: Request, res: Response): Promise<void>
 export const getCountryByName = async (req: Request, res: Response): Promise<void> => {
   try {
     const countryName = req.params.name;
-    
+
     // Decode the URL-encoded name
     const decodedName = decodeURIComponent(countryName);
-    
-    const country = await Country.findOne({ 
+
+    const country = await Country.findOne({
       name: decodedName
     });
-    
+
     if (!country) {
       res.status(404).json({ message: 'Country not found' });
       return;
     }
-    
+
     // Construct flag URL based on country code
-    const flagUrl = country.code ? 
-      `https://flagcdn.com/w320/${country.code.toLowerCase()}.png` : 
+    const flagUrl = country.code ?
+      `https://flagcdn.com/w320/${country.code.toLowerCase()}.png` :
       undefined;
-    
+
     // Return country details with all available fields
     res.status(200).json({
       success: true,
@@ -145,22 +145,33 @@ export const getCountryByName = async (req: Request, res: Response): Promise<voi
 // Get count of countries with optional filters
 export const getCountryCount = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { continent, in_geoguessr } = req.query;
-    
+    const { continent, in_geoguessr, has_domain } = req.query;
+
+    console.log('Country count request with params:', { continent, in_geoguessr, has_domain });
+
     // Build query based on filters
     const query: any = {};
-    
+
     if (continent && continent !== 'all') {
       query.continent = continent;
     }
-    
+
     if (in_geoguessr === 'true') {
       query.in_geoguessr = true;
     }
-    
+
+    // Add filter for domains quiz to only count countries with domains
+    if (has_domain === 'true') {
+      query.domain = { $exists: true, $ne: null, $not: { $size: 0 } };
+    }
+
+    console.log('MongoDB query:', JSON.stringify(query));
+
     // Count countries matching the query
     const count = await Country.countDocuments(query);
-    
+
+    console.log('Countries count result:', count);
+
     res.status(200).json({
       success: true,
       count
@@ -178,9 +189,9 @@ export const getCountryCount = async (req: Request, res: Response): Promise<void
 export const createCountry = async (req: Request, res: Response): Promise<void> => {
   try {
     // Destructure ALL relevant fields from the body
-    const { 
+    const {
       name, capital, continent, code, in_geoguessr,
-      domain, currency, population, area, phone_prefix, driving_side, camera_generation 
+      domain, currency, population, area, phone_prefix, driving_side, camera_generation
     } = req.body;
 
     // Validate required fields
@@ -221,7 +232,7 @@ export const createCountry = async (req: Request, res: Response): Promise<void> 
     if (camera_generation && typeof camera_generation === 'object' && Object.keys(camera_generation).length > 0) {
         countryData.camera_generation = camera_generation;
     }
-    
+
     const country = await Country.create(countryData);
 
     // Return the full new country object in the response
@@ -233,10 +244,10 @@ export const createCountry = async (req: Request, res: Response): Promise<void> 
   } catch (error: any) { // Catch specifically for validation error check
     // Handle potential validation errors from Mongoose during creation
     if (error.name === 'ValidationError') {
-        res.status(400).json({ 
-            success: false, 
-            message: 'Validation failed', 
-            errors: error.errors 
+        res.status(400).json({
+            success: false,
+            message: 'Validation failed',
+            errors: error.errors
         });
         return; // Stop execution after sending validation error response
     }
@@ -260,9 +271,9 @@ export const updateCountry = async (req: Request, res: Response): Promise<void> 
 
     // Validate if the id is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(countryId)) {
-      res.status(400).json({ 
+      res.status(400).json({
         success: false,
-        message: 'Invalid country ID format' 
+        message: 'Invalid country ID format'
       });
       return;
     }
@@ -270,9 +281,9 @@ export const updateCountry = async (req: Request, res: Response): Promise<void> 
     // Check if country exists
     const country = await Country.findById(countryId);
     if (!country) {
-      res.status(404).json({ 
+      res.status(404).json({
         success: false,
-        message: 'Country not found' 
+        message: 'Country not found'
       });
       return;
     }
@@ -314,9 +325,9 @@ export const updateCountry = async (req: Request, res: Response): Promise<void> 
     if (!updatedCountry) {
       // This case should ideally be covered by the findById check earlier,
       // but added for robustness in case of race conditions or other issues.
-      res.status(404).json({ 
+      res.status(404).json({
         success: false,
-        message: 'Country not found after update attempt' 
+        message: 'Country not found after update attempt'
       });
       return;
     }
@@ -330,10 +341,10 @@ export const updateCountry = async (req: Request, res: Response): Promise<void> 
   } catch (error: any) {
     // Handle potential validation errors from Mongoose
     if (error.name === 'ValidationError') {
-        res.status(400).json({ 
-            success: false, 
-            message: 'Validation failed', 
-            errors: error.errors 
+        res.status(400).json({
+            success: false,
+            message: 'Validation failed',
+            errors: error.errors
         });
     }
     console.error('Error updating country:', error);
@@ -351,9 +362,9 @@ export const deleteCountry = async (req: Request, res: Response): Promise<void> 
 
     // Validate if the id is a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(countryId)) {
-      res.status(400).json({ 
+      res.status(400).json({
         success: false,
-        message: 'Invalid country ID format' 
+        message: 'Invalid country ID format'
       });
       return;
     }
@@ -361,9 +372,9 @@ export const deleteCountry = async (req: Request, res: Response): Promise<void> 
     // Check if country exists
     const country = await Country.findById(countryId);
     if (!country) {
-      res.status(404).json({ 
+      res.status(404).json({
         success: false,
-        message: 'Country not found' 
+        message: 'Country not found'
       });
       return;
     }

@@ -1,6 +1,6 @@
 /**
  * API Configuration
- * 
+ *
  * This file contains configuration for API endpoints and image URLs
  * to ensure they work correctly in both development and production environments.
  */
@@ -24,7 +24,7 @@ export const getImageUrl = (imagePath: string): string => {
   if (imagePath?.startsWith('http')) {
     return imagePath;
   }
-  
+
   // Otherwise, prepend the base URL
   return `${IMAGE_BASE_URL}${imagePath}`;
 };
@@ -33,4 +33,4 @@ export default {
   API_BASE_URL,
   IMAGE_BASE_URL,
   getImageUrl
-}; 
+};
