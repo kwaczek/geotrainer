@@ -31,7 +31,7 @@ const upload = multer({
         const allowedTypes = /jpeg|jpg|png|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedTypes.test(file.mimetype);
-        
+
         if (extname && mimetype) {
             cb(null, true);
         } else {
@@ -105,7 +105,7 @@ export const getAllLanguages = async (req: Request, res: Response): Promise<void
                 select: 'name code continent'
             })
             .sort('-createdAt');
-        
+
         // Define an interface for the populated country (can remain the same)
         interface PopulatedCountry {
             _id: mongoose.Types.ObjectId;
@@ -113,7 +113,7 @@ export const getAllLanguages = async (req: Request, res: Response): Promise<void
             code: string;
             continent: string;
         }
-        
+
         // Define an interface for the transformed language objects
         interface TransformedLanguage { // Renamed interface
             _id: mongoose.Types.ObjectId;
@@ -127,12 +127,12 @@ export const getAllLanguages = async (req: Request, res: Response): Promise<void
             updatedAt: Date;
             __v: number;
         }
-        
+
         // Transform data to include direct country and continent properties
         const transformedLanguages = languages.map(lang => { // Changed variable name
             // First convert to a plain object
             const langObj = lang.toObject(); // Changed variable name
-            
+
             // Create the base transformed object with default values
             const transformedLanguage: any = { // Changed variable name
                 ...langObj,
@@ -140,7 +140,7 @@ export const getAllLanguages = async (req: Request, res: Response): Promise<void
                 countryCode: 'unknown',
                 continent: 'Unknown'
             };
-            
+
             // Add direct country, countryCode and continent properties if countries exist
             if (langObj.countries && Array.isArray(langObj.countries) && langObj.countries.length > 0) {
                 const country = langObj.countries[0] as unknown as PopulatedCountry;
@@ -150,10 +150,10 @@ export const getAllLanguages = async (req: Request, res: Response): Promise<void
                     if (country.continent) transformedLanguage.continent = country.continent;
                 }
             }
-            
+
             return transformedLanguage;
         });
-        
+
         res.json(transformedLanguages);
     } catch (error) {
         console.error('Error fetching languages:', error); // Changed log message
@@ -164,7 +164,7 @@ export const getAllLanguages = async (req: Request, res: Response): Promise<void
 export const deleteLanguage = async (req: Request, res: Response): Promise<void> => { // Renamed function
     try {
         const { id } = req.params;
-        
+
         // Find the language first to get the image URL
         const language = await Language.findById(id); // Changed model usage
         if (!language) {
@@ -197,28 +197,28 @@ export const deleteLanguage = async (req: Request, res: Response): Promise<void>
 export const getLanguagesByCountry = async (req: Request, res: Response): Promise<void> => { // Renamed function
     try {
         const { countryId } = req.params;
-        
+
         // Validate if the id is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(countryId)) {
-            res.status(400).json({ 
+            res.status(400).json({
                 success: false,
-                message: 'Invalid country ID format' 
+                message: 'Invalid country ID format'
             });
             return;
         }
-        
+
         // Find languages that include this country
         const languages = await Language.find({ // Changed model usage
-            countries: { $in: [countryId] } 
+            countries: { $in: [countryId] }
         }).sort('-createdAt');
-        
+
         res.status(200).json({
             success: true,
             languages // Changed variable name
         });
     } catch (error) {
         console.error('Error fetching languages by country:', error); // Changed log message
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'Failed to fetch languages for this country' // Changed error message
         });
@@ -229,28 +229,28 @@ export const getLanguagesByCountry = async (req: Request, res: Response): Promis
 export const getLanguageCount = async (req: Request, res: Response): Promise<void> => { // Renamed function
     try {
         const { continent, in_geoguessr } = req.query;
-        
+
         // Build a more sophisticated query based on filters
         let countryQuery: any = {};
-        
+
         // If continent filter is applied, find countries in that continent
         if (continent && continent !== 'all') {
             countryQuery.continent = continent;
         }
-        
+
         // If GeoGuessr filter is applied, find countries in GeoGuessr
         if (in_geoguessr === 'true') {
             countryQuery.in_geoguessr = true;
         }
-        
+
         // Find countries matching all applied filters
         let countryIds: mongoose.Types.ObjectId[] = [];
-        
+
         // Only query the database for countries if we have filters
         if (Object.keys(countryQuery).length > 0) {
             const filteredCountries = await Country.find(countryQuery).select('_id');
             countryIds = filteredCountries.map(country => country._id as mongoose.Types.ObjectId);
-            
+
             // If no countries match the filters, return 0 count
             if (countryIds.length === 0) {
                 res.status(200).json({
@@ -259,12 +259,12 @@ export const getLanguageCount = async (req: Request, res: Response): Promise<voi
                 });
                 return;
             }
-            
+
             // Find languages where at least one of the associated countries matches the filter
             const count = await Language.countDocuments({ // Changed model usage
                 countries: { $in: countryIds }
             });
-            
+
             res.status(200).json({
                 success: true,
                 count
@@ -272,7 +272,7 @@ export const getLanguageCount = async (req: Request, res: Response): Promise<voi
         } else {
             // No filters applied, count all languages
             const count = await Language.countDocuments({}); // Changed model usage
-            
+
             res.status(200).json({
                 success: true,
                 count
@@ -285,4 +285,55 @@ export const getLanguageCount = async (req: Request, res: Response): Promise<voi
             message: 'Error counting languages' // Changed error message
         });
     }
-}; 
+};
+
+export const updateLanguage = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        // Find the language first to make sure it exists
+        const language = await Language.findById(id);
+        if (!language) {
+            res.status(404).json({ success: false, message: 'Language not found' });
+            return;
+        }
+
+        const { description, countries } = req.body;
+
+        // Update fields
+        const updateData: any = {};
+
+        if (description) updateData.description = description;
+        if (countries) updateData.countries = JSON.parse(countries);
+
+        // If there's a new image file
+        if (req.file) {
+            // Delete the old image file
+            const oldImagePath = path.join(process.cwd(), language.imageUrl);
+            if (existsSync(oldImagePath)) {
+                await fs.unlink(oldImagePath);
+            }
+
+            // Set the new image URL
+            updateData.imageUrl = `/uploads/languages/${req.file.filename}`;
+        }
+
+        // Update the language
+        const updatedLanguage = await Language.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true }
+        ).populate('countries', 'name code');
+
+        res.status(200).json({
+            success: true,
+            language: updatedLanguage
+        });
+    } catch (error) {
+        console.error('Error updating language:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating language'
+        });
+    }
+};

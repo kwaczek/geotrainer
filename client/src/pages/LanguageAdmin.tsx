@@ -24,6 +24,10 @@ const LanguageAdmin: React.FC = () => { // Changed component name
     const [languages, setLanguages] = useState<Language[]>([]); // Changed state name
     const [loading, setLoading] = useState(false);
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [editMode, setEditMode] = useState(false);
+    const [editId, setEditId] = useState<string | null>(null);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     useEffect(() => {
         fetchCountries();
@@ -64,6 +68,32 @@ const LanguageAdmin: React.FC = () => { // Changed component name
         });
     };
 
+    const loadLanguageForEdit = (language: Language) => {
+        setEditMode(true);
+        setEditId(language._id);
+        setDescription(language.description || '');
+
+        const countryIds = language.countries.map(country => country._id);
+        setSelectedCountries(countryIds);
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const resetForm = () => {
+        setEditMode(false);
+        setEditId(null);
+        setSelectedFile(null);
+        setDescription('');
+        setSelectedCountries([]);
+        setError('');
+        setSuccess('');
+
+        const fileInput = document.getElementById('file-input') as HTMLInputElement;
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    };
+
     const handleDelete = async (languageId: string) => { // Changed parameter name
         if (!window.confirm('Are you sure you want to delete this language entry? This action cannot be undone.')) {
             return;
@@ -93,14 +123,35 @@ const LanguageAdmin: React.FC = () => { // Changed component name
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        if (!selectedFile || selectedCountries.length === 0 || !description) {
-            alert('Please fill in all fields');
+
+        if (editMode && !editId) {
+            setError('No language ID found for editing');
+            return;
+        }
+
+        if (!editMode && !selectedFile) {
+            setError('Please select an image');
+            return;
+        }
+
+        if (selectedCountries.length === 0) {
+            setError('Please select at least one country');
+            return;
+        }
+
+        if (!description) {
+            setError('Please provide a description');
             return;
         }
 
         setLoading(true);
+        setError('');
+        setSuccess('');
+
         const formData = new FormData();
-        formData.append('image', selectedFile);
+        if (selectedFile) {
+            formData.append('image', selectedFile);
+        }
         formData.append('description', description);
         formData.append('countries', JSON.stringify(selectedCountries));
 
@@ -111,26 +162,29 @@ const LanguageAdmin: React.FC = () => { // Changed component name
                 throw new Error('API key not found. Please log in again.');
             }
 
-            await axios.post('/api/languages/upload', formData, { // Changed API endpoint
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'X-API-Key': apiKey
-                },
-            });
-            
-            // Reset form
-            setSelectedFile(null);
-            setDescription('');
-            setSelectedCountries([]);
-            if (event.target instanceof HTMLFormElement) {
-                event.target.reset();
+            if (editMode) {
+                await axios.put(`/api/languages/${editId}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'X-API-Key': apiKey
+                    },
+                });
+                setSuccess('Language updated successfully!');
+            } else {
+                await axios.post('/api/languages/upload', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'X-API-Key': apiKey
+                    },
+                });
+                setSuccess('Language uploaded successfully!');
             }
-            
-            // Refresh languages list
-            fetchLanguages(); // Changed function call
+
+            resetForm();
+            fetchLanguages();
         } catch (error) {
-            console.error('Error uploading language:', error); // Changed error message
-            alert('Error uploading language'); // Changed alert message
+            console.error('Error processing language:', error);
+            setError('Error processing language. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -138,26 +192,58 @@ const LanguageAdmin: React.FC = () => { // Changed component name
 
     return (
         <div className="max-w-4xl mx-auto p-4">
-            <h1 className="text-2xl font-bold mb-6">Language Admin</h1> {/* Changed title */} 
-            
-            {/* Upload Form */} 
-            <form onSubmit={handleSubmit} className="mb-8 p-4 border rounded-lg bg-white shadow">
-                <div className="mb-4">
-                    <label className="block mb-2">
-                        Image (e.g., Screenshot of text): {/* Changed label */} 
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="mt-1 block w-full"
-                            required
-                        />
-                    </label>
+            <h1 className="text-2xl font-bold mb-6">Language Admin</h1> {/* Changed title */}
+
+            {error && (
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+                    {error}
                 </div>
+            )}
+
+            {success && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
+                    {success}
+                </div>
+            )}
+
+            {/* Upload/Edit Form */}
+            <form onSubmit={handleSubmit} className="mb-8 p-4 border rounded-lg bg-white shadow">
+                <h2 className="text-xl font-semibold mb-4">{editMode ? 'Edit Language Entry' : 'Add New Language Entry'}</h2>
+
+                {!editMode && (
+                    <div className="mb-4">
+                        <label className="block mb-2">
+                            Image (e.g., Screenshot of text): {/* Changed label */}
+                            <input
+                                id="file-input"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="mt-1 block w-full"
+                                required={!editMode}
+                            />
+                        </label>
+                    </div>
+                )}
+
+                {editMode && (
+                    <div className="mb-4">
+                        <label className="block mb-2">
+                            Update Image (optional):
+                            <input
+                                id="file-input"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="mt-1 block w-full"
+                            />
+                        </label>
+                    </div>
+                )}
 
                 <div className="mb-4">
                     <label className="block mb-2">
-                        Description (e.g., "Official Language"): {/* Changed label */} 
+                        Description (e.g., "Official Language"): {/* Changed label */}
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
@@ -185,18 +271,30 @@ const LanguageAdmin: React.FC = () => { // Changed component name
                     </div>
                 </div>
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
-                >
-                    {loading ? 'Uploading...' : 'Upload Language Entry'} {/* Changed button text */} 
-                </button>
+                <div className="flex space-x-2">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+                    >
+                        {loading ? 'Processing...' : editMode ? 'Update Language Entry' : 'Upload Language Entry'}
+                    </button>
+
+                    {editMode && (
+                        <button
+                            type="button"
+                            onClick={resetForm}
+                            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                        >
+                            Cancel Edit
+                        </button>
+                    )}
+                </div>
             </form>
 
-            {/* Existing Languages */} 
+            {/* Existing Languages */}
             <div>
-                <h2 className="text-xl font-bold mb-4">Uploaded Language Entries</h2> {/* Changed title */} 
+                <h2 className="text-xl font-bold mb-4">Uploaded Language Entries</h2> {/* Changed title */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {languages.map(language => (
                         <div key={language._id} className="border rounded-lg p-4 bg-white shadow relative">
@@ -212,7 +310,13 @@ const LanguageAdmin: React.FC = () => { // Changed component name
                             <div className="text-xs text-gray-400 mt-1">
                                 Added: {new Date(language.createdAt).toLocaleDateString()}
                             </div>
-                            <div className="absolute top-2 right-2">
+                            <div className="absolute top-2 right-2 flex space-x-2">
+                                <button
+                                    onClick={() => loadLanguageForEdit(language)}
+                                    className="bg-yellow-500 text-white px-2 py-1 rounded text-sm hover:bg-yellow-600"
+                                >
+                                    Edit
+                                </button>
                                 <button
                                     onClick={() => handleDelete(language._id)}
                                     disabled={deleting === language._id}
@@ -229,4 +333,4 @@ const LanguageAdmin: React.FC = () => { // Changed component name
     );
 };
 
-export default LanguageAdmin; // Changed export name 
+export default LanguageAdmin; // Changed export name
