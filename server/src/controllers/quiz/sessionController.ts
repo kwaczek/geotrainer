@@ -14,15 +14,15 @@ export const sessions = new Map<string, QuizSession>();
 export const initQuizSession = async (req: Request, res: Response) => {
   try {
     const { type, userName, filters } = req.body;
-    
+
     // Validate quiz type
-    if (!type || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES, QuizType.ROADSIGNS, QuizType.LANGUAGES, QuizType.CARS, QuizType.POLES].includes(type.toLowerCase() as QuizType)) {
+    if (!type || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES, QuizType.ROADSIGNS, QuizType.LANGUAGES, QuizType.CARS, QuizType.POLES, QuizType.DOMAINS].includes(type.toLowerCase() as QuizType)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid quiz type. Must be flags, capitals, bollards, licenseplates, roadsigns, languages, cars, or poles'
+        message: 'Invalid quiz type. Must be flags, capitals, bollards, licenseplates, roadsigns, languages, cars, poles, or domains'
       });
     }
-    
+
     // Create a new quiz session in the database
     const quizResult = await QuizResult.create({
       quizId: uuidv4(),
@@ -30,9 +30,9 @@ export const initQuizSession = async (req: Request, res: Response) => {
       type: type.toLowerCase() as QuizType,
       filters: filters || {}
     });
-    
+
     await quizResult.save();
-    
+
     // Also create an in-memory session with the same ID
     const sessionId = quizResult.quizId;
     sessions.set(sessionId, {
@@ -44,7 +44,7 @@ export const initQuizSession = async (req: Request, res: Response) => {
       lastUpdated: new Date(),
       filters
     });
-    
+
     return res.status(201).json({
       success: true,
       quizId: sessionId,
@@ -67,17 +67,17 @@ export const initQuizSession = async (req: Request, res: Response) => {
 export const getQuizSession = async (req: Request, res: Response) => {
   try {
     const { sessionId } = req.params;
-    
+
     if (!sessionId) {
       return res.status(400).json({
         success: false,
         message: 'Session ID is required'
       });
     }
-    
+
     // Try to get the session from memory first
     const session = sessions.get(sessionId);
-    
+
     if (session) {
       return res.json({
         success: true,
@@ -90,17 +90,17 @@ export const getQuizSession = async (req: Request, res: Response) => {
         filters: session.filters
       });
     }
-    
+
     // If not in memory, try to get from database
     const quizResult = await QuizResult.findOne({ quizId: sessionId });
-    
+
     if (!quizResult) {
       return res.status(404).json({
         success: false,
         message: 'Quiz session not found'
       });
     }
-    
+
     // Create a new in-memory session from the database record
     const newSession: QuizSession = {
       sessionId: quizResult.quizId,
@@ -111,9 +111,9 @@ export const getQuizSession = async (req: Request, res: Response) => {
       lastUpdated: new Date(),
       filters: quizResult.filters
     };
-    
+
     sessions.set(sessionId, newSession);
-    
+
     return res.json({
       success: true,
       sessionId: newSession.sessionId,
@@ -141,27 +141,27 @@ export const completeQuizSession = async (req: Request, res: Response) => {
   try {
     const { sessionId } = req.params;
     const { type, questionAttempts } = req.body;
-    
+
     // Get the session
     const session = sessions.get(sessionId);
-    
+
     if (!session && !questionAttempts) {
       return res.status(404).json({
         success: false,
         message: 'Session not found and no question attempts provided'
       });
     }
-    
+
     // Get the quiz result from the database
     let quizResult = await QuizResult.findOne({ quizId: sessionId });
-    
+
     if (!quizResult) {
       return res.status(404).json({
         success: false,
         message: 'Quiz result not found'
       });
     }
-    
+
     // If question attempts are provided, use them to update the quiz result
     if (questionAttempts && Array.isArray(questionAttempts)) {
       quizResult.questionAttempts = questionAttempts.map(attempt => ({
@@ -173,7 +173,7 @@ export const completeQuizSession = async (req: Request, res: Response) => {
         timeSpentMs: attempt.timeSpentMs,
         imageUrl: attempt.imageUrl
       }));
-      
+
       quizResult.totalScore = questionAttempts.filter(a => a.isCorrect).length;
       quizResult.totalQuestions = questionAttempts.length;
       quizResult.totalTimeSpentMs = questionAttempts.reduce((total, a) => total + a.timeSpentMs, 0);
@@ -182,7 +182,7 @@ export const completeQuizSession = async (req: Request, res: Response) => {
       quizResult.totalScore = session.score;
       quizResult.totalQuestions = session.questionCount;
       quizResult.totalTimeSpentMs = session.attempts.reduce((total, a) => total + a.timeSpentMs, 0);
-      
+
       // Update question attempts if needed
       if (session.attempts.length > quizResult.questionAttempts.length) {
         quizResult.questionAttempts = session.attempts.map(attempt => ({
@@ -196,16 +196,16 @@ export const completeQuizSession = async (req: Request, res: Response) => {
         }));
       }
     }
-    
+
     // Mark the quiz as completed
     quizResult.isCompleted = true;
     quizResult.completedAt = new Date();
-    
+
     await quizResult.save();
-    
+
     // Clear the session from memory
     sessions.delete(sessionId);
-    
+
     return res.json({
       success: true,
       quizId: quizResult.quizId,
@@ -219,4 +219,4 @@ export const completeQuizSession = async (req: Request, res: Response) => {
       error: error.message
     });
   }
-}; 
+};

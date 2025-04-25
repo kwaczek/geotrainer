@@ -9,7 +9,8 @@ export enum QuizType {
   ROADSIGNS = 'roadsigns',
   LANGUAGES = 'languages',
   CARS = 'cars',
-  POLES = 'poles'
+  POLES = 'poles',
+  DOMAINS = 'domains'
 }
 
 // Quiz filters interface

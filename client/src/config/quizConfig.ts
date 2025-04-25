@@ -111,5 +111,18 @@ export const QUIZ_CONFIGS: Record<QuizType, QuizConfig> = {
       imageField: 'imageUrl',
       correctAnswerField: 'countryName'
     }
+  },
+  domains: {
+    type: 'domains',
+    title: 'Domains Quiz',
+    description: 'Test your knowledge of country domain names (TLDs).',
+    hasImages: false,
+    questionTemplate: "Which country uses this domain?",
+    timeLimit: 30,
+    questionsPerQuiz: 10,
+    dataSource: {
+      endpoint: '/api/quiz-questions/domains',
+      correctAnswerField: 'countryName'
+    }
   }
-}; 
+};

@@ -42,47 +42,47 @@ const QuizRouter: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Validate that the quiz type is supported
-  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars', 'poles'].includes(id);
-  
+  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars', 'poles', 'domains'].includes(id);
+
   // For roadsigns, immediately navigate to a session URL to ensure consistency
   useEffect(() => {
     if (isValidQuizType) {
       // Generate a UUID for the session - using a consistent method
-      const uuid = crypto.randomUUID ? crypto.randomUUID() : 
+      const uuid = crypto.randomUUID ? crypto.randomUUID() :
         'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
           const r = Math.random() * 16 | 0;
           const v = c === 'x' ? r : (r & 0x3 | 0x8);
           return v.toString(16);
         });
-      
+
       // Navigate to the session URL with the state preserved
-      navigate(`/quiz/${id}/session/${uuid}`, { 
+      navigate(`/quiz/${id}/session/${uuid}`, {
         replace: true,
         state: location.state
       });
     }
   }, [id, navigate, location.state, isValidQuizType]);
-  
+
   if (isValidQuizType) {
     return <GenericQuizPage quizType={id as QuizType} />;
   }
-  
+
   return <div className="p-4">Quiz type "{id}" not found or not yet implemented.</div>;
 };
 
 // Quiz session router component
 const QuizSessionRouter: React.FC = () => {
   const { type, sessionId } = useParams<{ type: string; sessionId: string }>();
-  
+
   // Validate that the quiz type is supported
-  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars', 'poles'].includes(type);
-  
+  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars', 'poles', 'domains'].includes(type);
+
   if (isValidQuizType && sessionId) {
     return <GenericQuizPage quizType={type as QuizType} sessionId={sessionId} />;
   }
-  
+
   return <div className="p-4">Quiz session not found or not yet implemented.</div>;
 };
 
@@ -98,7 +98,7 @@ const App: React.FC = () => {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/contribute" element={<ContributePage />} />
-              
+
               {/* Learning Pages */}
               <Route path="/countries" element={<CountriesPage />} />
               <Route path="/countries/:id" element={<CountryDetailPage />} />
@@ -108,14 +108,14 @@ const App: React.FC = () => {
               <Route path="/languages" element={<LanguagesPage />} />
               <Route path="/poles" element={<PolesPage />} />
               <Route path="/google-cars" element={<GoogleCarsPage />} />
-              
+
               {/* Quiz Routes */}
               <Route path="/quiz/:id" element={<QuizRouter />} />
               <Route path="/quiz/:quizType/settings" element={<QuizSettingsPage />} />
               <Route path="/quiz/:type/session/:sessionId" element={<QuizSessionRouter />} />
               <Route path="/quiz/result" element={<GenericQuizResultPage />} />
               <Route path="/quiz-result/:quizId" element={<GenericQuizResultPage />} />
-              
+
               {/* Protected Admin Routes */}
               <Route element={<ProtectedRoute requireAdmin={true} />}>
                 <Route path="/admin/bollards" element={<BollardAdmin />} />
@@ -126,7 +126,7 @@ const App: React.FC = () => {
                 <Route path="/admin/google-cars" element={<GoogleCarAdmin />} />
                 <Route path="/admin/poles" element={<PoleAdmin />} />
               </Route>
-              
+
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </main>
