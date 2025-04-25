@@ -47,16 +47,37 @@ export async function getRandomDomainQuestion(filters?: QuizFilters, previousEnt
   if (!correctCountryCandidates || correctCountryCandidates.length === 0) {
     if (previousEntityIds.length > 0) {
       console.log('No countries found with exclusion filter for correct answer, retrying without excluding previous countries');
-      const fallbackCountries = await Country.aggregate([
-        { $match: baseQuery },
-        { $sample: { size: 1 } }
+
+      // Get all countries that match the base query using aggregate
+      const allEligibleCountries = await Country.aggregate([
+        { $match: baseQuery }
       ]);
 
-      if (!fallbackCountries || fallbackCountries.length === 0) {
+      if (!allEligibleCountries || allEligibleCountries.length === 0) {
         throw new Error('No countries found with the specified filters');
       }
 
-      correctCountry = fallbackCountries[0];
+      // If we have multiple countries, try to find one that's not the most recently used
+      if (allEligibleCountries.length > 1 && previousEntityIds.length > 0) {
+        const mostRecentEntityId = previousEntityIds[previousEntityIds.length - 1];
+        const otherCountries = allEligibleCountries.filter(
+          country => country._id.toString() !== mostRecentEntityId
+        );
+
+        if (otherCountries.length > 0) {
+          // Randomly select one of the countries that wasn't most recently used
+          const randomIndex = Math.floor(Math.random() * otherCountries.length);
+          correctCountry = otherCountries[randomIndex];
+        } else {
+          // If all countries have been used, just pick a random one
+          const randomIndex = Math.floor(Math.random() * allEligibleCountries.length);
+          correctCountry = allEligibleCountries[randomIndex];
+        }
+      } else {
+        // If we only have one country or no previous entity IDs, just pick a random one
+        const randomIndex = Math.floor(Math.random() * allEligibleCountries.length);
+        correctCountry = allEligibleCountries[randomIndex];
+      }
     } else {
       throw new Error('No countries found with the specified filters');
     }

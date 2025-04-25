@@ -484,6 +484,9 @@ describe('Domain Questions Generator', () => {
       }
     ];
 
+    // Combined incorrect countries (what the function will actually use)
+    const combinedIncorrectCountries = [...mockIncorrectCountries, ...mockAdditionalCountries];
+
     // Set up the mock implementation for the first aggregate call (correct country)
     (Country.aggregate as jest.Mock).mockImplementationOnce(() => {
       return Promise.resolve([mockCorrectCountry]);
@@ -497,6 +500,11 @@ describe('Domain Questions Generator', () => {
     // Set up the mock implementation for the third aggregate call (additional incorrect countries)
     (Country.aggregate as jest.Mock).mockImplementationOnce(() => {
       return Promise.resolve(mockAdditionalCountries);
+    });
+
+    // Set up a mock implementation for any additional calls
+    (Country.aggregate as jest.Mock).mockImplementation(() => {
+      return Promise.resolve([]);
     });
 
     // Call the function being tested
