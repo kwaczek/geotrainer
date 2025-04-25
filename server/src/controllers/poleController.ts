@@ -28,7 +28,7 @@ const upload = multer({
         const allowedTypes = /jpeg|jpg|png|webp/;
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = allowedTypes.test(file.mimetype);
-        
+
         if (extname && mimetype) {
             cb(null, true);
         } else {
@@ -116,7 +116,7 @@ export const deletePole = async (req: Request, res: Response): Promise<void> => 
             res.status(400).json({ message: 'Invalid Pole ID format' });
             return;
         }
-        
+
         const pole = await Pole.findById(id); // Use Pole model
         if (!pole) {
             res.status(404).json({ message: 'Pole not found' });
@@ -148,24 +148,24 @@ export const deletePole = async (req: Request, res: Response): Promise<void> => 
 export const getPolesByCountry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { countryId } = req.params;
-        
+
         console.log(`Fetching poles for country ID: ${countryId}`);
-        
+
         if (!mongoose.Types.ObjectId.isValid(countryId)) {
             console.log(`Invalid country ID format: ${countryId}`);
             res.status(400).json({ success: false, message: 'Invalid country ID format' });
             return;
         }
-        
+
         const poles = await Pole.find({ countries: countryId }) // Use Pole model
             .populate('countries', 'name code')
             .sort('-createdAt');
-            
+
         console.log(`Found ${poles.length} poles for country ID: ${countryId}`);
-        
+
         // Use a standardized response format to match other endpoints
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             poles
         });
     } catch (error) {
@@ -179,31 +179,83 @@ export const getPoleCount = async (req: Request, res: Response): Promise<void> =
     try {
         const { continent, in_geoguessr } = req.query;
         let countryQuery: any = {};
-        
+
         if (continent && typeof continent === 'string' && continent !== 'all') {
             countryQuery.continent = continent;
         }
-        
+
         if (in_geoguessr === 'true') {
             countryQuery.in_geoguessr = true;
         }
-        
+
         let countQuery: any = {};
         if (Object.keys(countryQuery).length > 0) {
             const filteredCountries = await Country.find(countryQuery).select('_id');
             const countryIds = filteredCountries.map(c => c._id);
-            
+
             if (countryIds.length === 0) {
                 res.json({ count: 0 });
                 return;
             }
             countQuery.countries = { $in: countryIds };
         }
-        
+
         const count = await Pole.countDocuments(countQuery); // Use Pole model
         res.json({ count });
     } catch (error) {
         console.error('Error counting poles:', error);
         res.status(500).json({ message: 'Error counting poles' });
     }
-}; 
+};
+
+export const updatePole = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        // Find the pole first to make sure it exists
+        const pole = await Pole.findById(id);
+        if (!pole) {
+            res.status(404).json({ success: false, message: 'Pole not found' });
+            return;
+        }
+
+        const { description, countries, googleMapsUrl } = req.body;
+
+        // Update fields
+        const updateData: any = {};
+
+        if (description) updateData.description = description;
+        if (googleMapsUrl) updateData.googleMapsUrl = googleMapsUrl;
+        if (countries) updateData.countries = JSON.parse(countries);
+
+        // If there's a new image file
+        if (req.file) {
+            // Delete the old image file
+            const oldImagePath = path.join(__dirname, '../../', pole.imageUrl);
+            if (existsSync(oldImagePath)) {
+                await fs.unlink(oldImagePath);
+            }
+
+            // Set the new image URL
+            updateData.imageUrl = `/uploads/poles/${req.file.filename}`;
+        }
+
+        // Update the pole
+        const updatedPole = await Pole.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true }
+        ).populate('countries', 'name code');
+
+        res.status(200).json({
+            success: true,
+            pole: updatedPole
+        });
+    } catch (error) {
+        console.error('Error updating pole:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating pole'
+        });
+    }
+};
