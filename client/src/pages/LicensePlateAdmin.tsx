@@ -24,6 +24,10 @@ const LicensePlateAdmin: React.FC = () => {
     const [licensePlates, setLicensePlates] = useState<LicensePlate[]>([]);
     const [loading, setLoading] = useState(false);
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [editMode, setEditMode] = useState(false);
+    const [editId, setEditId] = useState<string | null>(null);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
 
     useEffect(() => {
         fetchCountries();
@@ -63,6 +67,32 @@ const LicensePlateAdmin: React.FC = () => {
         });
     };
 
+    const loadLicensePlateForEdit = (licensePlate: LicensePlate) => {
+        setEditMode(true);
+        setEditId(licensePlate._id);
+        setDescription(licensePlate.description || '');
+
+        const countryIds = licensePlate.countries.map(country => country._id);
+        setSelectedCountries(countryIds);
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const resetForm = () => {
+        setEditMode(false);
+        setEditId(null);
+        setSelectedFile(null);
+        setDescription('');
+        setSelectedCountries([]);
+        setError('');
+        setSuccess('');
+
+        const fileInput = document.getElementById('file-input') as HTMLInputElement;
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    };
+
     const handleDelete = async (licensePlateId: string) => {
         if (!window.confirm('Are you sure you want to delete this license plate? This action cannot be undone.')) {
             return;
@@ -92,14 +122,35 @@ const LicensePlateAdmin: React.FC = () => {
 
     const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        if (!selectedFile || selectedCountries.length === 0 || !description) {
-            alert('Please fill in all fields');
+
+        if (editMode && !editId) {
+            setError('No license plate ID found for editing');
+            return;
+        }
+
+        if (!editMode && !selectedFile) {
+            setError('Please select an image');
+            return;
+        }
+
+        if (selectedCountries.length === 0) {
+            setError('Please select at least one country');
+            return;
+        }
+
+        if (!description) {
+            setError('Please provide a description');
             return;
         }
 
         setLoading(true);
+        setError('');
+        setSuccess('');
+
         const formData = new FormData();
-        formData.append('image', selectedFile);
+        if (selectedFile) {
+            formData.append('image', selectedFile);
+        }
         formData.append('description', description);
         formData.append('countries', JSON.stringify(selectedCountries));
 
@@ -110,26 +161,29 @@ const LicensePlateAdmin: React.FC = () => {
                 throw new Error('API key not found. Please log in again.');
             }
 
-            await axios.post('/api/licenseplates/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'X-API-Key': apiKey
-                },
-            });
-            
-            // Reset form
-            setSelectedFile(null);
-            setDescription('');
-            setSelectedCountries([]);
-            if (event.target instanceof HTMLFormElement) {
-                event.target.reset();
+            if (editMode) {
+                await axios.put(`/api/licenseplates/${editId}`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'X-API-Key': apiKey
+                    },
+                });
+                setSuccess('License plate updated successfully!');
+            } else {
+                await axios.post('/api/licenseplates/upload', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'X-API-Key': apiKey
+                    },
+                });
+                setSuccess('License plate uploaded successfully!');
             }
-            
-            // Refresh license plates list
+
+            resetForm();
             fetchLicensePlates();
         } catch (error) {
-            console.error('Error uploading license plate:', error);
-            alert('Error uploading license plate');
+            console.error('Error processing license plate:', error);
+            setError('Error processing license plate. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -138,21 +192,53 @@ const LicensePlateAdmin: React.FC = () => {
     return (
         <div className="max-w-4xl mx-auto p-4">
             <h1 className="text-2xl font-bold mb-6">License Plate Admin</h1>
-            
-            {/* Upload Form */}
-            <form onSubmit={handleSubmit} className="mb-8 p-4 border rounded-lg bg-white shadow">
-                <div className="mb-4">
-                    <label className="block mb-2">
-                        Image:
-                        <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="mt-1 block w-full"
-                            required
-                        />
-                    </label>
+
+            {error && (
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+                    {error}
                 </div>
+            )}
+
+            {success && (
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">
+                    {success}
+                </div>
+            )}
+
+            {/* Upload/Edit Form */}
+            <form onSubmit={handleSubmit} className="mb-8 p-4 border rounded-lg bg-white shadow">
+                <h2 className="text-xl font-semibold mb-4">{editMode ? 'Edit License Plate' : 'Add New License Plate'}</h2>
+
+                {!editMode && (
+                    <div className="mb-4">
+                        <label className="block mb-2">
+                            Image:
+                            <input
+                                id="file-input"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="mt-1 block w-full"
+                                required={!editMode}
+                            />
+                        </label>
+                    </div>
+                )}
+
+                {editMode && (
+                    <div className="mb-4">
+                        <label className="block mb-2">
+                            Update Image (optional):
+                            <input
+                                id="file-input"
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="mt-1 block w-full"
+                            />
+                        </label>
+                    </div>
+                )}
 
                 <div className="mb-4">
                     <label className="block mb-2">
@@ -184,13 +270,25 @@ const LicensePlateAdmin: React.FC = () => {
                     </div>
                 </div>
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
-                >
-                    {loading ? 'Uploading...' : 'Upload License Plate'}
-                </button>
+                <div className="flex space-x-2">
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-blue-300"
+                    >
+                        {loading ? 'Processing...' : editMode ? 'Update License Plate' : 'Upload License Plate'}
+                    </button>
+
+                    {editMode && (
+                        <button
+                            type="button"
+                            onClick={resetForm}
+                            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                        >
+                            Cancel Edit
+                        </button>
+                    )}
+                </div>
             </form>
 
             {/* Existing License Plates */}
@@ -211,7 +309,13 @@ const LicensePlateAdmin: React.FC = () => {
                             <div className="text-xs text-gray-400 mt-1">
                                 Added: {new Date(licensePlate.createdAt).toLocaleDateString()}
                             </div>
-                            <div className="absolute top-2 right-2">
+                            <div className="absolute top-2 right-2 flex space-x-2">
+                                <button
+                                    onClick={() => loadLicensePlateForEdit(licensePlate)}
+                                    className="bg-yellow-500 text-white px-2 py-1 rounded text-sm hover:bg-yellow-600"
+                                >
+                                    Edit
+                                </button>
                                 <button
                                     onClick={() => handleDelete(licensePlate._id)}
                                     disabled={deleting === licensePlate._id}
@@ -228,4 +332,4 @@ const LicensePlateAdmin: React.FC = () => {
     );
 };
 
-export default LicensePlateAdmin; 
+export default LicensePlateAdmin;
