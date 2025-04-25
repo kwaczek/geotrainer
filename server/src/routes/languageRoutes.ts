@@ -6,7 +6,8 @@ import {
     getAllLanguages,        // Controller function to get all language entries
     deleteLanguage,         // Controller function to delete a language entry
     getLanguagesByCountry,  // Controller function to get languages for a specific country
-    getLanguageCount        // Controller function to get the count of language entries
+    getLanguageCount,       // Controller function to get the count of language entries
+    updateLanguage          // Controller function to update a language entry
 } from '../controllers/languageController';
 import { requireApiKey } from '../middleware/apiKeyMiddleware'; // API key authentication middleware
 
@@ -15,6 +16,9 @@ const router = express.Router();
 // --- Protected Admin Routes ---
 // POST /api/languages/upload - Uploads an image and creates a new language entry
 router.post('/upload', requireApiKey, uploadLanguage, createLanguage);
+
+// PUT /api/languages/:id - Updates a specific language entry by its ID
+router.put('/:id', requireApiKey, uploadLanguage, updateLanguage);
 
 // DELETE /api/languages/:id - Deletes a specific language entry by its ID
 router.delete('/:id', requireApiKey, deleteLanguage);
@@ -33,4 +37,4 @@ router.get('/countries', getGeoGuessrCountries);
 // GET /api/languages/country/:countryId - Gets language entries associated with a specific country ID
 router.get('/country/:countryId', getLanguagesByCountry);
 
-export default router; 
+export default router;
