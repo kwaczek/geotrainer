@@ -5,16 +5,17 @@ import {
     getAllPoles,
     deletePole,
     getPolesByCountry,
-    getPoleCount
+    getPoleCount,
+    updatePole
 } from '../controllers/poleController';
 // Use apiKeyMiddleware for admin routes, similar to bollardRoutes
-import { requireApiKey } from '../middleware/apiKeyMiddleware'; 
+import { requireApiKey } from '../middleware/apiKeyMiddleware';
 
 const router = express.Router();
 
 // GET all poles (Publicly accessible or requires auth based on your needs)
 // If it should be public for learning page, remove authenticate
-router.get('/', getAllPoles); 
+router.get('/', getAllPoles);
 
 // GET poles for a specific country (Publicly accessible or requires auth)
 router.get('/country/:countryId', getPolesByCountry);
@@ -29,4 +30,7 @@ router.post('/upload', requireApiKey, uploadPole, createPole);
 // DELETE a pole by ID (Admin only)
 router.delete('/:id', requireApiKey, deletePole);
 
-export default router; 
+// PUT update a pole by ID (Admin only)
+router.put('/:id', requireApiKey, uploadPole, updatePole);
+
+export default router;
