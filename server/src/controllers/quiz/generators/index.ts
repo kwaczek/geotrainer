@@ -7,6 +7,7 @@ import { getRandomLanguageQuestion } from './languageQuestions';
 import { getRandomGoogleCarQuestion } from './googleCarQuestions';
 import { getRandomPoleQuestion } from './poleQuestions';
 import { getRandomDomainQuestion } from './domainQuestions';
+import { getRandomCurrencyQuestion } from './currencyQuestions';
 
 export {
   getRandomFlagQuestion,
@@ -17,5 +18,6 @@ export {
   getRandomLanguageQuestion,
   getRandomGoogleCarQuestion,
   getRandomPoleQuestion,
-  getRandomDomainQuestion
+  getRandomDomainQuestion,
+  getRandomCurrencyQuestion
 };

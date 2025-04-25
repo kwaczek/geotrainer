@@ -44,7 +44,7 @@ const QuizRouter: React.FC = () => {
   const location = useLocation();
 
   // Validate that the quiz type is supported
-  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars', 'poles', 'domains'].includes(id);
+  const isValidQuizType = id && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars', 'poles', 'domains', 'currencies'].includes(id);
 
   // For roadsigns, immediately navigate to a session URL to ensure consistency
   useEffect(() => {
@@ -77,7 +77,7 @@ const QuizSessionRouter: React.FC = () => {
   const { type, sessionId } = useParams<{ type: string; sessionId: string }>();
 
   // Validate that the quiz type is supported
-  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars', 'poles', 'domains'].includes(type);
+  const isValidQuizType = type && ['capitals', 'flags', 'bollards', 'licenseplates', 'roadsigns', 'languages', 'cars', 'poles', 'domains', 'currencies'].includes(type);
 
   if (isValidQuizType && sessionId) {
     return <GenericQuizPage quizType={type as QuizType} sessionId={sessionId} />;

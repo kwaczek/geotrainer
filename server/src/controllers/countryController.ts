@@ -145,9 +145,9 @@ export const getCountryByName = async (req: Request, res: Response): Promise<voi
 // Get count of countries with optional filters
 export const getCountryCount = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { continent, in_geoguessr, has_domain } = req.query;
+    const { continent, in_geoguessr, has_domain, has_currency } = req.query;
 
-    console.log('Country count request with params:', { continent, in_geoguessr, has_domain });
+    console.log('Country count request with params:', { continent, in_geoguessr, has_domain, has_currency });
 
     // Build query based on filters
     const query: any = {};
@@ -163,6 +163,11 @@ export const getCountryCount = async (req: Request, res: Response): Promise<void
     // Add filter for domains quiz to only count countries with domains
     if (has_domain === 'true') {
       query.domain = { $exists: true, $ne: null, $not: { $size: 0 } };
+    }
+
+    // Add filter for currencies quiz to only count countries with currencies
+    if (has_currency === 'true') {
+      query.currency = { $exists: true, $ne: null, $not: { $size: 0 } };
     }
 
     console.log('MongoDB query:', JSON.stringify(query));
