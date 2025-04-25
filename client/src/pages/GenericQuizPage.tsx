@@ -429,6 +429,22 @@ const GenericQuizPage: React.FC<GenericQuizPageProps> = ({ quizType, sessionId: 
             console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId} (${correctOption.text})`);
           }
         }
+    } else if (quizType === 'currencies') { // Handle currencies quiz
+        // For currencies, the entity ID is the country ID in the metadata
+        if (currentQuestion.metadata && currentQuestion.metadata.entityId) {
+          const entityId = String(currentQuestion.metadata.entityId);
+          if (entityId && !previousEntityIds.includes(entityId)) {
+            setPreviousEntityIds(prev => [...prev, entityId]);
+            console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId} (${correctOption.text})`);
+          }
+        } else if (currentQuestion.metadata && currentQuestion.metadata.countryId) {
+          // Fallback to countryId if entityId is not available
+          const entityId = String(currentQuestion.metadata.countryId);
+          if (entityId && !previousEntityIds.includes(entityId)) {
+            setPreviousEntityIds(prev => [...prev, entityId]);
+            console.log(`Adding entity ID to exclusion list for ${quizType}: ${entityId} (${correctOption.text})`);
+          }
+        }
     }
 
     // Handle case where selected option might not be found (e.g., in write mode)

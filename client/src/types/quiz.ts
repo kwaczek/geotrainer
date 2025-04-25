@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-export type QuizType = 'flags' | 'capitals' | 'bollards' | 'licenseplates' | 'roadsigns' | 'languages' | 'cars' | 'poles' | 'domains';
+export type QuizType = 'flags' | 'capitals' | 'bollards' | 'licenseplates' | 'roadsigns' | 'languages' | 'cars' | 'poles' | 'domains' | 'currencies';
 
 export interface QuizFilters {
   continent?: string;

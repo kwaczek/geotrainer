@@ -21,6 +21,7 @@ interface QuizCounts {
   cars: number;
   poles: number;
   domains: number;
+  currencies: number;
 }
 
 const HomePage: React.FC = () => {
@@ -43,7 +44,8 @@ const HomePage: React.FC = () => {
     languages: 0,
     cars: 0,
     poles: 0,
-    domains: 0
+    domains: 0,
+    currencies: 0
   });
 
   // Quiz categories
@@ -57,6 +59,7 @@ const HomePage: React.FC = () => {
     { id: 'cars', name: 'Google Cars', description: 'Identify countries by the Google Street View car', icon: '🚙', supportsFilters: true, category: 'geoguessr' },
     { id: 'poles', name: 'Poles', description: 'Identify utility poles by country', icon: '⚡️', supportsFilters: true, category: 'geoguessr' },
     { id: 'domains', name: 'Domains', description: 'Match domain names (TLDs) to their countries', icon: '🌐', supportsFilters: true, category: 'general' },
+    { id: 'currencies', name: 'Currencies', description: 'Match currencies to their countries', icon: '💰', supportsFilters: true, category: 'general' },
   ];
 
   // Fetch continents and quiz counts on component mount
@@ -96,7 +99,8 @@ const HomePage: React.FC = () => {
           languages: languagesRes.data.success ? languagesRes.data.count : 0,
           cars: carsRes.data.success ? carsRes.data.count : 0,
           poles: polesRes.data.count || 0,
-          domains: countriesRes.data.success ? countriesRes.data.count : 0 // Use countries count for domains
+          domains: countriesRes.data.success ? countriesRes.data.count : 0, // Use countries count for domains
+          currencies: countriesRes.data.success ? countriesRes.data.count : 0 // Use countries count for currencies
         });
       } catch (error) {
         console.error('Error fetching quiz counts:', error);
@@ -108,7 +112,8 @@ const HomePage: React.FC = () => {
           languages: prevCounts.languages || 0,
           cars: prevCounts.cars || 0,
           poles: prevCounts.poles || 0,
-          domains: prevCounts.domains || 0
+          domains: prevCounts.domains || 0,
+          currencies: prevCounts.currencies || 0
         }));
       }
     };
@@ -132,7 +137,7 @@ const HomePage: React.FC = () => {
 
   // Helper function to get the count for a category
   const getCategoryCount = (categoryId: string): number => {
-    if (categoryId === 'flags' || categoryId === 'capitals' || categoryId === 'domains') {
+    if (categoryId === 'flags' || categoryId === 'capitals' || categoryId === 'domains' || categoryId === 'currencies') {
       return quizCounts.countries;
     } else if (categoryId === 'bollards') {
       return quizCounts.bollards;
@@ -332,6 +337,12 @@ const HomePage: React.FC = () => {
                     buttonBg = 'bg-indigo-500';
                     buttonHover = 'hover:bg-indigo-600';
                     break;
+                  case 'currencies':
+                    bgGradient = 'from-amber-50 to-amber-100';
+                    iconBg = 'bg-amber-100';
+                    buttonBg = 'bg-amber-500';
+                    buttonHover = 'hover:bg-amber-600';
+                    break;
                   default:
                     bgGradient = 'from-gray-50 to-gray-100';
                     iconBg = 'bg-gray-100';
@@ -481,6 +492,10 @@ const HomePage: React.FC = () => {
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-1">•</span>
                   <span>US License Plates regional quiz</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-600 mr-1">•</span>
+                  <span>Currencies quiz for country currencies</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-1">•</span>

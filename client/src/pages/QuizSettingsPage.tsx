@@ -48,10 +48,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
 
     if (settingsLoaded) return;
 
-    // Add 'languages', 'cars', 'poles', and 'domains' to the list of supported quiz types
+    // Add 'languages', 'cars', 'poles', 'domains', and 'currencies' to the list of supported quiz types
     if (quizType === 'flags' || quizType === 'capitals' ||
         quizType === 'bollards' || quizType === 'licenseplates' ||
-        quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles' || quizType === 'domains') {
+        quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles' || quizType === 'domains' || quizType === 'currencies') {
       console.log(`Loading settings from localStorage for ${quizType}...`);
 
       try {
@@ -97,10 +97,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
       return;
     }
 
-    // Add 'languages', 'cars', 'poles', and 'domains' to the list of supported quiz types
+    // Add 'languages', 'cars', 'poles', 'domains', and 'currencies' to the list of supported quiz types
     if (quizType && (quizType === 'flags' || quizType === 'capitals' ||
                      quizType === 'bollards' || quizType === 'licenseplates' ||
-                     quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles' || quizType === 'domains')) {
+                     quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles' || quizType === 'domains' || quizType === 'currencies')) {
       console.log('Saving settings to localStorage...');
 
       const currentSettings: StoredQuizSettings = {
@@ -267,7 +267,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         setLoading(true);
 
         let endpoint = '';
-        if (quizType === 'flags' || quizType === 'capitals' || quizType === 'domains') {
+        if (quizType === 'flags' || quizType === 'capitals' || quizType === 'domains' || quizType === 'currencies') {
           endpoint = '/api/countries/count';
         } else if (quizType === 'bollards') {
           endpoint = '/api/bollards/count';
@@ -303,6 +303,11 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
           // Add special filter for domains quiz to only count countries with domains
           if (quizType === 'domains') {
             params.has_domain = true;
+          }
+
+          // Add special filter for currencies quiz to only count countries with currencies
+          if (quizType === 'currencies') {
+            params.has_currency = true;
           }
 
           console.log(`Making API request to ${endpoint} with params:`, params);
@@ -381,6 +386,11 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
       filters.has_domain = true;
     }
 
+    // Add has_currency filter for currencies quiz
+    if (quizType === 'currencies') {
+      filters.has_currency = true;
+    }
+
     navigate(`/quiz/${quizType}`, {
       state: {
         filters,
@@ -434,7 +444,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
            quizConfig.type === 'languages' ? '🗣️' :
            quizConfig.type === 'cars' ? '🚙' :
            quizConfig.type === 'poles' ? '⚡️' :
-           quizConfig.type === 'domains' ? '🌐' : '❓'}
+           quizConfig.type === 'domains' ? '🌐' :
+           quizConfig.type === 'currencies' ? '💰' : '❓'}
         </div>
         <h1 className="text-3xl font-bold mb-1">{quizConfig.title}</h1>
         <p className="text-gray-600">{quizConfig.description}</p>

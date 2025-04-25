@@ -124,5 +124,18 @@ export const QUIZ_CONFIGS: Record<QuizType, QuizConfig> = {
       endpoint: '/api/quiz-questions/domains',
       correctAnswerField: 'countryName'
     }
+  },
+  currencies: {
+    type: 'currencies',
+    title: 'Currencies Quiz',
+    description: 'Test your knowledge of currencies used around the world.',
+    hasImages: false,
+    questionTemplate: "Which country uses this currency?",
+    timeLimit: 30,
+    questionsPerQuiz: 10,
+    dataSource: {
+      endpoint: '/api/quiz-questions/currencies',
+      correctAnswerField: 'countryName'
+    }
   }
 };
