@@ -82,7 +82,7 @@ const Header: React.FC = () => {
                 </Link>
               </div>
             </li>
-            
+
             <li className="relative" onMouseEnter={openSourcesMenu} onMouseLeave={closeSourcesMenu}>
               <span className="hover:text-blue-100 transition-colors cursor-pointer flex items-center text-sm">
                 Sources
@@ -110,9 +110,16 @@ const Header: React.FC = () => {
                   </svg>
                   <span>Thanks to evevemue for content contributions.</span>
                 </div>
+                <div className="flex items-center space-x-1 px-2 py-1 text-xs text-blue-200">
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10 10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8z"/>
+                    <path d="M11 11h2v6h-2zm0-4h2v2h-2z"/>
+                  </svg>
+                  <span>Special thanks to Julia for her amazing mnemonic contributions!</span>
+                </div>
               </div>
             </li>
-            
+
             {isAuthenticated && isAdmin && (
               <li className="relative group">
                 <span className="hover:text-blue-100 transition-colors cursor-pointer text-sm">
@@ -143,17 +150,17 @@ const Header: React.FC = () => {
                 </div>
               </li>
             )}
-            
+
             <li>
               {isAuthenticated ? (
-                <button 
+                <button
                   onClick={handleLogout}
                   className="hover:text-blue-100 transition-colors text-sm"
                 >
                   Logout
                 </button>
               ) : (
-                <button 
+                <button
                   onClick={handleLoginClick}
                   className="hover:text-blue-100 transition-colors text-sm"
                 >

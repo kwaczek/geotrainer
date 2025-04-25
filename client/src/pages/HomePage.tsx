@@ -9,6 +9,7 @@ interface QuizCategory {
   description: string;
   icon: string;
   supportsFilters?: boolean;
+  category: 'geoguessr' | 'general';
 }
 
 interface QuizCounts {
@@ -33,6 +34,7 @@ const HomePage: React.FC = () => {
     'Africa', 'Asia', 'Europe', 'North America', 'South America', 'Oceania', 'Antarctica'
   ]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'geoguessr' | 'general'>('geoguessr');
   const [quizCounts, setQuizCounts] = useState<QuizCounts>({
     countries: 0,
     bollards: 0,
@@ -46,15 +48,15 @@ const HomePage: React.FC = () => {
 
   // Quiz categories
   const categories: QuizCategory[] = [
-    { id: 'capitals', name: 'Capitals', description: 'Match capitals to their countries', icon: '🏙️', supportsFilters: true },
-    { id: 'flags', name: 'Flags', description: 'Test your knowledge of country flags', icon: '🏳️', supportsFilters: true },
-    { id: 'bollards', name: 'Bollards', description: 'Identify countries by their road bollards', icon: '🚧', supportsFilters: true },
-    { id: 'licenseplates', name: 'License Plates', description: 'Recognize license plates from around the world', icon: '🪪', supportsFilters: true },
-    { id: 'roadsigns', name: 'Road Signs', description: 'Learn to identify road signs by country', icon: '🚸', supportsFilters: true },
-    { id: 'languages', name: 'Languages', description: 'Identify the language spoken in a country', icon: '🗣️', supportsFilters: true },
-    { id: 'cars', name: 'Google Cars', description: 'Identify countries by the Google Street View car', icon: '🚙', supportsFilters: true },
-    { id: 'poles', name: 'Poles', description: 'Identify utility poles by country', icon: '⚡️', supportsFilters: true },
-    { id: 'domains', name: 'Domains', description: 'Match domain names (TLDs) to their countries', icon: '🌐', supportsFilters: true },
+    { id: 'capitals', name: 'Capitals', description: 'Match capitals to their countries', icon: '🏙️', supportsFilters: true, category: 'general' },
+    { id: 'flags', name: 'Flags', description: 'Test your knowledge of country flags', icon: '🏳️', supportsFilters: true, category: 'general' },
+    { id: 'bollards', name: 'Bollards', description: 'Identify countries by their road bollards', icon: '🚧', supportsFilters: true, category: 'geoguessr' },
+    { id: 'licenseplates', name: 'License Plates', description: 'Recognize license plates from around the world', icon: '🪪', supportsFilters: true, category: 'geoguessr' },
+    { id: 'roadsigns', name: 'Road Signs', description: 'Learn to identify road signs by country', icon: '🚸', supportsFilters: true, category: 'geoguessr' },
+    { id: 'languages', name: 'Languages', description: 'Identify the language spoken in a country', icon: '🗣️', supportsFilters: true, category: 'geoguessr' },
+    { id: 'cars', name: 'Google Cars', description: 'Identify countries by the Google Street View car', icon: '🚙', supportsFilters: true, category: 'geoguessr' },
+    { id: 'poles', name: 'Poles', description: 'Identify utility poles by country', icon: '⚡️', supportsFilters: true, category: 'geoguessr' },
+    { id: 'domains', name: 'Domains', description: 'Match domain names (TLDs) to their countries', icon: '🌐', supportsFilters: true, category: 'general' },
   ];
 
   // Fetch continents and quiz counts on component mount
@@ -164,120 +166,215 @@ const HomePage: React.FC = () => {
           </Link>
         </div>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-          {categories.map((category) => {
-            // Define category-specific colors
-            let bgGradient, iconBg, buttonBg, buttonHover;
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="flex justify-center space-x-2 sm:space-x-4 border-b">
+            <button
+              onClick={() => setActiveTab('geoguessr')}
+              className={`px-4 py-2 text-lg font-medium transition-all duration-300 border-b-2 ${
+                activeTab === 'geoguessr'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span className="flex items-center">
+                <span className="mr-2">🌍</span>
+                GeoGuessr Features
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('general')}
+              className={`px-4 py-2 text-lg font-medium transition-all duration-300 border-b-2 ${
+                activeTab === 'general'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span className="flex items-center">
+                <span className="mr-2">🗺️</span>
+                General Geography
+              </span>
+            </button>
+          </div>
+        </div>
 
-            switch(category.id) {
-              case 'capitals':
-                bgGradient = 'from-blue-50 to-blue-100';
-                iconBg = 'bg-blue-100';
-                buttonBg = 'bg-blue-500';
-                buttonHover = 'hover:bg-blue-600';
-                break;
-              case 'flags':
-                bgGradient = 'from-red-50 to-red-100';
-                iconBg = 'bg-red-100';
-                buttonBg = 'bg-red-500';
-                buttonHover = 'hover:bg-red-600';
-                break;
-              case 'bollards':
-                bgGradient = 'from-yellow-50 to-yellow-100';
-                iconBg = 'bg-yellow-100';
-                buttonBg = 'bg-yellow-500';
-                buttonHover = 'hover:bg-yellow-600';
-                break;
-              case 'licenseplates':
-                bgGradient = 'from-green-50 to-green-100';
-                iconBg = 'bg-green-100';
-                buttonBg = 'bg-green-500';
-                buttonHover = 'hover:bg-green-600';
-                break;
-              case 'roadsigns':
-                bgGradient = 'from-purple-50 to-purple-100';
-                iconBg = 'bg-purple-100';
-                buttonBg = 'bg-purple-500';
-                buttonHover = 'hover:bg-purple-600';
-                break;
-              case 'languages':
-                bgGradient = 'from-orange-50 to-orange-100';
-                iconBg = 'bg-orange-100';
-                buttonBg = 'bg-orange-500';
-                buttonHover = 'hover:bg-orange-600';
-                break;
-              case 'cars':
-                bgGradient = 'from-cyan-50 to-cyan-100';
-                iconBg = 'bg-cyan-100';
-                buttonBg = 'bg-cyan-500';
-                buttonHover = 'hover:bg-cyan-600';
-                break;
-              case 'poles':
-                bgGradient = 'from-teal-50 to-teal-100';
-                iconBg = 'bg-teal-100';
-                buttonBg = 'bg-teal-500';
-                buttonHover = 'hover:bg-teal-600';
-                break;
-              case 'domains':
-                bgGradient = 'from-indigo-50 to-indigo-100';
-                iconBg = 'bg-indigo-100';
-                buttonBg = 'bg-indigo-500';
-                buttonHover = 'hover:bg-indigo-600';
-                break;
-              default:
-                bgGradient = 'from-gray-50 to-gray-100';
-                iconBg = 'bg-gray-100';
-                buttonBg = 'bg-blue-500';
-                buttonHover = 'hover:bg-blue-600';
-            }
+        {/* Tab Content with Animation */}
+        <div className="mb-8 transition-all duration-300 ease-in-out">
+          {/* GeoGuessr Features Tab */}
+          <div
+            className={`transition-opacity duration-300 ${
+              activeTab === 'geoguessr' ? 'opacity-100' : 'opacity-0 hidden'
+            }`}
+          >
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              {categories.filter(cat => cat.category === 'geoguessr').map((category) => {
+                // Define category-specific colors
+                let bgGradient, iconBg, buttonBg, buttonHover;
 
-            return (
-              <div
-                key={category.id}
-                className={`flex flex-col bg-gradient-to-br ${bgGradient} p-5 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 transform hover:-translate-y-1`}
-              >
-                <div className="flex flex-col items-center">
-                  <div className={`text-4xl mb-3 ${iconBg} p-4 rounded-full shadow-sm`}>{category.icon}</div>
-                  <h3 className="text-lg font-semibold mb-1 text-center">{category.name}</h3>
-                  <p className="text-gray-600 text-xs text-center mb-3">{category.description}</p>
+                switch(category.id) {
+                  case 'bollards':
+                    bgGradient = 'from-yellow-50 to-yellow-100';
+                    iconBg = 'bg-yellow-100';
+                    buttonBg = 'bg-yellow-500';
+                    buttonHover = 'hover:bg-yellow-600';
+                    break;
+                  case 'licenseplates':
+                    bgGradient = 'from-green-50 to-green-100';
+                    iconBg = 'bg-green-100';
+                    buttonBg = 'bg-green-500';
+                    buttonHover = 'hover:bg-green-600';
+                    break;
+                  case 'roadsigns':
+                    bgGradient = 'from-purple-50 to-purple-100';
+                    iconBg = 'bg-purple-100';
+                    buttonBg = 'bg-purple-500';
+                    buttonHover = 'hover:bg-purple-600';
+                    break;
+                  case 'languages':
+                    bgGradient = 'from-orange-50 to-orange-100';
+                    iconBg = 'bg-orange-100';
+                    buttonBg = 'bg-orange-500';
+                    buttonHover = 'hover:bg-orange-600';
+                    break;
+                  case 'cars':
+                    bgGradient = 'from-cyan-50 to-cyan-100';
+                    iconBg = 'bg-cyan-100';
+                    buttonBg = 'bg-cyan-500';
+                    buttonHover = 'hover:bg-cyan-600';
+                    break;
+                  case 'poles':
+                    bgGradient = 'from-teal-50 to-teal-100';
+                    iconBg = 'bg-teal-100';
+                    buttonBg = 'bg-teal-500';
+                    buttonHover = 'hover:bg-teal-600';
+                    break;
+                  default:
+                    bgGradient = 'from-gray-50 to-gray-100';
+                    iconBg = 'bg-gray-100';
+                    buttonBg = 'bg-blue-500';
+                    buttonHover = 'hover:bg-blue-600';
+                }
 
-                  {/* Display count badge for quizzes with available counts */}
-                  {category.supportsFilters && (
-                    <div className="bg-white bg-opacity-70 text-gray-700 text-xs font-medium px-3 py-1 rounded-full mb-3 shadow-sm border border-gray-200">
-                      {loading ? (
-                        <span>Loading...</span>
-                      ) : (
-                        <span>
-                          {getCategoryCount(category.id)} {category.id === 'capitals' || category.id === 'flags' || category.id === 'domains'
-                            ? 'countries'
-                            : category.id === 'bollards'
-                              ? 'bollards'
-                              : category.id === 'licenseplates'
-                                ? 'license plates'
-                                : category.id === 'roadsigns'
-                                  ? 'road signs'
-                                  : category.id === 'languages'
-                                    ? 'languages'
-                                    : category.id === 'cars'
-                                      ? 'cars'
-                                      : 'poles'}
-                        </span>
+                return (
+                  <div
+                    key={category.id}
+                    className={`flex flex-col bg-gradient-to-br ${bgGradient} p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 transform hover:-translate-y-1`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className={`text-3xl mb-2 ${iconBg} p-3 rounded-full shadow-sm`}>{category.icon}</div>
+                      <h3 className="text-base font-semibold mb-1 text-center">{category.name}</h3>
+                      <p className="text-gray-600 text-xs text-center mb-2 line-clamp-2">{category.description}</p>
+
+                      {/* Display count badge for quizzes with available counts */}
+                      {category.supportsFilters && (
+                        <div className="bg-white bg-opacity-70 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full mb-2 shadow-sm border border-gray-200">
+                          {loading ? (
+                            <span>Loading...</span>
+                          ) : (
+                            <span>
+                              {getCategoryCount(category.id)} {category.id === 'bollards'
+                                ? 'bollards'
+                                : category.id === 'licenseplates'
+                                  ? 'plates'
+                                  : category.id === 'roadsigns'
+                                    ? 'signs'
+                                    : category.id === 'languages'
+                                      ? 'langs'
+                                      : category.id === 'cars'
+                                        ? 'cars'
+                                        : 'poles'}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  )}
-                </div>
 
-                {/* Start button */}
-                <button
-                  onClick={() => handleStartQuiz(category.id)}
-                  className={`mt-auto w-full py-2 ${buttonBg} text-white rounded-lg ${buttonHover} transition-all duration-200 font-medium text-sm shadow-sm`}
-                >
-                  Start Quiz
-                </button>
-              </div>
-            );
-          })}
+                    {/* Start button */}
+                    <button
+                      onClick={() => handleStartQuiz(category.id)}
+                      className={`mt-auto w-full py-1.5 ${buttonBg} text-white rounded-lg ${buttonHover} transition-all duration-200 font-medium text-sm shadow-sm`}
+                    >
+                      Start Quiz
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* General Geography Tab */}
+          <div
+            className={`transition-opacity duration-300 ${
+              activeTab === 'general' ? 'opacity-100' : 'opacity-0 hidden'
+            }`}
+          >
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {categories.filter(cat => cat.category === 'general').map((category) => {
+                // Define category-specific colors
+                let bgGradient, iconBg, buttonBg, buttonHover;
+
+                switch(category.id) {
+                  case 'capitals':
+                    bgGradient = 'from-blue-50 to-blue-100';
+                    iconBg = 'bg-blue-100';
+                    buttonBg = 'bg-blue-500';
+                    buttonHover = 'hover:bg-blue-600';
+                    break;
+                  case 'flags':
+                    bgGradient = 'from-red-50 to-red-100';
+                    iconBg = 'bg-red-100';
+                    buttonBg = 'bg-red-500';
+                    buttonHover = 'hover:bg-red-600';
+                    break;
+                  case 'domains':
+                    bgGradient = 'from-indigo-50 to-indigo-100';
+                    iconBg = 'bg-indigo-100';
+                    buttonBg = 'bg-indigo-500';
+                    buttonHover = 'hover:bg-indigo-600';
+                    break;
+                  default:
+                    bgGradient = 'from-gray-50 to-gray-100';
+                    iconBg = 'bg-gray-100';
+                    buttonBg = 'bg-blue-500';
+                    buttonHover = 'hover:bg-blue-600';
+                }
+
+                return (
+                  <div
+                    key={category.id}
+                    className={`flex flex-col bg-gradient-to-br ${bgGradient} p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-100 transform hover:-translate-y-1`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className={`text-3xl mb-2 ${iconBg} p-3 rounded-full shadow-sm`}>{category.icon}</div>
+                      <h3 className="text-base font-semibold mb-1 text-center">{category.name}</h3>
+                      <p className="text-gray-600 text-xs text-center mb-2 line-clamp-2">{category.description}</p>
+
+                      {/* Display count badge for quizzes with available counts */}
+                      {category.supportsFilters && (
+                        <div className="bg-white bg-opacity-70 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full mb-2 shadow-sm border border-gray-200">
+                          {loading ? (
+                            <span>Loading...</span>
+                          ) : (
+                            <span>
+                              {getCategoryCount(category.id)} countries
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Start button */}
+                    <button
+                      onClick={() => handleStartQuiz(category.id)}
+                      className={`mt-auto w-full py-1.5 ${buttonBg} text-white rounded-lg ${buttonHover} transition-all duration-200 font-medium text-sm shadow-sm`}
+                    >
+                      Start Quiz
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Spacer and divider */}
