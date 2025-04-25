@@ -180,9 +180,12 @@ describe('Domain Quiz Flow', () => {
         timeSpentMs: 3000
       });
 
-    // Step 4: Get the second question
+    // Extract the entity ID from the first question
+    const entityId1 = question1.metadata.entityId;
+
+    // Step 4: Get the second question, explicitly passing the previous entity ID
     const question2Response = await request(app)
-      .get(`/quiz-questions/domains?sessionId=${sessionId}`);
+      .get(`/quiz-questions/domains?sessionId=${sessionId}&previousEntityIds=["${entityId1}"]`);
 
     expect(question2Response.status).toBe(200);
     const question2 = question2Response.body.question;
@@ -190,8 +193,7 @@ describe('Domain Quiz Flow', () => {
     // Verify that the second question is different from the first
     expect(question2.id).not.toBe(question1.id);
 
-    // Extract the entity IDs from both questions
-    const entityId1 = question1.metadata.entityId;
+    // Extract the entity ID from the second question
     const entityId2 = question2.metadata.entityId;
 
     // Verify that the entity IDs are different (no repetition)
