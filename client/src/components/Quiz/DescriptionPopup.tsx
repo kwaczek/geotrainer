@@ -16,15 +16,21 @@ const DescriptionPopup: React.FC<DescriptionPopupProps> = ({
 }) => {
   // Parse description to separate mnemonic from regular description
   const { regularDescription, mnemonic } = useMemo(() => {
-    // Check if description contains "Mnemonic:" marker
-    const mnemonicIndex = description.indexOf("Mnemonic:");
+    // Check if description contains "mnemonic:" marker (case-insensitive)
+    const lowerCaseDesc = description.toLowerCase();
+    const mnemonicIndex = lowerCaseDesc.indexOf("mnemonic:");
 
     if (mnemonicIndex !== -1) {
-      // Split the description into regular part and mnemonic part
-      return {
-        regularDescription: description.substring(0, mnemonicIndex).trim(),
-        mnemonic: description.substring(mnemonicIndex + 9).trim() // +9 to skip "Mnemonic:"
-      };
+      // Find the actual position of the colon
+      const colonIndex = description.indexOf(":", mnemonicIndex);
+
+      if (colonIndex !== -1) {
+        // Split the description into regular part and mnemonic part
+        return {
+          regularDescription: description.substring(0, mnemonicIndex).trim(),
+          mnemonic: description.substring(colonIndex + 1).trim() // Skip the colon
+        };
+      }
     }
 
     // If no mnemonic marker found, return the full description as regular

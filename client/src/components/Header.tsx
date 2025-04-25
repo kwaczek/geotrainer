@@ -47,7 +47,7 @@ const Header: React.FC = () => {
           <Link to="/" className="text-xl font-bold hover:text-blue-100 transition-colors">
             GeoPrep
           </Link>
-          <p className="ml-2 text-xs text-blue-100 hidden md:block">Quiz and Preparation for GeoGuessr</p>
+          <p className="ml-2 text-xs text-blue-100 hidden md:block">Quiz and Preparation for GeoGuessr with Mnemonics</p>
         </div>
         <nav>
           <ul className="flex items-center space-x-6">
