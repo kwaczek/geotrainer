@@ -164,7 +164,7 @@ describe('Currency Questions Generator', () => {
 
     // Assertions
     expect(question).toBeDefined();
-    expect(question.question).toContain('Which country uses the currency Japanese Yen (JPY)');
+    expect(question.question).toContain('Which country uses the currency Yen (JPY)');
     expect(question.options.length).toBe(4);
 
     // Check that the correct option is from Asia
@@ -251,7 +251,7 @@ describe('Currency Questions Generator', () => {
 
     // Assertions
     expect(question).toBeDefined();
-    expect(question.question).toContain('Which country uses the currency US Dollar (USD)');
+    expect(question.question).toContain('Which country uses the currency Dollar (USD)');
     expect(question.options.length).toBe(4);
 
     // Check that the correct option has in_geoguessr: true

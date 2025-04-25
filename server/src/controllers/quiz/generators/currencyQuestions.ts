@@ -109,7 +109,13 @@ export async function getRandomCurrencyQuestion(filters?: QuizFilters, previousE
 
   // If we have a name, use it as the primary identifier
   if (primaryCurrency.name && primaryCurrency.name.trim() !== '') {
-    currencyDisplay = primaryCurrency.name;
+    // Extract only the last word of the currency name to avoid giving away the country name
+    const currencyNameParts = primaryCurrency.name.trim().split(' ');
+    const lastWord = currencyNameParts[currencyNameParts.length - 1];
+
+    // Capitalize the last word
+    const capitalizedLastWord = lastWord.charAt(0).toUpperCase() + lastWord.slice(1);
+    currencyDisplay = capitalizedLastWord;
 
     // Add code in parentheses if available
     if (primaryCurrency.code && primaryCurrency.code.trim() !== '') {
