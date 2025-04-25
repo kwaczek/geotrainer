@@ -449,6 +449,14 @@ const HomePage: React.FC = () => {
                   <span className="text-yellow-600 mr-1">•</span>
                   <span>Languages Quiz</span>
                 </li>
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-1">•</span>
+                  <span>Domain quiz</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-600 mr-1">•</span>
+                  <span>Currency quiz</span>
+                </li>
               </ul>
             </div>
 
@@ -471,10 +479,6 @@ const HomePage: React.FC = () => {
                   <span className="text-yellow-600 mr-1">•</span>
                   <span>Poles quiz (uploading data)</span>
                 </li>
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-1">•</span>
-                  <span>Domain quiz</span>
-                </li>
               </ul>
             </div>
 
@@ -487,15 +491,7 @@ const HomePage: React.FC = () => {
               <ul className="space-y-1 text-xs">
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-1">•</span>
-                  <span>Poles quiz</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-1">•</span>
                   <span>US License Plates regional quiz</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-600 mr-1">•</span>
-                  <span>Currencies quiz for country currencies</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-600 mr-1">•</span>
