@@ -157,7 +157,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
 
           console.log('Making initial domains count API request with params:', params);
 
-          const response = await axios.get('http://localhost:5001/api/countries/count', { params });
+          const response = await axios.get('/api/countries/count', { params });
           console.log('Initial domains count API response:', response.data);
 
           if (response.data && response.data.count !== undefined) {
@@ -209,7 +209,7 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
 
           console.log('Making domains count API request with params:', params);
 
-          const response = await axios.get('http://localhost:5001/api/countries/count', { params });
+          const response = await axios.get('/api/countries/count', { params });
           console.log('Direct domains count API response:', response.data);
 
           if (response.data && response.data.count !== undefined) {
@@ -307,11 +307,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
 
           console.log(`Making API request to ${endpoint} with params:`, params);
 
-          // Use direct URL for domains quiz
-          const url = quizType === 'domains' ? 'http://localhost:5001/api/countries/count' : endpoint;
-          console.log(`Using URL: ${url}`);
+          // Use the endpoint for all quiz types
+          console.log(`Using endpoint: ${endpoint}`);
 
-          const response = await axios.get(url, { params });
+          const response = await axios.get(endpoint, { params });
           console.log(`API response from ${endpoint}:`, response.data);
 
           // Handle the response regardless of the endpoint format
