@@ -137,36 +137,36 @@ export const deleteGoogleCar = async (req: Request, res: Response): Promise<void
 };
 
 // Note: getBollardsByCountry and getBollardCount are omitted as they weren't explicitly requested for Google Cars yet.
-// They could be added later by adapting the logic similarly. 
+// They could be added later by adapting the logic similarly.
 
 // Get Google Cars by country ID
 export const getGoogleCarsByCountry = async (req: Request, res: Response): Promise<void> => {
     try {
         const { countryId } = req.params;
-        
+
         // Validate if the id is a valid MongoDB ObjectId
         if (!mongoose.Types.ObjectId.isValid(countryId)) {
-            res.status(400).json({ 
+            res.status(400).json({
                 success: false,
-                message: 'Invalid country ID format' 
+                message: 'Invalid country ID format'
             });
             return;
         }
-        
+
         // Find Google Cars that include this country
-        const googleCars = await GoogleCar.find({ 
-            countries: { $in: [countryId] } 
+        const googleCars = await GoogleCar.find({
+            countries: { $in: [countryId] }
         }).sort('-createdAt');
-        
+
         res.status(200).json({
             success: true,
             googleCars
         });
     } catch (error) {
         console.error('Error fetching Google Cars by country:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: 'Failed to fetch Google Cars for this country' 
+            message: 'Failed to fetch Google Cars for this country'
         });
     }
 };
@@ -175,28 +175,28 @@ export const getGoogleCarsByCountry = async (req: Request, res: Response): Promi
 export const getGoogleCarCount = async (req: Request, res: Response): Promise<void> => {
     try {
         const { continent, in_geoguessr } = req.query;
-        
+
         // Build a more sophisticated query based on filters
         let countryQuery: any = {};
-        
+
         // If continent filter is applied, find countries in that continent
         if (continent && continent !== 'all') {
             countryQuery.continent = continent;
         }
-        
+
         // If GeoGuessr filter is applied, find countries in GeoGuessr
         if (in_geoguessr === 'true') {
             countryQuery.in_geoguessr = true;
         }
-        
+
         // Find countries matching all applied filters
         let countryIds: mongoose.Types.ObjectId[] = [];
-        
+
         // Only query the database for countries if we have filters
         if (Object.keys(countryQuery).length > 0) {
             const filteredCountries = await Country.find(countryQuery).select('_id');
             countryIds = filteredCountries.map(country => country._id as mongoose.Types.ObjectId);
-            
+
             // If no countries match the filters, return 0 count
             if (countryIds.length === 0) {
                 res.status(200).json({
@@ -205,12 +205,12 @@ export const getGoogleCarCount = async (req: Request, res: Response): Promise<vo
                 });
                 return;
             }
-            
+
             // Find google cars where at least one of the associated countries matches the filter
             const count = await GoogleCar.countDocuments({
                 countries: { $in: countryIds }
             });
-            
+
             res.status(200).json({
                 success: true,
                 count
@@ -218,7 +218,7 @@ export const getGoogleCarCount = async (req: Request, res: Response): Promise<vo
         } else {
             // No filters applied, count all google cars
             const count = await GoogleCar.countDocuments({});
-            
+
             res.status(200).json({
                 success: true,
                 count
@@ -226,9 +226,61 @@ export const getGoogleCarCount = async (req: Request, res: Response): Promise<vo
         }
     } catch (error) {
         console.error('Error counting google cars:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: 'Error counting google cars' 
+            message: 'Error counting google cars'
         });
     }
-}; 
+};
+
+export const updateGoogleCar = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        // Find the Google Car first to make sure it exists
+        const googleCar = await GoogleCar.findById(id);
+        if (!googleCar) {
+            res.status(404).json({ success: false, message: 'Google Car not found' });
+            return;
+        }
+
+        const { description, countries, googleMapsUrl } = req.body;
+
+        // Update fields
+        const updateData: any = {};
+
+        if (description) updateData.description = description;
+        if (googleMapsUrl) updateData.googleMapsUrl = googleMapsUrl;
+        if (countries) updateData.countries = JSON.parse(countries);
+
+        // If there's a new image file
+        if (req.file) {
+            // Delete the old image file
+            const oldImagePath = path.join(process.cwd(), googleCar.imageUrl);
+            if (existsSync(oldImagePath)) {
+                await fs.unlink(oldImagePath);
+            }
+
+            // Set the new image URL
+            updateData.imageUrl = `/uploads/google-cars/${req.file.filename}`;
+        }
+
+        // Update the Google Car
+        const updatedGoogleCar = await GoogleCar.findByIdAndUpdate(
+            id,
+            updateData,
+            { new: true }
+        ).populate('countries', 'name code');
+
+        res.status(200).json({
+            success: true,
+            googleCar: updatedGoogleCar
+        });
+    } catch (error) {
+        console.error('Error updating Google Car:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error updating Google Car'
+        });
+    }
+};

@@ -1,12 +1,13 @@
 import express from 'express';
 // Import the necessary controller functions for Google Cars
-import { uploadGoogleCar, createGoogleCar, getAllGoogleCars, deleteGoogleCar, getGeoGuessrCountries, getGoogleCarCount, getGoogleCarsByCountry } from '../controllers/googleCarController';
+import { uploadGoogleCar, createGoogleCar, getAllGoogleCars, deleteGoogleCar, getGeoGuessrCountries, getGoogleCarCount, getGoogleCarsByCountry, updateGoogleCar } from '../controllers/googleCarController';
 import { requireApiKey } from '../middleware/apiKeyMiddleware';
 
 const router = express.Router();
 
 // Protected admin routes for Google Cars
 router.post('/upload', requireApiKey, uploadGoogleCar, createGoogleCar);
+router.put('/:id', requireApiKey, uploadGoogleCar, updateGoogleCar);
 router.get('/', getAllGoogleCars);
 router.delete('/:id', requireApiKey, deleteGoogleCar);
 
@@ -19,4 +20,4 @@ router.get('/count', getGoogleCarCount);
 // Route to get Google Cars by country
 router.get('/country/:countryId', getGoogleCarsByCountry);
 
-export default router; 
+export default router;
