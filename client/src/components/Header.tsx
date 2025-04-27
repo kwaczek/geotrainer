@@ -103,6 +103,9 @@ const Header: React.FC = () => {
                 <a href="https://learnablemeta.com/" target="_blank" rel="noopener noreferrer" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
                   LearnableMeta <span className="text-xs text-blue-300 block">Learn GeoGuessr meta with guides and maps.</span>
                 </a>
+                <a href="https://www.geometas.com/" target="_blank" rel="noopener noreferrer" className="block py-1 px-2 hover:bg-blue-700 rounded transition-colors text-sm">
+                  GeoMetas <span className="text-xs text-blue-300 block">Comprehensive GeoGuessr meta information and guides.</span>
+                </a>
                 <hr className="border-blue-500 my-2" />
                 <div className="flex items-center space-x-1 px-2 py-1 text-xs text-blue-200">
                   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
