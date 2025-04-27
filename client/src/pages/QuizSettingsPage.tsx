@@ -48,10 +48,11 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
 
     if (settingsLoaded) return;
 
-    // Add 'languages', 'cars', 'poles', 'domains', and 'currencies' to the list of supported quiz types
+    // Add 'languages', 'cars', 'poles', 'domains', 'currencies', and 'phoneprefixes' to the list of supported quiz types
     if (quizType === 'flags' || quizType === 'capitals' ||
         quizType === 'bollards' || quizType === 'licenseplates' ||
-        quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles' || quizType === 'domains' || quizType === 'currencies') {
+        quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles' ||
+        quizType === 'domains' || quizType === 'currencies' || quizType === 'phoneprefixes') {
       console.log(`Loading settings from localStorage for ${quizType}...`);
 
       try {
@@ -97,10 +98,10 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
       return;
     }
 
-    // Add 'languages', 'cars', 'poles', 'domains', and 'currencies' to the list of supported quiz types
+    // Add 'languages', 'cars', 'poles', 'domains', 'currencies', and 'phoneprefixes' to the list of supported quiz types
     if (quizType && (quizType === 'flags' || quizType === 'capitals' ||
                      quizType === 'bollards' || quizType === 'licenseplates' ||
-                     quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles' || quizType === 'domains' || quizType === 'currencies')) {
+                     quizType === 'roadsigns' || quizType === 'languages' || quizType === 'cars' || quizType === 'poles' || quizType === 'domains' || quizType === 'currencies' || quizType === 'phoneprefixes')) {
       console.log('Saving settings to localStorage...');
 
       const currentSettings: StoredQuizSettings = {
@@ -263,11 +264,13 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
         return;
       }
 
+      // Don't skip for phoneprefixes quiz - we need to count countries with phone prefixes
+
       try {
         setLoading(true);
 
         let endpoint = '';
-        if (quizType === 'flags' || quizType === 'capitals' || quizType === 'domains' || quizType === 'currencies') {
+        if (quizType === 'flags' || quizType === 'capitals' || quizType === 'currencies' || quizType === 'phoneprefixes') {
           endpoint = '/api/countries/count';
         } else if (quizType === 'bollards') {
           endpoint = '/api/bollards/count';
@@ -300,14 +303,16 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
             params.types = selectedTypes.join(',');
           }
 
-          // Add special filter for domains quiz to only count countries with domains
-          if (quizType === 'domains') {
-            params.has_domain = true;
-          }
+          // We already returned early for domains quiz, so this block won't execute for domains
 
           // Add special filter for currencies quiz to only count countries with currencies
           if (quizType === 'currencies') {
             params.has_currency = true;
+          }
+
+          // Add special filter for phone prefixes quiz to only count countries with phone prefixes
+          if (quizType === 'phoneprefixes') {
+            params.has_phone_prefix = true;
           }
 
           console.log(`Making API request to ${endpoint} with params:`, params);
@@ -391,6 +396,11 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
       filters.has_currency = true;
     }
 
+    // Add has_phone_prefix filter for phone prefixes quiz
+    if (quizType === 'phoneprefixes') {
+      filters.has_phone_prefix = true;
+    }
+
     navigate(`/quiz/${quizType}`, {
       state: {
         filters,
@@ -445,7 +455,8 @@ const QuizSettingsPage: React.FC<QuizSettingsPageProps> = () => {
            quizConfig.type === 'cars' ? '🚙' :
            quizConfig.type === 'poles' ? '⚡️' :
            quizConfig.type === 'domains' ? '🌐' :
-           quizConfig.type === 'currencies' ? '💰' : '❓'}
+           quizConfig.type === 'currencies' ? '💰' :
+           quizConfig.type === 'phoneprefixes' ? '📞' : '❓'}
         </div>
         <h1 className="text-3xl font-bold mb-1">{quizConfig.title}</h1>
         <p className="text-gray-600">{quizConfig.description}</p>
