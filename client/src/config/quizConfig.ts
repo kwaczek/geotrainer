@@ -137,5 +137,18 @@ export const QUIZ_CONFIGS: Record<QuizType, QuizConfig> = {
       endpoint: '/api/quiz-questions/currencies',
       correctAnswerField: 'countryName'
     }
+  },
+  phoneprefixes: {
+    type: 'phoneprefixes',
+    title: 'Phone Prefixes Quiz',
+    description: 'Test your knowledge of country phone prefixes from around the world.',
+    hasImages: false,
+    questionTemplate: "Which country uses this phone prefix?",
+    timeLimit: 30,
+    questionsPerQuiz: 10,
+    dataSource: {
+      endpoint: '/api/quiz-questions/phoneprefixes',
+      correctAnswerField: 'countryName'
+    }
   }
 };

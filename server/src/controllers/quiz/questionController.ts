@@ -14,7 +14,8 @@ import {
   getRandomGoogleCarQuestion,
   getRandomPoleQuestion,
   getRandomDomainQuestion,
-  getRandomCurrencyQuestion
+  getRandomCurrencyQuestion,
+  getRandomPhonePrefixQuestion
 } from './generators';
 
 /**
@@ -69,10 +70,10 @@ export const getNextQuestion = async (req: Request, res: Response) => {
     console.log(`Excluding previous entity IDs (${previousEntityIds.length}):`, previousEntityIds);
 
     // Validate quiz type
-    if (!quizType || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES, QuizType.ROADSIGNS, QuizType.LANGUAGES, QuizType.CARS, QuizType.POLES, QuizType.DOMAINS, QuizType.CURRENCIES].includes(quizType.toLowerCase() as QuizType)) {
+    if (!quizType || ![QuizType.FLAGS, QuizType.CAPITALS, QuizType.BOLLARDS, QuizType.LICENSEPLATES, QuizType.ROADSIGNS, QuizType.LANGUAGES, QuizType.CARS, QuizType.POLES, QuizType.DOMAINS, QuizType.CURRENCIES, QuizType.PHONE_PREFIXES].includes(quizType.toLowerCase() as QuizType)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid quiz type. Must be flags, capitals, bollards, licenseplates, roadsigns, languages, cars, poles, domains, or currencies'
+        message: 'Invalid quiz type. Must be flags, capitals, bollards, licenseplates, roadsigns, languages, cars, poles, domains, currencies, or phoneprefixes'
       });
     }
 
@@ -166,6 +167,9 @@ export const getNextQuestion = async (req: Request, res: Response) => {
           break;
         case QuizType.CURRENCIES:
           question = await getRandomCurrencyQuestion(session.filters, previousEntityIds);
+          break;
+        case QuizType.PHONE_PREFIXES:
+          question = await getRandomPhonePrefixQuestion(session.filters, previousEntityIds);
           break;
         default:
           return res.status(400).json({

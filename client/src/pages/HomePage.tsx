@@ -22,6 +22,7 @@ interface QuizCounts {
   poles: number;
   domains: number;
   currencies: number;
+  phoneprefixes: number;
 }
 
 const HomePage: React.FC = () => {
@@ -45,7 +46,8 @@ const HomePage: React.FC = () => {
     cars: 0,
     poles: 0,
     domains: 0,
-    currencies: 0
+    currencies: 0,
+    phoneprefixes: 0
   });
 
   // Quiz categories
@@ -60,6 +62,7 @@ const HomePage: React.FC = () => {
     { id: 'poles', name: 'Poles', description: 'Identify utility poles by country', icon: '⚡️', supportsFilters: true, category: 'geoguessr' },
     { id: 'domains', name: 'Domains', description: 'Match domain names (TLDs) to their countries', icon: '🌐', supportsFilters: true, category: 'general' },
     { id: 'currencies', name: 'Currencies', description: 'Match currencies to their countries', icon: '💰', supportsFilters: true, category: 'general' },
+    { id: 'phoneprefixes', name: 'Phone Prefixes', description: 'Match phone prefixes to their countries', icon: '📞', supportsFilters: true, category: 'general' },
   ];
 
   // Fetch continents and quiz counts on component mount
@@ -100,7 +103,8 @@ const HomePage: React.FC = () => {
           cars: carsRes.data.success ? carsRes.data.count : 0,
           poles: polesRes.data.count || 0,
           domains: countriesRes.data.success ? countriesRes.data.count : 0, // Use countries count for domains
-          currencies: countriesRes.data.success ? countriesRes.data.count : 0 // Use countries count for currencies
+          currencies: countriesRes.data.success ? countriesRes.data.count : 0, // Use countries count for currencies
+          phoneprefixes: countriesRes.data.success ? countriesRes.data.count : 0 // Use countries count for phone prefixes
         });
       } catch (error) {
         console.error('Error fetching quiz counts:', error);
@@ -113,7 +117,8 @@ const HomePage: React.FC = () => {
           cars: prevCounts.cars || 0,
           poles: prevCounts.poles || 0,
           domains: prevCounts.domains || 0,
-          currencies: prevCounts.currencies || 0
+          currencies: prevCounts.currencies || 0,
+          phoneprefixes: prevCounts.phoneprefixes || 0
         }));
       }
     };
@@ -137,7 +142,7 @@ const HomePage: React.FC = () => {
 
   // Helper function to get the count for a category
   const getCategoryCount = (categoryId: string): number => {
-    if (categoryId === 'flags' || categoryId === 'capitals' || categoryId === 'domains' || categoryId === 'currencies') {
+    if (categoryId === 'flags' || categoryId === 'capitals' || categoryId === 'domains' || categoryId === 'currencies' || categoryId === 'phoneprefixes') {
       return quizCounts.countries;
     } else if (categoryId === 'bollards') {
       return quizCounts.bollards;
@@ -343,6 +348,12 @@ const HomePage: React.FC = () => {
                     buttonBg = 'bg-amber-500';
                     buttonHover = 'hover:bg-amber-600';
                     break;
+                  case 'phoneprefixes':
+                    bgGradient = 'from-pink-50 to-pink-100';
+                    iconBg = 'bg-pink-100';
+                    buttonBg = 'bg-pink-500';
+                    buttonHover = 'hover:bg-pink-600';
+                    break;
                   default:
                     bgGradient = 'from-gray-50 to-gray-100';
                     iconBg = 'bg-gray-100';
@@ -494,7 +505,7 @@ const HomePage: React.FC = () => {
                   <span>US License Plates regional quiz</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-600 mr-1">•</span>
+                  <span className="text-green-600 mr-1">•</span>
                   <span>Phone Prefixes quiz for country codes</span>
                 </li>
                 <li className="flex items-start">

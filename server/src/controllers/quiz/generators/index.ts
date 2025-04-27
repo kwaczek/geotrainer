@@ -8,6 +8,7 @@ import { getRandomGoogleCarQuestion } from './googleCarQuestions';
 import { getRandomPoleQuestion } from './poleQuestions';
 import { getRandomDomainQuestion } from './domainQuestions';
 import { getRandomCurrencyQuestion } from './currencyQuestions';
+import { getRandomPhonePrefixQuestion } from './phonePrefixQuestions';
 
 export {
   getRandomFlagQuestion,
@@ -19,5 +20,6 @@ export {
   getRandomGoogleCarQuestion,
   getRandomPoleQuestion,
   getRandomDomainQuestion,
-  getRandomCurrencyQuestion
+  getRandomCurrencyQuestion,
+  getRandomPhonePrefixQuestion
 };
